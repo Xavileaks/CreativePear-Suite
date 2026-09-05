@@ -1,0 +1,60 @@
+.iti {
+    width: 100%;
+}
+
+.iti input[type="tel"] {
+    width: 100%;
+}
+
+.iti__country-selector {
+    z-index: 999999;
+}
+
+.iti__selected-country,
+.iti__selected-country:hover,
+.iti__selected-country:focus {
+    background: transparent !important;
+    border: 0 !important;
+    color: inherit !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+
+.iti__country-selector .iti__search-input {
+    padding-left: 38px !important;
+    padding-right: 38px !important;
+    background-image: none !important;
+}
+
+.iti__country-selector .iti__search-icon {
+    left: 12px !important;
+    z-index: 2;
+}
+
+.iti__country-selector .iti__search-clear {
+    right: 8px !important;
+    z-index: 2;
+}
+
+form.elementor-form input[type="tel"].xw-phone-invalid {
+    border-color: #d63638 !important;
+}
+
+.xw-phone-error {
+    display: block;
+    margin-top: 6px;
+    color: #d63638;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.xw-phone-error[hidden] {
+    display: none;
+}
+
+form.elementor-form button.elementor-button.xw-submit-disabled {
+    opacity: .5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}

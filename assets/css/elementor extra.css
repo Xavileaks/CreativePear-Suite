@@ -1,0 +1,92 @@
+/*Estilos para Hello Elementor*/
+
+:root {
+  --color-web: #E52427;
+}
+
+html, body {
+ width: 100% !important;
+ overflow-x: hidden !important;
+}
+
+a {
+  text-decoration: none !important;
+}
+
+/*Eliminar estilos por defecto de botones*/
+
+[type=button]:focus, [type=submit]:focus, button:focus {
+    outline: 0px auto -webkit-focus-ring-color;
+}
+
+:focus-visible {
+    outline: -webkit-focus-ring-color auto 0px;
+}
+
+* {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+/*Scroll Bar*/
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 0px;
+}
+
+/*Ultimo parrafo sin margen*/
+
+p:last-child {
+    margin-bottom: 0px !important;
+}
+
+/*Viñeta parrafo con margen*/
+
+.elementor-widget-text-editor ul  {
+	margin-bottom: 20px !important;
+}
+
+.elementor-widget-text-editor ol  {
+	margin-bottom: 20px !important;
+}
+
+h1, h2, h3, h4, h5, h6, span, a, p {
+	text-wrap: balance;
+}
+
+input[type=checkbox] {
+    accent-color: var(--color-web);
+}
+
+input[type=radio] {
+    accent-color: var(--color-web);
+}
+
+/*Prueba*/
+@media (min-width: 1025px) and (max-width:1400px) {
+	.e-con  { --container-max-width: 90%;
+}
+}
+
+@media (min-width: 1700px) {
+	.e-con  { --container-max-width: 70%;
+}
+}
+
+.elementor-icon-wrapper {
+    line-height: 0;
+}
+
+::selection {
+  color: #FFF;
+  background: var(--color-web);
+}

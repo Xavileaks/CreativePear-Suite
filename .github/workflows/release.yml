@@ -1,0 +1,58 @@
+name: Publicar plugin
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v6
+
+      - name: Validar versión y archivos PHP
+        shell: bash
+        run: |
+          set -euo pipefail
+          plugin_version="$(sed -n 's/^Version:[[:space:]]*//p' creativepear-suite.php | head -n 1 | tr -d '\r')"
+          tag_version="${GITHUB_REF_NAME#v}"
+
+          if [[ "$plugin_version" != "$tag_version" ]]; then
+            echo "La etiqueta $GITHUB_REF_NAME no coincide con Version: $plugin_version"
+            exit 1
+          fi
+
+          find . -type f -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
+
+      - name: Crear ZIP instalable
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/creativepear-suite
+          rsync -a ./ build/creativepear-suite/ \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='build/' \
+            --exclude='*.zip' \
+            --exclude='.idea/' \
+            --exclude='.vscode/'
+          cd build
+          zip -r creativepear-suite.zip creativepear-suite
+          sha256sum creativepear-suite.zip > creativepear-suite.zip.sha256
+
+      - name: Crear publicación de GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            build/creativepear-suite.zip \
+            build/creativepear-suite.zip.sha256 \
+            --title "CreativePear Suite $GITHUB_REF_NAME" \
+            --generate-notes
