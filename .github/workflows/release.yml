@@ -54,5 +54,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             build/creativepear-suite.zip \
             build/creativepear-suite.zip.sha256 \
-            --title "CreativePear Suite $GITHUB_REF_NAME" \
+            --title "Creative Pear Suite $GITHUB_REF_NAME" \
             --generate-notes

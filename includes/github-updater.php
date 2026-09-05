@@ -1,6 +1,6 @@
 <?php
 /**
- * Actualizaciones de CreativePear Suite mediante GitHub Releases.
+ * Actualizaciones de Creative Pear Suite mediante GitHub Releases.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -191,7 +191,7 @@ function xw_github_plugin_information( $result, $action, $args ) {
     }
 
     $information = new stdClass();
-    $information->name = 'CreativePear Suite';
+    $information->name = 'Creative Pear Suite';
     $information->slug = dirname( plugin_basename( XW_FUNCTIONS_FILE ) );
     $information->version = $release['version'];
     $information->author = '<a href="https://creativepearagency.com">Creative Pear Agency</a>';

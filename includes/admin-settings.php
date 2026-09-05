@@ -1,6 +1,6 @@
 <?php
 /**
- * Pantalla y utilidades de configuración de CreativePear Suite.
+ * Pantalla y utilidades de configuración de Creative Pear Suite.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -339,8 +339,8 @@ function xw_register_settings() {
 add_action( 'admin_menu', 'xw_add_settings_page' );
 function xw_add_settings_page() {
     add_options_page(
-        'CreativePear Suite',
-        'CreativePear Suite',
+        'Creative Pear Suite',
+        'Creative Pear Suite',
         'manage_options',
         'creativepear-suite',
         'xw_render_settings_page'
@@ -397,7 +397,7 @@ function xw_render_settings_page() {
     <div class="wrap xw-settings-wrap">
         <div class="xw-settings-header">
             <div>
-                <h1>CreativePear Suite</h1>
+                <h1>Creative Pear Suite</h1>
                 <p><?php echo esc_html( xw_t( 'Activa solo las funciones que necesita este sitio y ajusta las que admiten personalización.', 'Enable only the features this site needs and configure the ones that support customization.' ) ); ?></p>
             </div>
             <span class="xw-version">v<?php echo esc_html( XW_FUNCTIONS_VERSION ); ?></span>
