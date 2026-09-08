@@ -62,6 +62,11 @@ function xw_get_feature_definitions() {
             'description' => xw_t( 'Oculta el logo de WordPress y personaliza el texto enlazado del pie del administrador.', 'Hides the WordPress logo and customizes the linked admin footer text.' ),
             'settings'    => true,
         ),
+        'back_to_top' => array(
+            'title'       => xw_t( 'Volver arriba', 'Back to top' ),
+            'description' => xw_t( 'Muestra un botón con progreso de lectura que regresa suavemente al inicio de la página.', 'Displays a reading-progress button that smoothly returns to the top of the page.' ),
+            'settings'    => true,
+        ),
         'elementor_messages' => array(
             'title'       => xw_t( 'Form Elementor: mensajes flotantes', 'Form Elementor: floating messages' ),
             'description' => xw_t( 'Muestra las respuestas de formularios como avisos flotantes temporales.', 'Displays form responses as temporary floating notices.' ),
@@ -125,6 +130,7 @@ function xw_get_feature_groups() {
                 'hide_admin_bar',
                 'admin_bar_style',
                 'admin_branding',
+                'back_to_top',
                 'preloader',
                 'admin_notices',
                 'plugin_export',
@@ -179,6 +185,26 @@ function xw_get_default_settings() {
                 'Sitio creado por <a href="https://creativepearagency.com" target="_blank" rel="noopener noreferrer">Creative Pear Agency</a>.',
                 'Website created by <a href="https://creativepearagency.com" target="_blank" rel="noopener noreferrer">Creative Pear Agency</a>.'
             ),
+        ),
+        'back_to_top' => array(
+            'icon'              => 'arrow-up',
+            'position'          => 'bottom-right',
+            'shape'             => 'circle',
+            'vertical_margin'   => 20,
+            'horizontal_margin' => 20,
+            'offset'            => 300,
+            'duration'          => 500,
+            'button_size'       => 46,
+            'border_size'       => 1,
+            'icon_size'         => 20,
+            'progress_size'     => 3,
+            'background_color'  => '',
+            'border_color'      => '',
+            'icon_color'        => '',
+            'progress_color'    => '',
+            'hide_mobile'       => 0,
+            'hide_tablet'       => 0,
+            'hide_desktop'      => 0,
         ),
         'phone' => array(
             'mode'              => 'area_code',
@@ -245,6 +271,7 @@ function xw_sanitize_settings( $input ) {
     $login     = isset( $input['login'] ) && is_array( $input['login'] ) ? $input['login'] : array();
     $styles    = isset( $input['styles'] ) && is_array( $input['styles'] ) ? $input['styles'] : array();
     $branding  = isset( $input['admin_branding'] ) && is_array( $input['admin_branding'] ) ? $input['admin_branding'] : array();
+    $back_to_top = isset( $input['back_to_top'] ) && is_array( $input['back_to_top'] ) ? $input['back_to_top'] : array();
     $phone     = isset( $input['phone'] ) && is_array( $input['phone'] ) ? $input['phone'] : array();
     $woocommerce = isset( $input['woocommerce'] ) && is_array( $input['woocommerce'] ) ? $input['woocommerce'] : array();
 
@@ -282,6 +309,41 @@ function xw_sanitize_settings( $input ) {
     );
     $footer_html = isset( $branding['footer_html'] ) ? $branding['footer_html'] : $defaults['admin_branding']['footer_html'];
     $sanitized['admin_branding']['footer_html'] = trim( wp_kses( $footer_html, $allowed_footer_html ) );
+
+    $back_to_top_icons = function_exists( 'xw_get_back_to_top_icon_options' )
+        ? array_keys( xw_get_back_to_top_icon_options() )
+        : array( 'arrow-up' );
+    $back_to_top_icon = isset( $back_to_top['icon'] ) ? sanitize_key( $back_to_top['icon'] ) : $defaults['back_to_top']['icon'];
+    $back_to_top_position = isset( $back_to_top['position'] ) ? sanitize_key( $back_to_top['position'] ) : $defaults['back_to_top']['position'];
+    $back_to_top_shape = isset( $back_to_top['shape'] ) ? sanitize_key( $back_to_top['shape'] ) : $defaults['back_to_top']['shape'];
+    $back_to_top_button_size = isset( $back_to_top['button_size'] ) ? absint( $back_to_top['button_size'] ) : $defaults['back_to_top']['button_size'];
+
+    $sanitized['back_to_top']['icon'] = in_array( $back_to_top_icon, $back_to_top_icons, true )
+        ? $back_to_top_icon
+        : $defaults['back_to_top']['icon'];
+    $sanitized['back_to_top']['position'] = in_array( $back_to_top_position, array( 'bottom-right', 'bottom-left' ), true )
+        ? $back_to_top_position
+        : $defaults['back_to_top']['position'];
+    $sanitized['back_to_top']['shape'] = in_array( $back_to_top_shape, array( 'circle', 'rounded', 'square' ), true )
+        ? $back_to_top_shape
+        : $defaults['back_to_top']['shape'];
+    $sanitized['back_to_top']['vertical_margin'] = max( 0, min( 200, isset( $back_to_top['vertical_margin'] ) ? absint( $back_to_top['vertical_margin'] ) : $defaults['back_to_top']['vertical_margin'] ) );
+    $sanitized['back_to_top']['horizontal_margin'] = max( 0, min( 200, isset( $back_to_top['horizontal_margin'] ) ? absint( $back_to_top['horizontal_margin'] ) : $defaults['back_to_top']['horizontal_margin'] ) );
+    $sanitized['back_to_top']['offset'] = max( 0, min( 5000, isset( $back_to_top['offset'] ) ? absint( $back_to_top['offset'] ) : $defaults['back_to_top']['offset'] ) );
+    $sanitized['back_to_top']['duration'] = max( 0, min( 3000, isset( $back_to_top['duration'] ) ? absint( $back_to_top['duration'] ) : $defaults['back_to_top']['duration'] ) );
+    $sanitized['back_to_top']['button_size'] = max( 32, min( 100, $back_to_top_button_size ) );
+    $sanitized['back_to_top']['border_size'] = max( 0, min( 10, isset( $back_to_top['border_size'] ) ? absint( $back_to_top['border_size'] ) : $defaults['back_to_top']['border_size'] ) );
+    $sanitized['back_to_top']['icon_size'] = max( 12, min( $sanitized['back_to_top']['button_size'] - 8, isset( $back_to_top['icon_size'] ) ? absint( $back_to_top['icon_size'] ) : $defaults['back_to_top']['icon_size'] ) );
+    $sanitized['back_to_top']['progress_size'] = max( 1, min( 10, isset( $back_to_top['progress_size'] ) ? absint( $back_to_top['progress_size'] ) : $defaults['back_to_top']['progress_size'] ) );
+
+    foreach ( array( 'background_color', 'border_color', 'icon_color', 'progress_color' ) as $color_key ) {
+        $color = isset( $back_to_top[ $color_key ] ) ? sanitize_hex_color( $back_to_top[ $color_key ] ) : '';
+        $sanitized['back_to_top'][ $color_key ] = $color ? $color : '';
+    }
+
+    foreach ( array( 'hide_mobile', 'hide_tablet', 'hide_desktop' ) as $visibility_key ) {
+        $sanitized['back_to_top'][ $visibility_key ] = empty( $back_to_top[ $visibility_key ] ) ? 0 : 1;
+    }
 
     $phone_mode = isset( $phone['mode'] ) && 'international' === $phone['mode'] ? 'international' : 'area_code';
     $phone_language = isset( $phone['language'] ) && 'en' === $phone['language'] ? 'en' : 'es';
@@ -432,7 +494,7 @@ function xw_render_settings_page() {
                                     $feature = $feature_definitions[ $key ];
                                     ?>
                     <?php $enabled = ! empty( $settings['features'][ $key ] ); ?>
-                    <section class="xw-feature-card<?php echo $enabled ? ' is-enabled' : ''; ?>" data-xw-feature>
+                    <section class="xw-feature-card<?php echo $enabled ? ' is-enabled' : ''; ?><?php echo ! empty( $feature['wide'] ) ? ' xw-feature-card--wide' : ''; ?>" data-xw-feature>
                         <div class="xw-feature-summary">
                             <div class="xw-feature-copy">
                                 <h3><?php echo esc_html( $feature['title'] ); ?></h3>
@@ -510,6 +572,131 @@ function xw_render_settings_page() {
                                             <span>px</span>
                                         </div>
                                     </div>
+                                <?php elseif ( 'back_to_top' === $key ) : ?>
+                                    <fieldset class="xw-btt-icon-picker xw-field-full">
+                                        <legend><?php echo esc_html( xw_t( 'Tipo de icono', 'Icon type' ) ); ?></legend>
+                                        <div class="xw-btt-icon-grid">
+                                            <?php foreach ( xw_get_back_to_top_icon_options() as $icon_key => $icon_label ) : ?>
+                                                <label>
+                                                    <input type="radio" name="xw_settings[back_to_top][icon]" value="<?php echo esc_attr( $icon_key ); ?>" <?php checked( $settings['back_to_top']['icon'], $icon_key ); ?>>
+                                                    <span>
+                                                        <?php echo xw_back_to_top_icon_svg( $icon_key ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG fijo de la lista permitida. ?>
+                                                        <small><?php echo esc_html( $icon_label ); ?></small>
+                                                    </span>
+                                                </label>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </fieldset>
+
+                                    <h3 class="xw-options-heading"><?php echo esc_html( xw_t( 'Posición y movimiento', 'Position and movement' ) ); ?></h3>
+                                    <div class="xw-field-row">
+                                        <label for="xw-btt-position"><?php echo esc_html( xw_t( 'Posición del botón', 'Button position' ) ); ?></label>
+                                        <select id="xw-btt-position" name="xw_settings[back_to_top][position]">
+                                            <option value="bottom-right" <?php selected( $settings['back_to_top']['position'], 'bottom-right' ); ?>><?php echo esc_html( xw_t( 'Abajo a la derecha', 'Bottom right' ) ); ?></option>
+                                            <option value="bottom-left" <?php selected( $settings['back_to_top']['position'], 'bottom-left' ); ?>><?php echo esc_html( xw_t( 'Abajo a la izquierda', 'Bottom left' ) ); ?></option>
+                                        </select>
+                                    </div>
+                                    <div class="xw-field-row">
+                                        <label for="xw-btt-shape"><?php echo esc_html( xw_t( 'Forma del botón', 'Button shape' ) ); ?></label>
+                                        <select id="xw-btt-shape" name="xw_settings[back_to_top][shape]">
+                                            <option value="circle" <?php selected( $settings['back_to_top']['shape'], 'circle' ); ?>><?php echo esc_html( xw_t( 'Circular', 'Circle' ) ); ?></option>
+                                            <option value="rounded" <?php selected( $settings['back_to_top']['shape'], 'rounded' ); ?>><?php echo esc_html( xw_t( 'Redondeado', 'Rounded' ) ); ?></option>
+                                            <option value="square" <?php selected( $settings['back_to_top']['shape'], 'square' ); ?>><?php echo esc_html( xw_t( 'Cuadrado', 'Square' ) ); ?></option>
+                                        </select>
+                                    </div>
+                                    <div class="xw-field-row xw-btt-compact-field">
+                                        <label for="xw-btt-vertical-margin"><?php echo esc_html( xw_t( 'Margen vertical', 'Vertical margin' ) ); ?></label>
+                                        <div class="xw-number-control">
+                                            <input id="xw-btt-vertical-margin" type="number" name="xw_settings[back_to_top][vertical_margin]" value="<?php echo esc_attr( $settings['back_to_top']['vertical_margin'] ); ?>" min="0" max="200" step="1">
+                                            <span>px</span>
+                                        </div>
+                                    </div>
+                                    <div class="xw-field-row xw-btt-compact-field">
+                                        <label for="xw-btt-horizontal-margin"><?php echo esc_html( xw_t( 'Margen horizontal', 'Horizontal margin' ) ); ?></label>
+                                        <div class="xw-number-control">
+                                            <input id="xw-btt-horizontal-margin" type="number" name="xw_settings[back_to_top][horizontal_margin]" value="<?php echo esc_attr( $settings['back_to_top']['horizontal_margin'] ); ?>" min="0" max="200" step="1">
+                                            <span>px</span>
+                                        </div>
+                                    </div>
+                                    <div class="xw-field-row xw-btt-compact-field">
+                                        <label for="xw-btt-offset"><?php echo esc_html( xw_t( 'Aparecer después', 'Show after' ) ); ?></label>
+                                        <div class="xw-number-control">
+                                            <input id="xw-btt-offset" type="number" name="xw_settings[back_to_top][offset]" value="<?php echo esc_attr( $settings['back_to_top']['offset'] ); ?>" min="0" max="5000" step="1">
+                                            <span>px</span>
+                                        </div>
+                                    </div>
+                                    <div class="xw-field-row xw-btt-compact-field">
+                                        <label for="xw-btt-duration"><?php echo esc_html( xw_t( 'Duración', 'Duration' ) ); ?></label>
+                                        <div class="xw-number-control">
+                                            <input id="xw-btt-duration" type="number" name="xw_settings[back_to_top][duration]" value="<?php echo esc_attr( $settings['back_to_top']['duration'] ); ?>" min="0" max="3000" step="50">
+                                            <span>ms</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="xw-field-row xw-btt-compact-field">
+                                        <label for="xw-btt-button-size"><?php echo esc_html( xw_t( 'Botón', 'Button' ) ); ?></label>
+                                        <div class="xw-number-control">
+                                            <input id="xw-btt-button-size" type="number" name="xw_settings[back_to_top][button_size]" value="<?php echo esc_attr( $settings['back_to_top']['button_size'] ); ?>" min="32" max="100" step="1">
+                                            <span>px</span>
+                                        </div>
+                                    </div>
+                                    <div class="xw-field-row xw-btt-compact-field">
+                                        <label for="xw-btt-icon-size"><?php echo esc_html( xw_t( 'Icono', 'Icon' ) ); ?></label>
+                                        <div class="xw-number-control">
+                                            <input id="xw-btt-icon-size" type="number" name="xw_settings[back_to_top][icon_size]" value="<?php echo esc_attr( $settings['back_to_top']['icon_size'] ); ?>" min="12" max="92" step="1">
+                                            <span>px</span>
+                                        </div>
+                                    </div>
+                                    <div class="xw-field-row xw-btt-compact-field">
+                                        <label for="xw-btt-border-size"><?php echo esc_html( xw_t( 'Borde', 'Border' ) ); ?></label>
+                                        <div class="xw-number-control">
+                                            <input id="xw-btt-border-size" type="number" name="xw_settings[back_to_top][border_size]" value="<?php echo esc_attr( $settings['back_to_top']['border_size'] ); ?>" min="0" max="10" step="1">
+                                            <span>px</span>
+                                        </div>
+                                    </div>
+                                    <div class="xw-field-row xw-btt-compact-field">
+                                        <label for="xw-btt-progress-size"><?php echo esc_html( xw_t( 'Progreso', 'Progress' ) ); ?></label>
+                                        <div class="xw-number-control">
+                                            <input id="xw-btt-progress-size" type="number" name="xw_settings[back_to_top][progress_size]" value="<?php echo esc_attr( $settings['back_to_top']['progress_size'] ); ?>" min="1" max="10" step="1">
+                                            <span>px</span>
+                                        </div>
+                                    </div>
+
+                                    <?php
+                                    $back_to_top_colors = array(
+                                        'background_color' => array( xw_t( 'Color de fondo', 'Background color' ), '#FFFFFF' ),
+                                        'border_color'     => array( xw_t( 'Color del borde', 'Border color' ), '#DCDCDE' ),
+                                        'icon_color'       => array( xw_t( 'Color del icono', 'Icon color' ), '#1D2327' ),
+                                        'progress_color'   => array( xw_t( 'Color del progreso', 'Progress color' ), '#3858E9' ),
+                                    );
+                                    ?>
+                                    <?php foreach ( $back_to_top_colors as $color_key => $color_data ) : ?>
+                                        <div class="xw-field-row">
+                                            <label for="xw-btt-<?php echo esc_attr( str_replace( '_', '-', $color_key ) ); ?>"><?php echo esc_html( $color_data[0] ); ?></label>
+                                            <div class="xw-color-control">
+                                                <input id="xw-btt-<?php echo esc_attr( str_replace( '_', '-', $color_key ) ); ?>" type="color" class="<?php echo empty( $settings['back_to_top'][ $color_key ] ) ? 'is-empty' : ''; ?>" value="<?php echo esc_attr( $settings['back_to_top'][ $color_key ] ?: $color_data[1] ); ?>" data-xw-color-picker>
+                                                <input type="text" name="xw_settings[back_to_top][<?php echo esc_attr( $color_key ); ?>]" class="xw-color-text" value="<?php echo esc_attr( $settings['back_to_top'][ $color_key ] ); ?>" maxlength="7" spellcheck="false" placeholder="#RRGGBB" aria-label="<?php echo esc_attr( $color_data[0] ); ?>" data-xw-color-value>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+
+                                    <fieldset class="xw-btt-visibility xw-field-full">
+                                        <legend><?php echo esc_html( xw_t( 'Ocultar visibilidad por dispositivo', 'Hide visibility by device' ) ); ?></legend>
+                                        <div class="xw-btt-visibility-grid">
+                                            <label class="xw-check-control">
+                                                <input type="checkbox" name="xw_settings[back_to_top][hide_mobile]" value="1" <?php checked( ! empty( $settings['back_to_top']['hide_mobile'] ) ); ?>>
+                                                <span><?php echo esc_html( xw_t( 'Móvil', 'Mobile' ) ); ?></span>
+                                            </label>
+                                            <label class="xw-check-control">
+                                                <input type="checkbox" name="xw_settings[back_to_top][hide_tablet]" value="1" <?php checked( ! empty( $settings['back_to_top']['hide_tablet'] ) ); ?>>
+                                                <span>Tablet</span>
+                                            </label>
+                                            <label class="xw-check-control">
+                                                <input type="checkbox" name="xw_settings[back_to_top][hide_desktop]" value="1" <?php checked( ! empty( $settings['back_to_top']['hide_desktop'] ) ); ?>>
+                                                <span><?php echo esc_html( xw_t( 'Escritorio', 'Desktop' ) ); ?></span>
+                                            </label>
+                                        </div>
+                                    </fieldset>
                                 <?php elseif ( 'admin_branding' === $key ) : ?>
                                     <div class="xw-field-row xw-field-full xw-footer-editor">
                                         <label for="xw-admin-footer-html"><?php echo esc_html( xw_t( 'Texto del pie', 'Footer text' ) ); ?></label>

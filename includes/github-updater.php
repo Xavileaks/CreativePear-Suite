@@ -9,9 +9,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 define( 'XW_GITHUB_REPOSITORY', 'Xavileaks/CreativePear-Suite' );
 define( 'XW_GITHUB_RELEASE_ASSET', 'creativepear-suite.zip' );
+define( 'XW_GITHUB_UPDATE_INTERVAL', 10 * MINUTE_IN_SECONDS );
+define( 'XW_GITHUB_UPDATE_CRON_HOOK', 'xw_github_ten_minute_update_check' );
 
 /**
- * Obtiene la última publicación estable y la conserva durante quince minutos.
+ * Obtiene la última publicación estable y la conserva durante diez minutos.
  *
  * @param bool $force_refresh Ignorar la caché guardada.
  * @return array|WP_Error
@@ -80,7 +82,7 @@ function xw_github_get_latest_release( $force_refresh = false ) {
         'notes'        => isset( $release['body'] ) ? (string) $release['body'] : '',
     );
 
-    set_site_transient( $cache_key, $result, 15 * MINUTE_IN_SECONDS );
+    set_site_transient( $cache_key, $result, XW_GITHUB_UPDATE_INTERVAL );
 
     return $result;
 }
@@ -96,10 +98,7 @@ function xw_github_check_for_update( $transient ) {
         return $transient;
     }
 
-    // WordPress ya controla la frecuencia de sus comprobaciones. Consultar la
-    // publicación directamente evita conservar como "última" una versión que
-    // se publicó justo después de haber llenado nuestra caché interna.
-    $release = xw_github_get_latest_release( true );
+    $release = xw_github_get_latest_release();
 
     if (
         is_wp_error( $release ) ||
@@ -126,6 +125,124 @@ function xw_github_check_for_update( $transient ) {
 add_filter( 'pre_set_site_transient_update_plugins', 'xw_github_check_for_update' );
 
 /**
+ * Añade una frecuencia de diez minutos sin modificar el cron de otros plugins.
+ *
+ * @param array $schedules Frecuencias registradas.
+ * @return array
+ */
+function xw_github_add_ten_minute_schedule( $schedules ) {
+    $schedules['xw_ten_minutes'] = array(
+        'interval' => XW_GITHUB_UPDATE_INTERVAL,
+        'display'  => xw_t( 'Cada diez minutos', 'Every ten minutes' ),
+    );
+
+    return $schedules;
+}
+add_filter( 'cron_schedules', 'xw_github_add_ten_minute_schedule' );
+
+/**
+ * Programa la comprobación. También se ejecuta en init para instalaciones
+ * existentes, ya que una actualización no vuelve a disparar la activación.
+ *
+ * @return void
+ */
+function xw_github_schedule_update_checks() {
+    if ( ! wp_next_scheduled( XW_GITHUB_UPDATE_CRON_HOOK ) ) {
+        wp_schedule_event(
+            time() + XW_GITHUB_UPDATE_INTERVAL,
+            'xw_ten_minutes',
+            XW_GITHUB_UPDATE_CRON_HOOK
+        );
+    }
+}
+add_action( 'init', 'xw_github_schedule_update_checks' );
+register_activation_hook( XW_FUNCTIONS_FILE, 'xw_github_schedule_update_checks' );
+
+/**
+ * Elimina únicamente el cron perteneciente a este plugin.
+ *
+ * @return void
+ */
+function xw_github_unschedule_update_checks() {
+    wp_clear_scheduled_hook( XW_GITHUB_UPDATE_CRON_HOOK );
+}
+register_deactivation_hook( XW_FUNCTIONS_FILE, 'xw_github_unschedule_update_checks' );
+
+/**
+ * Actualiza el transient de WordPress sin consultar el resto de plugins.
+ *
+ * @return void
+ */
+function xw_github_refresh_update_transient() {
+    $lock_key = 'xw_github_ten_minute_update_lock';
+
+    if ( false !== get_site_transient( $lock_key ) ) {
+        return;
+    }
+
+    set_site_transient( $lock_key, 1, XW_GITHUB_UPDATE_INTERVAL );
+
+    $release = xw_github_get_latest_release();
+
+    if ( is_wp_error( $release ) || empty( $release['version'] ) ) {
+        return;
+    }
+
+    $transient = get_site_transient( 'update_plugins' );
+
+    if ( ! is_object( $transient ) ) {
+        $transient = new stdClass();
+    }
+
+    if ( ! isset( $transient->response ) || ! is_array( $transient->response ) ) {
+        $transient->response = array();
+    }
+
+    if ( ! isset( $transient->no_update ) || ! is_array( $transient->no_update ) ) {
+        $transient->no_update = array();
+    }
+
+    $plugin_file = plugin_basename( XW_FUNCTIONS_FILE );
+
+    if (
+        ! empty( $release['package'] ) &&
+        version_compare( XW_FUNCTIONS_VERSION, $release['version'], '<' )
+    ) {
+        $update = new stdClass();
+        $update->id = 'github.com/' . XW_GITHUB_REPOSITORY;
+        $update->slug = dirname( $plugin_file );
+        $update->plugin = $plugin_file;
+        $update->new_version = $release['version'];
+        $update->url = $release['details_url'];
+        $update->package = $release['package'];
+
+        $transient->response[ $plugin_file ] = $update;
+        unset( $transient->no_update[ $plugin_file ] );
+    } else {
+        unset( $transient->response[ $plugin_file ] );
+    }
+
+    // Evita que nuestro propio filtro repita la consulta al guardar el dato.
+    remove_filter( 'pre_set_site_transient_update_plugins', 'xw_github_check_for_update' );
+    set_site_transient( 'update_plugins', $transient );
+    add_filter( 'pre_set_site_transient_update_plugins', 'xw_github_check_for_update' );
+}
+add_action( XW_GITHUB_UPDATE_CRON_HOOK, 'xw_github_refresh_update_transient' );
+
+/**
+ * Permite que el aviso ya esté preparado al entrar en la administración.
+ * El bloqueo interno impide más de una consulta cada diez minutos.
+ *
+ * @return void
+ */
+function xw_github_maybe_refresh_update_transient_in_admin() {
+    if ( current_user_can( 'update_plugins' ) ) {
+        xw_github_refresh_update_transient();
+    }
+}
+add_action( 'admin_init', 'xw_github_maybe_refresh_update_transient_in_admin' );
+
+/**
  * Responde al mecanismo oficial de Update URI para repositorios externos.
  *
  * WordPress usa el hostname de Update URI para crear este filtro dinámico. Al
@@ -145,7 +262,7 @@ function xw_github_update_uri_response( $update, $plugin_data, $plugin_file, $lo
         return $update;
     }
 
-    $release = xw_github_get_latest_release( true );
+    $release = xw_github_get_latest_release();
 
     if ( is_wp_error( $release ) || empty( $release['version'] ) ) {
         return $update;
@@ -227,5 +344,6 @@ function xw_github_clear_release_cache( $upgrader, $options ) {
     }
 
     delete_site_transient( 'xw_github_latest_release' );
+    delete_site_transient( 'xw_github_ten_minute_update_lock' );
 }
 add_action( 'upgrader_process_complete', 'xw_github_clear_release_cache', 10, 2 );

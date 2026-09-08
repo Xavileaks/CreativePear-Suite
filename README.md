@@ -6,7 +6,7 @@ Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
 ## Actualizaciones desde GitHub
 
-WordPress consulta la última publicación estable de este repositorio. Si la versión publicada es mayor que la instalada, la actualización aparece en **Plugins > Plugins instalados** y puede aplicarse con **Actualizar ahora** o mediante las actualizaciones automáticas de WordPress.
+El plugin consulta cada diez minutos la última publicación estable de este repositorio mediante WP-Cron. Si la versión publicada es mayor que la instalada, la actualización aparece en **Plugins > Plugins instalados** y puede aplicarse con **Actualizar ahora** o mediante las actualizaciones automáticas de WordPress. Como WP-Cron depende de la actividad del sitio, la comprobación se ejecuta durante la primera visita recibida después de cumplirse el intervalo.
 
 La instalación inicial del plugin sigue haciéndose una sola vez con el ZIP. A partir de ese momento, las versiones nuevas llegan desde GitHub Releases.
 
@@ -17,7 +17,7 @@ La instalación inicial del plugin sigue haciéndose una sola vez con el ZIP. A 
 3. Crear y subir una etiqueta con esa versión, por ejemplo:
 
 ```powershell
-git tag v1.0.1
+git tag v1.0.2
 git push origin main --tags
 ```
 
