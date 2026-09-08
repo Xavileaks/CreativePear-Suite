@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.4
+
+- Botón «Volver arriba»: el anillo de progreso y el círculo ahora forman una sola pieza visual.
+- La sombra se aplica al contorno completo del botón y se elimina la sombra interior que deformaba visualmente el progreso.
+
 ## 1.0.3
 
 - El componente queda aislado del CSS de temas, constructores y otros plugins para conservar siempre sus dimensiones y su forma.

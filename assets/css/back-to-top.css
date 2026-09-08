@@ -33,7 +33,7 @@
         var(--xw-btt-progress-color) var(--xw-btt-progress),
         var(--xw-btt-border) 0
     ) !important;
-    box-shadow: none !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .16) !important;
     color: var(--xw-btt-icon) !important;
     place-items: center !important;
     overflow: visible !important;
@@ -64,7 +64,7 @@
     border: var(--xw-btt-border-size) solid var(--xw-btt-border) !important;
     border-radius: var(--xw-btt-radius) !important;
     background: var(--xw-btt-background) !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, .12) !important;
+    box-shadow: none !important;
     content: '' !important;
     opacity: 1 !important;
     pointer-events: none !important;
