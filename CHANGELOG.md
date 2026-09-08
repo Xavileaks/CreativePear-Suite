@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.5
+
+- Botón «Volver arriba»: el progreso circular se dibuja con un trazo SVG centrado para mantener el mismo grosor arriba, abajo y a los lados.
+- Se conserva una única sombra exterior para todo el botón y el mismo aspecto en los estados interactivos.
+
 ## 1.0.4
 
 - Botón «Volver arriba»: el anillo de progreso y el círculo ahora forman una sola pieza visual.

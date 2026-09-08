@@ -93,6 +93,14 @@
     left: var(--xw-btt-horizontal-margin) !important;
 }
 
+/* El círculo usa un trazo SVG centrado para evitar diferencias de subpíxel. */
+#xw-back-to-top.xw-back-to-top--circle,
+#xw-back-to-top.xw-back-to-top--circle:hover,
+#xw-back-to-top.xw-back-to-top--circle:focus,
+#xw-back-to-top.xw-back-to-top--circle:active {
+    background: var(--xw-btt-background) !important;
+}
+
 .xw-back-to-top--rounded {
     --xw-btt-radius: 12px;
 }
@@ -101,10 +109,10 @@
     --xw-btt-radius: 0px;
 }
 
-#xw-back-to-top svg {
+#xw-back-to-top .xw-back-to-top__icon {
     all: unset !important;
     position: relative !important;
-    z-index: 1 !important;
+    z-index: 3 !important;
     display: block !important;
     width: var(--xw-btt-icon-size) !important;
     height: var(--xw-btt-icon-size) !important;
@@ -117,13 +125,48 @@
     pointer-events: none !important;
 }
 
-#xw-back-to-top svg * {
+#xw-back-to-top .xw-back-to-top__icon * {
     fill: none !important;
     stroke: currentColor !important;
     stroke-width: 2 !important;
     stroke-linecap: round !important;
     stroke-linejoin: round !important;
     vector-effect: non-scaling-stroke !important;
+}
+
+#xw-back-to-top .xw-back-to-top__progress {
+    all: unset !important;
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 2 !important;
+    display: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: visible !important;
+    pointer-events: none !important;
+}
+
+#xw-back-to-top.xw-back-to-top--circle .xw-back-to-top__progress {
+    display: block !important;
+}
+
+#xw-back-to-top .xw-back-to-top__progress-track,
+#xw-back-to-top .xw-back-to-top__progress-value {
+    fill: none !important;
+    stroke-width: var(--xw-btt-progress-size) !important;
+    vector-effect: non-scaling-stroke !important;
+}
+
+#xw-back-to-top .xw-back-to-top__progress-track {
+    stroke: var(--xw-btt-border) !important;
+}
+
+#xw-back-to-top .xw-back-to-top__progress-value {
+    stroke: var(--xw-btt-progress-color) !important;
+    stroke-dasharray: var(--xw-btt-progress-value) 100 !important;
+    stroke-linecap: butt !important;
+    transform: rotate(-90deg) !important;
+    transform-origin: 50% 50% !important;
 }
 
 @media (max-width: 767px) {

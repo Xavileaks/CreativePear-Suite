@@ -30,6 +30,7 @@
             var visible = scrollTop >= offset && scrollable > 0;
 
             button.style.setProperty('--xw-btt-progress', progress.toFixed(2) + '%');
+            button.style.setProperty('--xw-btt-progress-value', progress.toFixed(2));
             button.classList.toggle('is-visible', visible);
             button.setAttribute('aria-hidden', visible ? 'false' : 'true');
             button.setAttribute('tabindex', visible ? '0' : '-1');
