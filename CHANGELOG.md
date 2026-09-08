@@ -1,5 +1,11 @@
 # Historial de cambios
 
+## 1.0.3
+
+- El componente queda aislado del CSS de temas, constructores y otros plugins para conservar siempre sus dimensiones y su forma.
+- Botón «Volver arriba»: el indicador de progreso mantiene visible el anillo completo con el color de borde configurado.
+- Eliminada la apariencia de raya flotante al comienzo del recorrido, sin introducir cambios al pasar el cursor.
+
 ## 1.0.2
 
 - WordPress: nuevo botón «Volver arriba» con desplazamiento suave e indicador de progreso permanente.

@@ -1,77 +1,96 @@
 .xw-back-to-top {
     --xw-btt-progress: 0%;
     --xw-btt-radius: 50%;
-    position: fixed;
-    bottom: var(--xw-btt-vertical-margin);
-    z-index: 9998;
-    display: grid;
-    width: var(--xw-btt-size);
-    height: var(--xw-btt-size);
-    padding: 0;
-    border: 0;
-    border-radius: var(--xw-btt-radius);
-    background: conic-gradient(var(--xw-btt-progress-color) var(--xw-btt-progress), transparent 0);
-    color: var(--xw-btt-icon);
-    place-items: center;
-    cursor: pointer;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(12px) scale(.94);
-    visibility: hidden;
-    transition: opacity .2s ease, transform .2s ease, visibility .2s;
-    appearance: none;
-    -webkit-appearance: none;
 }
 
-/* Aísla el botón de los estilos hover globales del tema o del constructor. */
+/*
+ * El ID y el reinicio completo aíslan el componente de los estilos globales
+ * del tema, constructores y otros plugins, incluidos sus estados interactivos.
+ */
 #xw-back-to-top,
 #xw-back-to-top:hover,
 #xw-back-to-top:focus,
 #xw-back-to-top:active {
+    all: unset !important;
+    position: fixed !important;
+    right: auto !important;
+    bottom: var(--xw-btt-vertical-margin) !important;
+    left: auto !important;
+    z-index: 9998 !important;
+    display: grid !important;
+    width: var(--xw-btt-size) !important;
+    height: var(--xw-btt-size) !important;
+    min-width: var(--xw-btt-size) !important;
+    min-height: var(--xw-btt-size) !important;
+    max-width: var(--xw-btt-size) !important;
+    max-height: var(--xw-btt-size) !important;
+    box-sizing: border-box !important;
+    aspect-ratio: 1 / 1 !important;
+    padding: 0 !important;
     border: 0 !important;
-    background: conic-gradient(var(--xw-btt-progress-color) var(--xw-btt-progress), transparent 0) !important;
+    border-radius: var(--xw-btt-radius) !important;
+    background: conic-gradient(
+        var(--xw-btt-progress-color) var(--xw-btt-progress),
+        var(--xw-btt-border) 0
+    ) !important;
     box-shadow: none !important;
     color: var(--xw-btt-icon) !important;
+    place-items: center !important;
+    overflow: visible !important;
+    cursor: pointer !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(12px) scale(.94) !important;
+    visibility: hidden !important;
+    isolation: isolate !important;
+    transition: opacity .2s ease, transform .2s ease, visibility .2s !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    line-height: 1 !important;
     text-decoration: none !important;
-}
-
-.xw-back-to-top::before {
-    position: absolute;
-    inset: var(--xw-btt-progress-size);
-    border: var(--xw-btt-border-size) solid var(--xw-btt-border);
-    border-radius: var(--xw-btt-radius);
-    background: var(--xw-btt-background);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, .12);
-    content: '';
+    flex: 0 0 var(--xw-btt-size) !important;
 }
 
 #xw-back-to-top::before,
 #xw-back-to-top:hover::before,
 #xw-back-to-top:focus::before,
 #xw-back-to-top:active::before {
-    border-color: var(--xw-btt-border) !important;
+    all: initial !important;
+    position: absolute !important;
+    inset: var(--xw-btt-progress-size) !important;
+    z-index: 0 !important;
+    display: block !important;
+    box-sizing: border-box !important;
+    border: var(--xw-btt-border-size) solid var(--xw-btt-border) !important;
+    border-radius: var(--xw-btt-radius) !important;
     background: var(--xw-btt-background) !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, .12) !important;
+    content: '' !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
+    transform: none !important;
 }
 
-.xw-back-to-top:focus-visible {
-    outline: 3px solid rgba(34, 113, 177, .38);
-    outline-offset: 3px;
+#xw-back-to-top:focus-visible {
+    outline: 3px solid rgba(34, 113, 177, .38) !important;
+    outline-offset: 3px !important;
 }
 
-.xw-back-to-top.is-visible {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0) scale(1);
-    visibility: visible;
+#xw-back-to-top.is-visible {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: translateY(0) scale(1) !important;
+    visibility: visible !important;
 }
 
-.xw-back-to-top--bottom-right {
-    right: var(--xw-btt-horizontal-margin);
+#xw-back-to-top.xw-back-to-top--bottom-right {
+    right: var(--xw-btt-horizontal-margin) !important;
+    left: auto !important;
 }
 
-.xw-back-to-top--bottom-left {
-    left: var(--xw-btt-horizontal-margin);
+#xw-back-to-top.xw-back-to-top--bottom-left {
+    right: auto !important;
+    left: var(--xw-btt-horizontal-margin) !important;
 }
 
 .xw-back-to-top--rounded {
@@ -82,45 +101,52 @@
     --xw-btt-radius: 0px;
 }
 
-.xw-back-to-top svg {
-    position: relative;
-    z-index: 1;
-    width: var(--xw-btt-icon-size);
-    height: var(--xw-btt-icon-size);
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.xw-back-to-top svg,
-.xw-back-to-top svg * {
+#xw-back-to-top svg {
+    all: unset !important;
+    position: relative !important;
+    z-index: 1 !important;
+    display: block !important;
+    width: var(--xw-btt-icon-size) !important;
+    height: var(--xw-btt-icon-size) !important;
+    overflow: visible !important;
     fill: none !important;
     stroke: currentColor !important;
+    stroke-width: 2 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    pointer-events: none !important;
+}
+
+#xw-back-to-top svg * {
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 2 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    vector-effect: non-scaling-stroke !important;
 }
 
 @media (max-width: 767px) {
-    .xw-back-to-top--hide-mobile {
-        display: none;
+    #xw-back-to-top.xw-back-to-top--hide-mobile {
+        display: none !important;
     }
 }
 
 @media (min-width: 768px) and (max-width: 991px) {
-    .xw-back-to-top--hide-tablet {
-        display: none;
+    #xw-back-to-top.xw-back-to-top--hide-tablet {
+        display: none !important;
     }
 }
 
 @media (min-width: 992px) {
-    .xw-back-to-top--hide-desktop {
-        display: none;
+    #xw-back-to-top.xw-back-to-top--hide-desktop {
+        display: none !important;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .xw-back-to-top,
-    .xw-back-to-top::before {
-        transition-duration: .01ms;
+    #xw-back-to-top,
+    #xw-back-to-top::before {
+        transition-duration: .01ms !important;
     }
 }
