@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 1.0.7
+
+- WooCommerce: opción para mostrar miniaturas de producto de 55 × 55 píxeles junto al nombre en el resumen del checkout.
+- WooCommerce: opción para ocultar el cálculo y los costes de envío únicamente en el carrito, conservándolos en el checkout.
+- WooCommerce: opción para exigir a usuarios conectados el correo de su cuenta como campo obligatorio y de solo lectura en el checkout, con validación del servidor.
+- Las tres funciones nuevas están desactivadas por defecto y sus textos se adaptan al español o inglés de WordPress.
+
 ## 1.0.6
 
 - El progreso SVG uniforme ahora se aplica a las formas circular, redondeada y cuadrada.

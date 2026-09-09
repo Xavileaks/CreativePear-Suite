@@ -89,6 +89,18 @@ function xw_get_feature_definitions() {
             'description' => xw_t( 'Actualiza el importe del carrito después de cambiar la cantidad de un producto.', 'Updates the cart total after changing a product quantity.' ),
             'settings'    => true,
         ),
+        'woocommerce_checkout_product_images' => array(
+            'title'       => xw_t( 'WooCommerce: mostrar imágenes en el checkout', 'WooCommerce: show product images at checkout' ),
+            'description' => xw_t( 'Muestra una miniatura del producto junto a su nombre en el resumen del pedido.', 'Displays a product thumbnail next to its name in the order summary.' ),
+        ),
+        'woocommerce_hide_cart_shipping' => array(
+            'title'       => xw_t( 'WooCommerce: ocultar envío en el carrito', 'WooCommerce: hide shipping in the cart' ),
+            'description' => xw_t( 'Oculta el cálculo y los costes de envío únicamente en el carrito; se mantienen en el checkout.', 'Hides shipping calculations and costs only in the cart; they remain available at checkout.' ),
+        ),
+        'woocommerce_require_account_email' => array(
+            'title'       => xw_t( 'WooCommerce: correo de cuenta obligatorio', 'WooCommerce: require account email' ),
+            'description' => xw_t( 'Para usuarios conectados, usa el correo de la cuenta en el checkout y evita que sea modificado.', 'For logged-in users, uses the account email at checkout and prevents it from being changed.' ),
+        ),
         'woocommerce_hide_success_messages' => array(
             'title'       => xw_t( 'WooCommerce: ocultar mensajes de confirmación', 'WooCommerce: hide confirmation messages' ),
             'description' => xw_t( 'Oculta únicamente los avisos de éxito como “producto añadido” o “carrito actualizado”; mantiene visibles los errores y la información.', 'Hides only success notices such as “product added” or “cart updated”; errors and information remain visible.' ),
@@ -151,6 +163,9 @@ function xw_get_feature_groups() {
             'description' => xw_t( 'Funciones específicas para tiendas WooCommerce.', 'Features specifically for WooCommerce stores.' ),
             'features'    => array(
                 'woocommerce_auto_cart',
+                'woocommerce_checkout_product_images',
+                'woocommerce_hide_cart_shipping',
+                'woocommerce_require_account_email',
                 'woocommerce_hide_success_messages',
                 'woocommerce_delete_product_images',
             ),

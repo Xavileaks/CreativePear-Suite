@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.6
+Version: 1.0.7
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.6' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.7' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -653,6 +653,183 @@ button.elementor-button.xl-submit-disabled{
 }
 </style>
 <?php }
+
+
+// WOOCOMMERCE: MOSTRAR IMÁGENES DE PRODUCTOS EN EL CHECKOUT
+
+add_filter( 'woocommerce_cart_item_name', 'xw_add_checkout_product_thumbnail', 9999, 3 );
+function xw_add_checkout_product_thumbnail( $name, $cart_item, $cart_item_key ) {
+    if (
+        ! xw_feature_enabled( 'woocommerce_checkout_product_images' ) ||
+        ! function_exists( 'is_checkout' ) ||
+        ! is_checkout()
+    ) {
+        return $name;
+    }
+
+    $product = isset( $cart_item['data'] ) && is_object( $cart_item['data'] )
+        ? $cart_item['data']
+        : null;
+
+    if ( ! $product || ! is_a( $product, 'WC_Product' ) || ! is_callable( array( $product, 'get_image' ) ) ) {
+        return $name;
+    }
+
+    $thumbnail = $product->get_image(
+        array( 55, 55 ),
+        array(
+            'class'   => 'xw-checkout-product-thumbnail',
+            'loading' => 'lazy',
+        )
+    );
+
+    if ( '' === trim( (string) $thumbnail ) ) {
+        return $name;
+    }
+
+    return '<span class="xw-checkout-product-line">'
+        . $thumbnail
+        . '<span class="xw-checkout-product-name">' . $name . '</span>'
+        . '</span>';
+}
+
+add_action( 'wp_head', 'xw_checkout_product_thumbnail_styles', 99 );
+function xw_checkout_product_thumbnail_styles() {
+    if (
+        is_admin() ||
+        ! xw_feature_enabled( 'woocommerce_checkout_product_images' ) ||
+        ! function_exists( 'is_checkout' ) ||
+        ! is_checkout()
+    ) {
+        return;
+    }
+    ?>
+    <style id="xw-checkout-product-images">
+    .woocommerce-checkout-review-order-table .xw-checkout-product-line {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        max-width: 100%;
+        vertical-align: middle;
+    }
+
+    .woocommerce-checkout-review-order-table .xw-checkout-product-thumbnail {
+        width: 55px;
+        height: 55px;
+        max-width: 55px;
+        margin: 0;
+        object-fit: cover;
+        flex: 0 0 55px;
+    }
+
+    .woocommerce-checkout-review-order-table .xw-checkout-product-name {
+        min-width: 0;
+    }
+    </style>
+    <?php
+}
+
+
+// WOOCOMMERCE: OCULTAR EL ENVÍO ÚNICAMENTE EN EL CARRITO
+
+add_filter( 'woocommerce_cart_needs_shipping', 'xw_hide_shipping_in_cart', 9999 );
+function xw_hide_shipping_in_cart( $needs_shipping ) {
+    if (
+        xw_feature_enabled( 'woocommerce_hide_cart_shipping' ) &&
+        function_exists( 'is_cart' ) &&
+        is_cart()
+    ) {
+        return false;
+    }
+
+    return $needs_shipping;
+}
+
+
+// WOOCOMMERCE: EXIGIR EL CORREO DE LA CUENTA EN EL CHECKOUT
+
+function xw_get_logged_in_account_email() {
+    if ( ! is_user_logged_in() ) {
+        return '';
+    }
+
+    $current_user = wp_get_current_user();
+
+    return isset( $current_user->user_email )
+        ? sanitize_email( $current_user->user_email )
+        : '';
+}
+
+add_filter( 'woocommerce_checkout_fields', 'xw_lock_logged_in_checkout_email', 9999 );
+function xw_lock_logged_in_checkout_email( $fields ) {
+    if (
+        ! xw_feature_enabled( 'woocommerce_require_account_email' ) ||
+        ! is_user_logged_in() ||
+        ! isset( $fields['billing']['billing_email'] ) ||
+        ! is_array( $fields['billing']['billing_email'] )
+    ) {
+        return $fields;
+    }
+
+    $account_email = xw_get_logged_in_account_email();
+
+    if ( '' === $account_email ) {
+        return $fields;
+    }
+
+    $attributes = isset( $fields['billing']['billing_email']['custom_attributes'] ) &&
+        is_array( $fields['billing']['billing_email']['custom_attributes'] )
+        ? $fields['billing']['billing_email']['custom_attributes']
+        : array();
+
+    $attributes['readonly'] = 'readonly';
+    $fields['billing']['billing_email']['default']           = $account_email;
+    $fields['billing']['billing_email']['required']          = true;
+    $fields['billing']['billing_email']['custom_attributes'] = $attributes;
+
+    return $fields;
+}
+
+add_filter( 'woocommerce_checkout_get_value', 'xw_force_logged_in_checkout_email_value', 9999, 2 );
+function xw_force_logged_in_checkout_email_value( $value, $input ) {
+    if (
+        'billing_email' !== $input ||
+        ! xw_feature_enabled( 'woocommerce_require_account_email' ) ||
+        ! is_user_logged_in()
+    ) {
+        return $value;
+    }
+
+    $account_email = xw_get_logged_in_account_email();
+
+    return '' !== $account_email ? $account_email : $value;
+}
+
+add_action( 'woocommerce_after_checkout_validation', 'xw_validate_logged_in_checkout_email', 10, 2 );
+function xw_validate_logged_in_checkout_email( $data, $errors ) {
+    if (
+        ! xw_feature_enabled( 'woocommerce_require_account_email' ) ||
+        ! is_user_logged_in() ||
+        ! $errors instanceof WP_Error
+    ) {
+        return;
+    }
+
+    $account_email  = xw_get_logged_in_account_email();
+    $checkout_email = isset( $data['billing_email'] )
+        ? sanitize_email( $data['billing_email'] )
+        : '';
+
+    if ( '' !== $account_email && 0 !== strcasecmp( $checkout_email, $account_email ) ) {
+        $errors->add(
+            'xw_checkout_account_email',
+            xw_t(
+                'No está permitido cambiar el correo electrónico de su cuenta durante el checkout.',
+                'Changing your account email during checkout is not allowed.'
+            )
+        );
+    }
+}
 
 
 // WOOCOMMERCE: ACTUALIZAR EL CARRITO AL CAMBIAR LA CANTIDAD
