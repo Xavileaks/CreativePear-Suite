@@ -1,5 +1,11 @@
 # Historial de cambios
 
+## 1.0.8
+
+- WooCommerce: nueva opción para mostrar la primera imagen de la galería al pasar el cursor sobre la imagen principal en los listados de productos.
+- El único ajuste de esta función es la duración del fade, configurable entre 0 y 5 segundos.
+- Compatible con listados clásicos de WooCommerce, Elementor Loop, bloques de productos y contenido cargado mediante AJAX.
+
 ## 1.0.7
 
 - WooCommerce: opción para mostrar miniaturas de producto de 55 × 55 píxeles junto al nombre en el resumen del checkout.

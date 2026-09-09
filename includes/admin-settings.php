@@ -93,6 +93,11 @@ function xw_get_feature_definitions() {
             'title'       => xw_t( 'WooCommerce: mostrar imágenes en el checkout', 'WooCommerce: show product images at checkout' ),
             'description' => xw_t( 'Muestra una miniatura del producto junto a su nombre en el resumen del pedido.', 'Displays a product thumbnail next to its name in the order summary.' ),
         ),
+        'woocommerce_product_hover_image' => array(
+            'title'       => xw_t( 'WooCommerce: segunda imagen al pasar el cursor', 'WooCommerce: second image on hover' ),
+            'description' => xw_t( 'Cambia la imagen principal por la primera imagen de la galería en los listados de productos.', 'Changes the main image to the first gallery image in product listings.' ),
+            'settings'    => true,
+        ),
         'woocommerce_hide_cart_shipping' => array(
             'title'       => xw_t( 'WooCommerce: ocultar envío en el carrito', 'WooCommerce: hide shipping in the cart' ),
             'description' => xw_t( 'Oculta el cálculo y los costes de envío únicamente en el carrito; se mantienen en el checkout.', 'Hides shipping calculations and costs only in the cart; they remain available at checkout.' ),
@@ -164,6 +169,7 @@ function xw_get_feature_groups() {
             'features'    => array(
                 'woocommerce_auto_cart',
                 'woocommerce_checkout_product_images',
+                'woocommerce_product_hover_image',
                 'woocommerce_hide_cart_shipping',
                 'woocommerce_require_account_email',
                 'woocommerce_hide_success_messages',
@@ -228,7 +234,8 @@ function xw_get_default_settings() {
             'primary_countries' => array(),
         ),
         'woocommerce' => array(
-            'cart_update_delay' => 1,
+            'cart_update_delay'         => 1,
+            'product_hover_fade_seconds' => 0.4,
         ),
     );
 }
@@ -396,6 +403,11 @@ function xw_sanitize_settings( $input ) {
         ? (float) str_replace( ',', '.', (string) $woocommerce['cart_update_delay'] )
         : $defaults['woocommerce']['cart_update_delay'];
     $sanitized['woocommerce']['cart_update_delay'] = max( 0, min( 30, round( $cart_update_delay, 1 ) ) );
+
+    $product_hover_fade_seconds = isset( $woocommerce['product_hover_fade_seconds'] ) && is_scalar( $woocommerce['product_hover_fade_seconds'] )
+        ? (float) str_replace( ',', '.', (string) $woocommerce['product_hover_fade_seconds'] )
+        : $defaults['woocommerce']['product_hover_fade_seconds'];
+    $sanitized['woocommerce']['product_hover_fade_seconds'] = max( 0, min( 5, round( $product_hover_fade_seconds, 1 ) ) );
 
     return $sanitized;
 }
@@ -796,6 +808,15 @@ function xw_render_settings_page() {
                                             <span><?php echo esc_html( xw_t( 'segundos', 'seconds' ) ); ?></span>
                                         </div>
                                         <p><?php echo esc_html( xw_t( 'La espera comienza después del último cambio de cantidad. Use 0 para actualizar inmediatamente.', 'The delay starts after the last quantity change. Use 0 to update immediately.' ) ); ?></p>
+                                    </div>
+                                <?php elseif ( 'woocommerce_product_hover_image' === $key ) : ?>
+                                    <div class="xw-field-row xw-field-full">
+                                        <label for="xw-product-hover-fade-seconds"><?php echo esc_html( xw_t( 'Duración del fade', 'Fade duration' ) ); ?></label>
+                                        <div class="xw-number-control">
+                                            <input id="xw-product-hover-fade-seconds" type="number" name="xw_settings[woocommerce][product_hover_fade_seconds]" value="<?php echo esc_attr( $settings['woocommerce']['product_hover_fade_seconds'] ); ?>" min="0" max="5" step="0.1" inputmode="decimal">
+                                            <span><?php echo esc_html( xw_t( 'segundos', 'seconds' ) ); ?></span>
+                                        </div>
+                                        <p><?php echo esc_html( xw_t( 'Controla el tiempo de desvanecimiento al mostrar y ocultar la imagen de la galería.', 'Controls the fade time when showing and hiding the gallery image.' ) ); ?></p>
                                     </div>
                                 <?php elseif ( 'login_customization' === $key ) : ?>
                                 <div class="xw-field-row">

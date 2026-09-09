@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.7
+Version: 1.0.8
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.7' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.8' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -653,6 +653,259 @@ button.elementor-button.xl-submit-disabled{
 }
 </style>
 <?php }
+
+
+
+
+// WOOCOMMERCE: CAMBIAR A LA PRIMERA IMAGEN DE LA GALERÍA EN LOS LISTADOS
+
+add_filter( 'wp_get_attachment_image_attributes', 'xw_add_product_loop_hover_image_attributes', 20, 3 );
+function xw_add_product_loop_hover_image_attributes( $attr, $attachment, $size ) {
+    if (
+        ! xw_feature_enabled( 'woocommerce_product_hover_image' ) ||
+        ! function_exists( 'wc_get_product' )
+    ) {
+        return $attr;
+    }
+
+    global $product;
+
+    $loop_product = $product instanceof WC_Product ? $product : null;
+
+    if ( ! $loop_product ) {
+        $product_id = get_the_ID();
+
+        if ( ! $product_id || 'product' !== get_post_type( $product_id ) ) {
+            return $attr;
+        }
+
+        $loop_product = wc_get_product( $product_id );
+    }
+
+    if ( ! $loop_product instanceof WC_Product || ! isset( $attachment->ID ) ) {
+        return $attr;
+    }
+
+    $featured_id = (int) $loop_product->get_image_id();
+
+    if ( ! $featured_id || (int) $attachment->ID !== $featured_id ) {
+        return $attr;
+    }
+
+    $gallery_ids = $loop_product->get_gallery_image_ids();
+
+    if ( empty( $gallery_ids ) ) {
+        return $attr;
+    }
+
+    $hover_id  = (int) reset( $gallery_ids );
+    $hover_src = wp_get_attachment_image_url( $hover_id, $size );
+
+    if ( ! $hover_id || ! $hover_src ) {
+        return $attr;
+    }
+
+    $attr['data-xw-wc-hover-src'] = esc_url( $hover_src );
+
+    $hover_srcset = wp_get_attachment_image_srcset( $hover_id, $size );
+
+    if ( $hover_srcset ) {
+        $attr['data-xw-wc-hover-srcset'] = $hover_srcset;
+    }
+
+    return $attr;
+}
+
+add_action( 'wp_footer', 'xw_render_product_loop_hover_image', 99 );
+function xw_render_product_loop_hover_image() {
+    if ( is_admin() || ! xw_feature_enabled( 'woocommerce_product_hover_image' ) ) {
+        return;
+    }
+
+    $settings     = xw_get_settings();
+    $fade_seconds = isset( $settings['woocommerce']['product_hover_fade_seconds'] )
+        ? (float) $settings['woocommerce']['product_hover_fade_seconds']
+        : 0.4;
+    $fade_ms      = (int) round( max( 0, min( 5, $fade_seconds ) ) * 1000 );
+    ?>
+    <style id="xw-woocommerce-product-hover-image">
+    img[data-xw-wc-hover-src] {
+        transition-property: opacity !important;
+        transition-duration: <?php echo (int) $fade_ms; ?>ms !important;
+        transition-timing-function: ease !important;
+    }
+    </style>
+    <script id="xw-woocommerce-product-hover-image-script">
+    (() => {
+        'use strict';
+
+        const selector = 'img[data-xw-wc-hover-src]';
+        const fadeDuration = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            ? 0
+            : <?php echo (int) $fade_ms; ?>;
+        const states = new WeakMap();
+
+        function isProductLoop(image) {
+            return !!image.closest(
+                '.elementor-loop-container,' +
+                '.e-loop-item,' +
+                'ul.products,' +
+                '.products,' +
+                '.wc-block-product,' +
+                '.wc-block-product-template'
+            );
+        }
+
+        function prepareImage(image) {
+            if (!isProductLoop(image)) {
+                return null;
+            }
+
+            let state = states.get(image);
+
+            if (state) {
+                return state;
+            }
+
+            state = {
+                current: false,
+                desired: false,
+                timer: null,
+                originalSrc: image.getAttribute('src') || '',
+                originalSrcset: image.getAttribute('srcset') || ''
+            };
+
+            states.set(image, state);
+
+            const preload = new Image();
+            const hoverSrcset = image.dataset.xwWcHoverSrcset || '';
+
+            if (hoverSrcset) {
+                preload.srcset = hoverSrcset;
+                preload.sizes = image.getAttribute('sizes') || '100vw';
+            }
+
+            preload.src = image.dataset.xwWcHoverSrc;
+
+            return state;
+        }
+
+        function applySource(image, state, useHover) {
+            const src = useHover ? image.dataset.xwWcHoverSrc : state.originalSrc;
+            const srcset = useHover ? (image.dataset.xwWcHoverSrcset || '') : state.originalSrcset;
+
+            if (src) {
+                image.setAttribute('src', src);
+            }
+
+            if (srcset) {
+                image.setAttribute('srcset', srcset);
+            } else {
+                image.removeAttribute('srcset');
+            }
+
+            state.current = useHover;
+        }
+
+        function swapImage(image, useHover) {
+            const state = prepareImage(image);
+
+            if (!state) {
+                return;
+            }
+
+            state.desired = useHover;
+
+            if (state.timer) {
+                window.clearTimeout(state.timer);
+                state.timer = null;
+            }
+
+            if (state.current === state.desired) {
+                image.style.setProperty('opacity', '1', 'important');
+                return;
+            }
+
+            if (0 === fadeDuration) {
+                applySource(image, state, state.desired);
+                image.style.setProperty('opacity', '1', 'important');
+                return;
+            }
+
+            image.style.setProperty('opacity', '0', 'important');
+
+            state.timer = window.setTimeout(() => {
+                state.timer = null;
+                applySource(image, state, state.desired);
+
+                window.requestAnimationFrame(() => {
+                    image.style.setProperty('opacity', '1', 'important');
+                });
+            }, fadeDuration);
+        }
+
+        document.addEventListener('mouseover', (event) => {
+            if (!(event.target instanceof Element)) {
+                return;
+            }
+
+            const image = event.target.closest(selector);
+
+            if (image) {
+                swapImage(image, true);
+            }
+        });
+
+        document.addEventListener('mouseout', (event) => {
+            if (!(event.target instanceof Element)) {
+                return;
+            }
+
+            const image = event.target.closest(selector);
+
+            if (!image || (event.relatedTarget instanceof Node && image.contains(event.relatedTarget))) {
+                return;
+            }
+
+            swapImage(image, false);
+        });
+
+        function scanImages(root) {
+            if (!(root instanceof Element) && root !== document) {
+                return;
+            }
+
+            if (root instanceof Element && root.matches(selector)) {
+                prepareImage(root);
+            }
+
+            root.querySelectorAll(selector).forEach(prepareImage);
+        }
+
+        if ('loading' === document.readyState) {
+            document.addEventListener('DOMContentLoaded', () => scanImages(document), { once: true });
+        } else {
+            scanImages(document);
+        }
+
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node instanceof Element) {
+                        scanImages(node);
+                    }
+                });
+            });
+        });
+
+        observer.observe(document.documentElement, {
+            childList: true,
+            subtree: true
+        });
+    })();
+    </script>
+    <?php
+}
 
 
 // WOOCOMMERCE: MOSTRAR IMÁGENES DE PRODUCTOS EN EL CHECKOUT
