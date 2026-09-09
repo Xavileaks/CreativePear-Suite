@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.10
+Version: 1.0.11
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.10' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.11' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -731,6 +731,9 @@ function xw_render_product_loop_hover_image() {
     <style id="xw-woocommerce-product-hover-image">
     img.xw-wc-product-hover-base {
         opacity: 1 !important;
+        transition-property: opacity !important;
+        transition-timing-function: ease-in-out !important;
+        transition-delay: 0ms !important;
     }
 
     img.xw-wc-product-hover-layer {
@@ -742,7 +745,10 @@ function xw_render_product_loop_hover_image() {
         padding: 0 !important;
         pointer-events: none !important;
         opacity: 0 !important;
-        transition: opacity <?php echo (int) $fade_ms; ?>ms ease !important;
+        transition-property: opacity !important;
+        transition-duration: <?php echo (int) $fade_ms; ?>ms !important;
+        transition-timing-function: ease-in-out !important;
+        transition-delay: 0ms !important;
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -759,6 +765,7 @@ function xw_render_product_loop_hover_image() {
         const fadeDuration = window.matchMedia('(prefers-reduced-motion: reduce)').matches
             ? 0
             : <?php echo (int) $fade_ms; ?>;
+        const fadeOutDuration = fadeDuration > 0 ? fadeDuration + 100 : 0;
         const states = new WeakMap();
 
         function isProductLoop(image) {
@@ -837,8 +844,7 @@ function xw_render_product_loop_hover_image() {
                 host,
                 layer,
                 resizeObserver: null,
-                active: false,
-                hideBaseTimer: null
+                active: false
             };
 
             states.set(image, state);
@@ -866,26 +872,11 @@ function xw_render_product_loop_hover_image() {
                 return;
             }
 
-            if (state.hideBaseTimer) {
-                window.clearTimeout(state.hideBaseTimer);
-                state.hideBaseTimer = null;
-            }
-
-            image.style.setProperty('opacity', '1', 'important');
+            image.style.setProperty('transition-duration', `${fadeOutDuration}ms`, 'important');
+            state.layer.style.setProperty('transition-duration', `${fadeDuration}ms`, 'important');
+            void state.layer.offsetWidth;
+            image.style.setProperty('opacity', '0', 'important');
             state.layer.style.setProperty('opacity', '1', 'important');
-
-            if (0 === fadeDuration) {
-                image.style.setProperty('opacity', '0', 'important');
-                return;
-            }
-
-            state.hideBaseTimer = window.setTimeout(() => {
-                state.hideBaseTimer = null;
-
-                if (state.active) {
-                    image.style.setProperty('opacity', '0', 'important');
-                }
-            }, fadeDuration);
         }
 
         function setHoverState(image, active) {
@@ -903,18 +894,15 @@ function xw_render_product_loop_hover_image() {
 
             state.active = active;
 
-            if (state.hideBaseTimer) {
-                window.clearTimeout(state.hideBaseTimer);
-                state.hideBaseTimer = null;
-            }
-
             if (active) {
                 revealHoverImage(image, state);
                 return;
             }
 
-            image.style.setProperty('opacity', '1', 'important');
+            image.style.setProperty('transition-duration', `${fadeDuration}ms`, 'important');
+            state.layer.style.setProperty('transition-duration', `${fadeOutDuration}ms`, 'important');
             void state.layer.offsetWidth;
+            image.style.setProperty('opacity', '1', 'important');
             state.layer.style.setProperty('opacity', '0', 'important');
         }
 

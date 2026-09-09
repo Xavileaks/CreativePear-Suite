@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.11
+
+- WooCommerce: el cambio de imagen usa ahora dos transiciones de opacidad simultáneas para crear un fundido cruzado real.
+- La imagen que aparece utiliza la duración configurada y la que desaparece tarda 0,1 segundos adicionales; los tiempos se invierten al retirar el cursor.
+
 ## 1.0.10
 
 - WooCommerce: la imagen principal del listado se oculta completamente cuando termina de aparecer la imagen secundaria.
