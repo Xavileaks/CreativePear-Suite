@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.10
+
+- WooCommerce: la imagen principal del listado se oculta completamente cuando termina de aparecer la imagen secundaria.
+- Al retirar el cursor, la imagen principal se restaura antes de desvanecer la secundaria para evitar espacios en blanco.
+
 ## 1.0.9
 
 - WooCommerce: el cambio de imagen en los listados ahora utiliza un fundido cruzado real, manteniendo siempre visible la imagen principal mientras aparece la imagen de la galería.

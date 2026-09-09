@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.9
+Version: 1.0.10
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.9' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.10' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -756,6 +756,9 @@ function xw_render_product_loop_hover_image() {
         'use strict';
 
         const selector = 'img[data-xw-wc-hover-src]';
+        const fadeDuration = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            ? 0
+            : <?php echo (int) $fade_ms; ?>;
         const states = new WeakMap();
 
         function isProductLoop(image) {
@@ -833,7 +836,9 @@ function xw_render_product_loop_hover_image() {
             state = {
                 host,
                 layer,
-                resizeObserver: null
+                resizeObserver: null,
+                active: false,
+                hideBaseTimer: null
             };
 
             states.set(image, state);
@@ -845,9 +850,42 @@ function xw_render_product_loop_hover_image() {
             }
 
             image.addEventListener('load', () => syncLayer(image, state));
-            layer.addEventListener('load', () => syncLayer(image, state));
+            layer.addEventListener('load', () => {
+                syncLayer(image, state);
+
+                if (state.active) {
+                    revealHoverImage(image, state);
+                }
+            });
 
             return state;
+        }
+
+        function revealHoverImage(image, state) {
+            if (!state.layer.complete || !state.layer.naturalWidth) {
+                return;
+            }
+
+            if (state.hideBaseTimer) {
+                window.clearTimeout(state.hideBaseTimer);
+                state.hideBaseTimer = null;
+            }
+
+            image.style.setProperty('opacity', '1', 'important');
+            state.layer.style.setProperty('opacity', '1', 'important');
+
+            if (0 === fadeDuration) {
+                image.style.setProperty('opacity', '0', 'important');
+                return;
+            }
+
+            state.hideBaseTimer = window.setTimeout(() => {
+                state.hideBaseTimer = null;
+
+                if (state.active) {
+                    image.style.setProperty('opacity', '0', 'important');
+                }
+            }, fadeDuration);
         }
 
         function setHoverState(image, active) {
@@ -858,8 +896,26 @@ function xw_render_product_loop_hover_image() {
             }
 
             syncLayer(image, state);
+
+            if (state.active === active) {
+                return;
+            }
+
+            state.active = active;
+
+            if (state.hideBaseTimer) {
+                window.clearTimeout(state.hideBaseTimer);
+                state.hideBaseTimer = null;
+            }
+
+            if (active) {
+                revealHoverImage(image, state);
+                return;
+            }
+
+            image.style.setProperty('opacity', '1', 'important');
             void state.layer.offsetWidth;
-            state.layer.style.setProperty('opacity', active ? '1' : '0', 'important');
+            state.layer.style.setProperty('opacity', '0', 'important');
         }
 
         document.addEventListener('mouseover', (event) => {
