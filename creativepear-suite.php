@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.8
+Version: 1.0.9
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.8' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.9' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -729,10 +729,26 @@ function xw_render_product_loop_hover_image() {
     $fade_ms      = (int) round( max( 0, min( 5, $fade_seconds ) ) * 1000 );
     ?>
     <style id="xw-woocommerce-product-hover-image">
-    img[data-xw-wc-hover-src] {
-        transition-property: opacity !important;
-        transition-duration: <?php echo (int) $fade_ms; ?>ms !important;
-        transition-timing-function: ease !important;
+    img.xw-wc-product-hover-base {
+        opacity: 1 !important;
+    }
+
+    img.xw-wc-product-hover-layer {
+        display: block !important;
+        position: absolute !important;
+        z-index: 2 !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        pointer-events: none !important;
+        opacity: 0 !important;
+        transition: opacity <?php echo (int) $fade_ms; ?>ms ease !important;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        img.xw-wc-product-hover-layer {
+            transition-duration: 0ms !important;
+        }
     }
     </style>
     <script id="xw-woocommerce-product-hover-image-script">
@@ -740,9 +756,6 @@ function xw_render_product_loop_hover_image() {
         'use strict';
 
         const selector = 'img[data-xw-wc-hover-src]';
-        const fadeDuration = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-            ? 0
-            : <?php echo (int) $fade_ms; ?>;
         const states = new WeakMap();
 
         function isProductLoop(image) {
@@ -756,6 +769,23 @@ function xw_render_product_loop_hover_image() {
             );
         }
 
+        function syncLayer(image, state) {
+            const imageRect = image.getBoundingClientRect();
+            const hostRect = state.host.getBoundingClientRect();
+            const hostStyle = window.getComputedStyle(state.host);
+            const imageStyle = window.getComputedStyle(image);
+            const borderLeft = parseFloat(hostStyle.borderLeftWidth) || 0;
+            const borderTop = parseFloat(hostStyle.borderTopWidth) || 0;
+
+            state.layer.style.setProperty('left', `${imageRect.left - hostRect.left - borderLeft + state.host.scrollLeft}px`, 'important');
+            state.layer.style.setProperty('top', `${imageRect.top - hostRect.top - borderTop + state.host.scrollTop}px`, 'important');
+            state.layer.style.setProperty('width', `${imageRect.width}px`, 'important');
+            state.layer.style.setProperty('height', `${imageRect.height}px`, 'important');
+            state.layer.style.setProperty('border-radius', imageStyle.borderRadius, 'important');
+            state.layer.style.setProperty('object-fit', imageStyle.objectFit || 'fill', 'important');
+            state.layer.style.setProperty('object-position', imageStyle.objectPosition || '50% 50%', 'important');
+        }
+
         function prepareImage(image) {
             if (!isProductLoop(image)) {
                 return null;
@@ -764,84 +794,72 @@ function xw_render_product_loop_hover_image() {
             let state = states.get(image);
 
             if (state) {
+                syncLayer(image, state);
                 return state;
             }
 
+            const picture = image.closest('picture');
+            const host = picture && picture.contains(image)
+                ? picture.parentElement
+                : image.parentElement;
+
+            if (!host) {
+                return null;
+            }
+
+            if ('static' === window.getComputedStyle(host).position) {
+                host.style.setProperty('position', 'relative', 'important');
+            }
+
+            const layer = new Image();
+            const hoverSrcset = image.dataset.xwWcHoverSrcset || '';
+
+            layer.className = 'xw-wc-product-hover-layer';
+            layer.alt = '';
+            layer.setAttribute('aria-hidden', 'true');
+            layer.decoding = 'async';
+            layer.loading = 'eager';
+
+            if (hoverSrcset) {
+                layer.srcset = hoverSrcset;
+                layer.sizes = image.getAttribute('sizes') || '100vw';
+            }
+
+            layer.src = image.dataset.xwWcHoverSrc;
+            layer.style.setProperty('opacity', '0', 'important');
+            image.classList.add('xw-wc-product-hover-base');
+            host.appendChild(layer);
+
             state = {
-                current: false,
-                desired: false,
-                timer: null,
-                originalSrc: image.getAttribute('src') || '',
-                originalSrcset: image.getAttribute('srcset') || ''
+                host,
+                layer,
+                resizeObserver: null
             };
 
             states.set(image, state);
+            syncLayer(image, state);
 
-            const preload = new Image();
-            const hoverSrcset = image.dataset.xwWcHoverSrcset || '';
-
-            if (hoverSrcset) {
-                preload.srcset = hoverSrcset;
-                preload.sizes = image.getAttribute('sizes') || '100vw';
+            if ('ResizeObserver' in window) {
+                state.resizeObserver = new ResizeObserver(() => syncLayer(image, state));
+                state.resizeObserver.observe(image);
             }
 
-            preload.src = image.dataset.xwWcHoverSrc;
+            image.addEventListener('load', () => syncLayer(image, state));
+            layer.addEventListener('load', () => syncLayer(image, state));
 
             return state;
         }
 
-        function applySource(image, state, useHover) {
-            const src = useHover ? image.dataset.xwWcHoverSrc : state.originalSrc;
-            const srcset = useHover ? (image.dataset.xwWcHoverSrcset || '') : state.originalSrcset;
-
-            if (src) {
-                image.setAttribute('src', src);
-            }
-
-            if (srcset) {
-                image.setAttribute('srcset', srcset);
-            } else {
-                image.removeAttribute('srcset');
-            }
-
-            state.current = useHover;
-        }
-
-        function swapImage(image, useHover) {
+        function setHoverState(image, active) {
             const state = prepareImage(image);
 
             if (!state) {
                 return;
             }
 
-            state.desired = useHover;
-
-            if (state.timer) {
-                window.clearTimeout(state.timer);
-                state.timer = null;
-            }
-
-            if (state.current === state.desired) {
-                image.style.setProperty('opacity', '1', 'important');
-                return;
-            }
-
-            if (0 === fadeDuration) {
-                applySource(image, state, state.desired);
-                image.style.setProperty('opacity', '1', 'important');
-                return;
-            }
-
-            image.style.setProperty('opacity', '0', 'important');
-
-            state.timer = window.setTimeout(() => {
-                state.timer = null;
-                applySource(image, state, state.desired);
-
-                window.requestAnimationFrame(() => {
-                    image.style.setProperty('opacity', '1', 'important');
-                });
-            }, fadeDuration);
+            syncLayer(image, state);
+            void state.layer.offsetWidth;
+            state.layer.style.setProperty('opacity', active ? '1' : '0', 'important');
         }
 
         document.addEventListener('mouseover', (event) => {
@@ -852,7 +870,7 @@ function xw_render_product_loop_hover_image() {
             const image = event.target.closest(selector);
 
             if (image) {
-                swapImage(image, true);
+                setHoverState(image, true);
             }
         });
 
@@ -867,7 +885,7 @@ function xw_render_product_loop_hover_image() {
                 return;
             }
 
-            swapImage(image, false);
+            setHoverState(image, false);
         });
 
         function scanImages(root) {
@@ -887,6 +905,8 @@ function xw_render_product_loop_hover_image() {
         } else {
             scanImages(document);
         }
+
+        window.addEventListener('resize', () => scanImages(document), { passive: true });
 
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {

@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.9
+
+- WooCommerce: el cambio de imagen en los listados ahora utiliza un fundido cruzado real, manteniendo siempre visible la imagen principal mientras aparece la imagen de la galería.
+- Se elimina el instante en blanco entre imágenes y la capa secundaria conserva el tamaño, encuadre y bordes de la imagen original.
+
 ## 1.0.8
 
 - WooCommerce: nueva opción para mostrar la primera imagen de la galería al pasar el cursor sobre la imagen principal en los listados de productos.
