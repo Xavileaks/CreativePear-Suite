@@ -1,5 +1,11 @@
 # Historial de cambios
 
+## 1.0.6
+
+- El progreso SVG uniforme ahora se aplica a las formas circular, redondeada y cuadrada.
+- Los trazados redondeado y cuadrado comienzan en el centro superior y siguen exactamente el contorno correspondiente.
+- Eliminado el degradado circular anterior de las variantes redondeada y cuadrada.
+
 ## 1.0.5
 
 - Botón «Volver arriba»: el progreso circular se dibuja con un trazo SVG centrado para mantener el mismo grosor arriba, abajo y a los lados.

@@ -1,5 +1,4 @@
 .xw-back-to-top {
-    --xw-btt-progress: 0%;
     --xw-btt-radius: 50%;
 }
 
@@ -29,10 +28,7 @@
     padding: 0 !important;
     border: 0 !important;
     border-radius: var(--xw-btt-radius) !important;
-    background: conic-gradient(
-        var(--xw-btt-progress-color) var(--xw-btt-progress),
-        var(--xw-btt-border) 0
-    ) !important;
+    background: var(--xw-btt-background) !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, .16) !important;
     color: var(--xw-btt-icon) !important;
     place-items: center !important;
@@ -93,12 +89,12 @@
     left: var(--xw-btt-horizontal-margin) !important;
 }
 
-/* El círculo usa un trazo SVG centrado para evitar diferencias de subpíxel. */
-#xw-back-to-top.xw-back-to-top--circle,
-#xw-back-to-top.xw-back-to-top--circle:hover,
-#xw-back-to-top.xw-back-to-top--circle:focus,
-#xw-back-to-top.xw-back-to-top--circle:active {
-    background: var(--xw-btt-background) !important;
+#xw-back-to-top.xw-back-to-top--rounded::before {
+    border-radius: max(0px, calc(12px - var(--xw-btt-progress-size))) !important;
+}
+
+#xw-back-to-top.xw-back-to-top--square::before {
+    border-radius: 0 !important;
 }
 
 .xw-back-to-top--rounded {
@@ -139,15 +135,11 @@
     position: absolute !important;
     inset: 0 !important;
     z-index: 2 !important;
-    display: none !important;
+    display: block !important;
     width: 100% !important;
     height: 100% !important;
     overflow: visible !important;
     pointer-events: none !important;
-}
-
-#xw-back-to-top.xw-back-to-top--circle .xw-back-to-top__progress {
-    display: block !important;
 }
 
 #xw-back-to-top .xw-back-to-top__progress-track,
@@ -165,8 +157,18 @@
     stroke: var(--xw-btt-progress-color) !important;
     stroke-dasharray: var(--xw-btt-progress-value) 100 !important;
     stroke-linecap: butt !important;
+    stroke-linejoin: miter !important;
+    transform: none !important;
+}
+
+#xw-back-to-top .xw-back-to-top__progress--circle .xw-back-to-top__progress-value {
     transform: rotate(-90deg) !important;
     transform-origin: 50% 50% !important;
+}
+
+#xw-back-to-top .xw-back-to-top__progress--rounded .xw-back-to-top__progress-track,
+#xw-back-to-top .xw-back-to-top__progress--rounded .xw-back-to-top__progress-value {
+    stroke-linejoin: round !important;
 }
 
 @media (max-width: 767px) {

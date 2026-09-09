@@ -29,7 +29,10 @@
             var progress = scrollable ? Math.min(100, Math.max(0, (scrollTop / scrollable) * 100)) : 0;
             var visible = scrollTop >= offset && scrollable > 0;
 
-            button.style.setProperty('--xw-btt-progress', progress.toFixed(2) + '%');
+            if (scrollable && scrollable - scrollTop <= 1) {
+                progress = 100;
+            }
+
             button.style.setProperty('--xw-btt-progress-value', progress.toFixed(2));
             button.classList.toggle('is-visible', visible);
             button.setAttribute('aria-hidden', visible ? 'false' : 'true');

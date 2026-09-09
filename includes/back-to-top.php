@@ -52,21 +52,61 @@ function xw_back_to_top_icon_svg( $icon ) {
 }
 
 /**
- * Renderiza un trazo SVG circular con grosor uniforme para el progreso.
+ * Renderiza el progreso SVG con el contorno correspondiente a cada forma.
  *
  * @param int $button_size   Diámetro del botón en píxeles.
  * @param int $progress_size Grosor del indicador en píxeles.
+ * @param string $shape      Forma permitida del botón.
  * @return string
  */
-function xw_back_to_top_progress_svg( $button_size, $progress_size ) {
+function xw_back_to_top_progress_svg( $button_size, $progress_size, $shape ) {
+    $number = static function ( $value ) {
+        return rtrim( rtrim( number_format( $value, 2, '.', '' ), '0' ), '.' );
+    };
     $center = $button_size / 2;
-    $radius = ( $button_size - $progress_size ) / 2;
+    $inset  = $progress_size / 2;
+    $end    = $button_size - $inset;
+
+    if ( 'circle' === $shape ) {
+        $radius   = ( $button_size - $progress_size ) / 2;
+        $geometry = sprintf(
+            '<circle class="%%s" cx="%1$s" cy="%1$s" r="%2$s" pathLength="100"></circle>',
+            esc_attr( $number( $center ) ),
+            esc_attr( $number( $radius ) )
+        );
+    } else {
+        if ( 'rounded' === $shape ) {
+            $corner = max( 0, min( 12 - $inset, ( $button_size - $progress_size ) / 2 ) );
+            $path   = sprintf(
+                'M %1$s %2$s H %3$s A %4$s %4$s 0 0 1 %5$s %6$s V %3$s A %4$s %4$s 0 0 1 %3$s %5$s H %6$s A %4$s %4$s 0 0 1 %2$s %3$s V %6$s A %4$s %4$s 0 0 1 %6$s %2$s H %1$s Z',
+                $number( $center ),
+                $number( $inset ),
+                $number( $end - $corner ),
+                $number( $corner ),
+                $number( $end ),
+                $number( $inset + $corner )
+            );
+        } else {
+            $path = sprintf(
+                'M %1$s %2$s H %3$s V %3$s H %2$s V %2$s H %1$s Z',
+                $number( $center ),
+                $number( $inset ),
+                $number( $end )
+            );
+        }
+
+        $geometry = sprintf(
+            '<path class="%%s" d="%s" pathLength="100"></path>',
+            esc_attr( $path )
+        );
+    }
 
     return sprintf(
-        '<svg class="xw-back-to-top__progress" viewBox="0 0 %1$d %1$d" aria-hidden="true" focusable="false"><circle class="xw-back-to-top__progress-track" cx="%2$s" cy="%2$s" r="%3$s" pathLength="100"></circle><circle class="xw-back-to-top__progress-value" cx="%2$s" cy="%2$s" r="%3$s" pathLength="100"></circle></svg>',
+        '<svg class="xw-back-to-top__progress xw-back-to-top__progress--%1$s" viewBox="0 0 %2$d %2$d" aria-hidden="true" focusable="false">%3$s%4$s</svg>',
+        esc_attr( $shape ),
         $button_size,
-        esc_attr( number_format( $center, 2, '.', '' ) ),
-        esc_attr( number_format( $radius, 2, '.', '' ) )
+        sprintf( $geometry, 'xw-back-to-top__progress-track' ),
+        sprintf( $geometry, 'xw-back-to-top__progress-value' )
     );
 }
 
@@ -171,7 +211,7 @@ function xw_render_back_to_top_button() {
         aria-hidden="true"
         tabindex="-1"
     >
-        <?php echo xw_back_to_top_progress_svg( $button_size, $progress_size ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG fijo con valores numéricos saneados. ?>
+        <?php echo xw_back_to_top_progress_svg( $button_size, $progress_size, $shape ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG fijo con valores saneados. ?>
         <?php echo xw_back_to_top_icon_svg( $icon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG fijo de la lista permitida. ?>
     </button>
     <?php
