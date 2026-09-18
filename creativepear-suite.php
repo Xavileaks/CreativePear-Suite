@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.14
+Version: 1.0.15
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.14' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.15' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -1111,7 +1111,7 @@ function xw_enqueue_woocommerce_checkout_styles() {
         wp_enqueue_script(
             'xw-woocommerce-checkout-layout',
             plugin_dir_url( __FILE__ ) . $script_relative_path,
-            array(),
+            array( 'jquery' ),
             filemtime( $script_file_path ),
             true
         );

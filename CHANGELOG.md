@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.15
+
+- WooCommerce: cambiar el método de envío conserva su posición y actualiza el total por AJAX sin saltos visuales.
+- WooCommerce: el método pulsado permanece seleccionado aunque el proveedor reordene las tarifas en la respuesta.
+
 ## 1.0.14
 
 - WooCommerce: los métodos de envío quedan alineados a la derecha y el selector aparece después del texto.
