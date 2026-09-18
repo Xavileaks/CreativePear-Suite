@@ -7,13 +7,16 @@ body.woocommerce-checkout .woocommerce-checkout-review-order-table {
 
 body.woocommerce-checkout .woocommerce-checkout-review-order-table th.product-name,
 body.woocommerce-checkout .woocommerce-checkout-review-order-table td.product-name {
-    width: 75%;
+    width: 78%;
+    max-width: none !important;
+    padding-inline-end: 10px !important;
     text-align: left;
 }
 
 body.woocommerce-checkout .woocommerce-checkout-review-order-table th.product-total,
 body.woocommerce-checkout .woocommerce-checkout-review-order-table td.product-total {
-    width: 25%;
+    width: 22%;
+    padding-inline-end: 10px !important;
     text-align: right;
     white-space: nowrap;
 }
@@ -72,14 +75,14 @@ body.woocommerce-checkout .woocommerce-checkout-review-order-table .xw-checkout-
 }
 
 /*
- * Product rows use a 75/25 table split. The shipping row becomes an
+ * Product rows give the name as much room as possible. The shipping row becomes an
  * independent grid so its methods can use most of the available width.
  */
 body.woocommerce-checkout .woocommerce-checkout-review-order-table tr.woocommerce-shipping-totals.shipping {
     display: grid;
-    grid-template-columns: minmax(78px, 25%) minmax(0, 75%);
+    grid-template-columns: minmax(100px, 32%) minmax(0, 68%);
     align-items: start;
-    width: 133.333333% !important;
+    width: 128.205128% !important;
     max-width: none !important;
 }
 
@@ -90,6 +93,10 @@ body.woocommerce-checkout .woocommerce-checkout-review-order-table tr.woocommerc
     min-width: 0;
     max-width: none !important;
     text-align: left;
+}
+
+body.woocommerce-checkout .woocommerce-checkout-review-order-table tr.woocommerce-shipping-totals.shipping > td {
+    padding-inline-end: 10px !important;
 }
 
 body.woocommerce-checkout .woocommerce-checkout-review-order-table .woocommerce-shipping-methods {
@@ -115,15 +122,83 @@ body.woocommerce-checkout .woocommerce-checkout-review-order-table .woocommerce-
     overflow-wrap: anywhere;
 }
 
+/* Keep WooCommerce Select2 fields vertically centred and their selected option legible. */
+body.woocommerce-checkout .select2-container .select2-selection--single {
+    height: 45px !important;
+}
+
+body.woocommerce-checkout .select2-container .select2-selection--single .select2-selection__rendered {
+    display: flex !important;
+    align-items: center;
+    height: 45px !important;
+    padding-block: 0 !important;
+    padding-inline: 16px 40px !important;
+    line-height: 1.25 !important;
+}
+
+body.woocommerce-checkout .select2-container .select2-selection--single .select2-selection__arrow {
+    height: 45px !important;
+}
+
+body.woocommerce-checkout .select2-container--default .select2-results__option[aria-selected="true"]:not(.select2-results__option--highlighted) {
+    background: #fff !important;
+    color: inherit !important;
+    font-weight: 600;
+}
+
+body.woocommerce-checkout .select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background: #0073aa !important;
+    color: #fff !important;
+}
+
+@media (min-width: 768px) {
+    body.woocommerce-checkout .woocommerce-billing-fields__field-wrapper,
+    body.woocommerce-checkout .woocommerce-shipping-fields__field-wrapper {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        column-gap: 14px;
+    }
+
+    body.woocommerce-checkout .woocommerce-billing-fields__field-wrapper > .form-row,
+    body.woocommerce-checkout .woocommerce-shipping-fields__field-wrapper > .form-row {
+        grid-column: 1 / -1;
+        float: none !important;
+        width: auto !important;
+        min-width: 0;
+    }
+
+    body.woocommerce-checkout :is(
+        #billing_first_name_field,
+        #billing_last_name_field,
+        #shipping_first_name_field,
+        #shipping_last_name_field,
+        #billing_phone_field,
+        #billing_email_field
+    ) {
+        grid-column: span 3;
+    }
+
+    body.woocommerce-checkout :is(
+        #billing_city_field,
+        #billing_state_field,
+        #billing_postcode_field,
+        #shipping_city_field,
+        #shipping_state_field,
+        #shipping_postcode_field
+    ) {
+        grid-column: span 2;
+    }
+}
+
 @media (max-width: 767px) {
     body.woocommerce-checkout .woocommerce-checkout-review-order-table th.product-name,
     body.woocommerce-checkout .woocommerce-checkout-review-order-table td.product-name {
-        width: 74%;
+        width: 77%;
     }
 
     body.woocommerce-checkout .woocommerce-checkout-review-order-table th.product-total,
     body.woocommerce-checkout .woocommerce-checkout-review-order-table td.product-total {
-        width: 26%;
+        width: 23%;
     }
 
     body.woocommerce-checkout .woocommerce-checkout-review-order-table .xw-checkout-product-media {
@@ -138,7 +213,7 @@ body.woocommerce-checkout .woocommerce-checkout-review-order-table .woocommerce-
     }
 
     body.woocommerce-checkout .woocommerce-checkout-review-order-table tr.woocommerce-shipping-totals.shipping {
-        grid-template-columns: minmax(72px, 24%) minmax(0, 76%);
-        width: 135.135135% !important;
+        grid-template-columns: minmax(82px, 30%) minmax(0, 70%);
+        width: 129.87013% !important;
     }
 }

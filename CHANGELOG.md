@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 1.0.13
+
+- WooCommerce: se amplía la columna de producto y se reduce a 10 px el espacio junto al subtotal para evitar que los importes se partan.
+- WooCommerce: los selectores y métodos de envío quedan alineados hacia la derecha y conservan más espacio útil.
+- WooCommerce: ciudad, estado y código postal comparten una fila en tablet y escritorio; teléfono y correo comparten otra.
+- WooCommerce: el selector de país queda centrado verticalmente y la opción seleccionada mantiene texto legible al abrir la lista.
+
 ## 1.0.12
 
 - WooCommerce: nueva opción “CSS checkout” para ampliar el espacio del producto y mantener el subtotal compacto.
