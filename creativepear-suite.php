@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.11
+Version: 1.0.12
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.11' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.12' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -136,7 +136,7 @@ function xleon_suite_enqueue_styles() {
     $last_handle = '';
 
     foreach (glob($css_dir . '*.css') as $file) {
-        if ( 'admin-settings.css' === basename( $file ) ) {
+        if ( in_array( basename( $file ), array( 'admin-settings.css', 'woocommerce-checkout.css' ), true ) ) {
             continue;
         }
 
@@ -1004,10 +1004,33 @@ function xw_add_checkout_product_thumbnail( $name, $cart_item, $cart_item_key ) 
         return $name;
     }
 
+    $quantity_badge = '';
+
+    if ( xw_feature_enabled( 'woocommerce_checkout_css' ) ) {
+        $quantity       = isset( $cart_item['quantity'] ) ? max( 1, absint( $cart_item['quantity'] ) ) : 1;
+        $quantity_badge = '<span class="xw-checkout-product-quantity" aria-label="'
+            . esc_attr( sprintf( xw_t( 'Cantidad: %d', 'Quantity: %d' ), $quantity ) )
+            . '">' . esc_html( (string) $quantity ) . '</span>';
+    }
+
     return '<span class="xw-checkout-product-line">'
-        . $thumbnail
+        . '<span class="xw-checkout-product-media">' . $thumbnail . $quantity_badge . '</span>'
         . '<span class="xw-checkout-product-name">' . $name . '</span>'
         . '</span>';
+}
+
+add_filter( 'woocommerce_checkout_cart_item_quantity', 'xw_hide_default_checkout_quantity_when_styled', 9999, 3 );
+function xw_hide_default_checkout_quantity_when_styled( $quantity_html, $cart_item, $cart_item_key ) {
+    if (
+        xw_feature_enabled( 'woocommerce_checkout_css' ) &&
+        xw_feature_enabled( 'woocommerce_checkout_product_images' ) &&
+        function_exists( 'is_checkout' ) &&
+        is_checkout()
+    ) {
+        return '';
+    }
+
+    return $quantity_html;
 }
 
 add_action( 'wp_head', 'xw_checkout_product_thumbnail_styles', 99 );
@@ -1030,13 +1053,20 @@ function xw_checkout_product_thumbnail_styles() {
         vertical-align: middle;
     }
 
+    .woocommerce-checkout-review-order-table .xw-checkout-product-media {
+        position: relative;
+        display: block;
+        width: 55px;
+        height: 55px;
+        flex: 0 0 55px;
+    }
+
     .woocommerce-checkout-review-order-table .xw-checkout-product-thumbnail {
         width: 55px;
         height: 55px;
         max-width: 55px;
         margin: 0;
         object-fit: cover;
-        flex: 0 0 55px;
     }
 
     .woocommerce-checkout-review-order-table .xw-checkout-product-name {
@@ -1044,6 +1074,35 @@ function xw_checkout_product_thumbnail_styles() {
     }
     </style>
     <?php
+}
+
+
+// WOOCOMMERCE: CSS RESPONSIVE PARA EL RESUMEN DEL CHECKOUT
+
+add_action( 'wp_enqueue_scripts', 'xw_enqueue_woocommerce_checkout_styles', 30 );
+function xw_enqueue_woocommerce_checkout_styles() {
+    if (
+        is_admin() ||
+        ! xw_feature_enabled( 'woocommerce_checkout_css' ) ||
+        ! function_exists( 'is_checkout' ) ||
+        ! is_checkout()
+    ) {
+        return;
+    }
+
+    $relative_path = 'assets/css/woocommerce-checkout.css';
+    $file_path     = plugin_dir_path( __FILE__ ) . $relative_path;
+
+    if ( ! file_exists( $file_path ) ) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'xw-woocommerce-checkout',
+        plugin_dir_url( __FILE__ ) . $relative_path,
+        array(),
+        filemtime( $file_path )
+    );
 }
 
 

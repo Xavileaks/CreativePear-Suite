@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 1.0.12
+
+- WooCommerce: nueva opción “CSS checkout” para ampliar el espacio del producto y mantener el subtotal compacto.
+- WooCommerce: la cantidad aparece como una insignia negra sobre la miniatura cuando también está activa la opción de imágenes en el checkout.
+- WooCommerce: los métodos de envío usan una distribución independiente y más amplia, sin quedar comprimidos por la columna de subtotales.
+- Diseño responsive verificado en escritorio y móvil.
+
 ## 1.0.11
 
 - WooCommerce: el cambio de imagen usa ahora dos transiciones de opacidad simultáneas para crear un fundido cruzado real.

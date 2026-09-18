@@ -1,0 +1,144 @@
+/* WooCommerce checkout layout. Loaded only when the feature is enabled. */
+
+body.woocommerce-checkout .woocommerce-checkout-review-order-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+body.woocommerce-checkout .woocommerce-checkout-review-order-table th.product-name,
+body.woocommerce-checkout .woocommerce-checkout-review-order-table td.product-name {
+    width: 75%;
+    text-align: left;
+}
+
+body.woocommerce-checkout .woocommerce-checkout-review-order-table th.product-total,
+body.woocommerce-checkout .woocommerce-checkout-review-order-table td.product-total {
+    width: 25%;
+    text-align: right;
+    white-space: nowrap;
+}
+
+body.woocommerce-checkout .woocommerce-checkout-review-order-table .xw-checkout-product-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+}
+
+body.woocommerce-checkout .woocommerce-checkout-review-order-table .xw-checkout-product-media {
+    position: relative;
+    display: block;
+    width: 64px;
+    height: 64px;
+    flex: 0 0 64px;
+}
+
+body.woocommerce-checkout .woocommerce-checkout-review-order-table .xw-checkout-product-thumbnail {
+    display: block;
+    width: 64px !important;
+    height: 64px !important;
+    max-width: none !important;
+    margin: 0 !important;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+body.woocommerce-checkout .woocommerce-checkout-review-order-table .xw-checkout-product-name {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow-wrap: anywhere;
+}
+
+body.woocommerce-checkout .woocommerce-checkout-review-order-table .xw-checkout-product-quantity {
+    position: absolute;
+    z-index: 2;
+    top: -7px;
+    right: -7px;
+    display: grid;
+    place-items: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 5px;
+    box-sizing: border-box;
+    border-radius: 999px;
+    background: #111;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/*
+ * Product rows use a 75/25 table split. The shipping row becomes an
+ * independent grid so its methods can use most of the available width.
+ */
+body.woocommerce-checkout .woocommerce-checkout-review-order-table tr.woocommerce-shipping-totals.shipping {
+    display: grid;
+    grid-template-columns: minmax(78px, 25%) minmax(0, 75%);
+    align-items: start;
+    width: 133.333333% !important;
+    max-width: none !important;
+}
+
+body.woocommerce-checkout .woocommerce-checkout-review-order-table tr.woocommerce-shipping-totals.shipping > th,
+body.woocommerce-checkout .woocommerce-checkout-review-order-table tr.woocommerce-shipping-totals.shipping > td {
+    display: block;
+    width: auto !important;
+    min-width: 0;
+    max-width: none !important;
+    text-align: left;
+}
+
+body.woocommerce-checkout .woocommerce-checkout-review-order-table .woocommerce-shipping-methods {
+    width: 100%;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: left;
+}
+
+body.woocommerce-checkout .woocommerce-checkout-review-order-table .woocommerce-shipping-methods li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 0 8px;
+    width: 100%;
+    text-align: left;
+}
+
+body.woocommerce-checkout .woocommerce-checkout-review-order-table .woocommerce-shipping-methods label {
+    min-width: 0;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+    body.woocommerce-checkout .woocommerce-checkout-review-order-table th.product-name,
+    body.woocommerce-checkout .woocommerce-checkout-review-order-table td.product-name {
+        width: 74%;
+    }
+
+    body.woocommerce-checkout .woocommerce-checkout-review-order-table th.product-total,
+    body.woocommerce-checkout .woocommerce-checkout-review-order-table td.product-total {
+        width: 26%;
+    }
+
+    body.woocommerce-checkout .woocommerce-checkout-review-order-table .xw-checkout-product-media {
+        width: 58px;
+        height: 58px;
+        flex-basis: 58px;
+    }
+
+    body.woocommerce-checkout .woocommerce-checkout-review-order-table .xw-checkout-product-thumbnail {
+        width: 58px !important;
+        height: 58px !important;
+    }
+
+    body.woocommerce-checkout .woocommerce-checkout-review-order-table tr.woocommerce-shipping-totals.shipping {
+        grid-template-columns: minmax(72px, 24%) minmax(0, 76%);
+        width: 135.135135% !important;
+    }
+}

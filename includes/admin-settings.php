@@ -93,6 +93,10 @@ function xw_get_feature_definitions() {
             'title'       => xw_t( 'WooCommerce: mostrar imágenes en el checkout', 'WooCommerce: show product images at checkout' ),
             'description' => xw_t( 'Muestra una miniatura del producto junto a su nombre en el resumen del pedido.', 'Displays a product thumbnail next to its name in the order summary.' ),
         ),
+        'woocommerce_checkout_css' => array(
+            'title'       => xw_t( 'WooCommerce: CSS checkout', 'WooCommerce: checkout CSS' ),
+            'description' => xw_t( 'Mejora el espacio de productos, cantidades, subtotales y métodos de envío en el resumen del pedido.', 'Improves the layout of products, quantities, subtotals, and shipping methods in the order summary.' ),
+        ),
         'woocommerce_product_hover_image' => array(
             'title'       => xw_t( 'WooCommerce: segunda imagen al pasar el cursor', 'WooCommerce: second image on hover' ),
             'description' => xw_t( 'Cambia la imagen principal por la primera imagen de la galería en los listados de productos.', 'Changes the main image to the first gallery image in product listings.' ),
@@ -169,6 +173,7 @@ function xw_get_feature_groups() {
             'features'    => array(
                 'woocommerce_auto_cart',
                 'woocommerce_checkout_product_images',
+                'woocommerce_checkout_css',
                 'woocommerce_product_hover_image',
                 'woocommerce_hide_cart_shipping',
                 'woocommerce_require_account_email',
