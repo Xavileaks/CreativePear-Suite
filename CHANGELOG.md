@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 1.0.14
+
+- WooCommerce: los métodos de envío quedan alineados a la derecha y el selector aparece después del texto.
+- WooCommerce: subtotal, envío y total comparten el mismo borde derecho, incluso cuando el nombre del método ocupa varias líneas.
+- WooCommerce: las variaciones aparecen debajo del título del producto y se separan mediante el símbolo `|`.
+- WooCommerce: la distribución se restaura automáticamente después de las actualizaciones AJAX del checkout.
+
 ## 1.0.13
 
 - WooCommerce: se amplía la columna de producto y se reduce a 10 px el espacio junto al subtotal para evitar que los importes se partan.
