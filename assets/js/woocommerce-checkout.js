@@ -34,6 +34,34 @@
         return `${input.name}\u0000${input.value}`;
     }
 
+    function synchronizeServerShippingSelection(review) {
+        if (!review) {
+            return;
+        }
+
+        const groups = new Map();
+
+        review.querySelectorAll('input[type="radio"][name^="shipping_method"]').forEach((method) => {
+            if (!groups.has(method.name)) {
+                groups.set(method.name, []);
+            }
+
+            groups.get(method.name).push(method);
+        });
+
+        groups.forEach((methods) => {
+            const serverSelected = methods.find((method) => method.defaultChecked);
+
+            if (!serverSelected) {
+                return;
+            }
+
+            methods.forEach((method) => {
+                method.checked = method === serverSelected;
+            });
+        });
+    }
+
     function captureShippingState(event) {
         const input = event.target;
 
@@ -60,10 +88,6 @@
     }
 
     function restoreShippingState() {
-        if (!shippingState) {
-            return;
-        }
-
         const review = document.querySelector('.woocommerce-checkout-review-order-table');
 
         if (!review) {
@@ -72,35 +96,41 @@
 
         const lists = Array.from(review.querySelectorAll('.woocommerce-shipping-methods'));
 
-        if (!lists.length) {
+        if (shippingState) {
+            lists.forEach((list, index) => {
+                const items = new Map();
+
+                Array.from(list.children).forEach((item) => {
+                    const method = item.querySelector('input[name^="shipping_method"]');
+
+                    if (method) {
+                        items.set(shippingMethodKey(method), item);
+                    }
+                });
+
+                (shippingState.lists[index] || []).forEach((key) => {
+                    const item = items.get(key);
+
+                    if (item) {
+                        list.appendChild(item);
+                        items.delete(key);
+                    }
+                });
+
+                items.forEach((item) => list.appendChild(item));
+            });
+
             shippingState = null;
-            return;
         }
 
-        lists.forEach((list, index) => {
-            const items = new Map();
+        synchronizeServerShippingSelection(review);
+    }
 
-            Array.from(list.children).forEach((item) => {
-                const method = item.querySelector('input[name^="shipping_method"]');
-
-                if (method) {
-                    items.set(shippingMethodKey(method), item);
-                }
-            });
-
-            (shippingState.lists[index] || []).forEach((key) => {
-                const item = items.get(key);
-
-                if (item) {
-                    list.appendChild(item);
-                    items.delete(key);
-                }
-            });
-
-            items.forEach((item) => list.appendChild(item));
-        });
-
-        shippingState = null;
+    function initializeCheckoutLayout() {
+        synchronizeServerShippingSelection(
+            document.querySelector('.woocommerce-checkout-review-order-table')
+        );
+        scheduleArrangement();
     }
 
     function arrangeProductVariations() {
@@ -127,9 +157,9 @@
     }
 
     if ('loading' === document.readyState) {
-        document.addEventListener('DOMContentLoaded', scheduleArrangement, { once: true });
+        document.addEventListener('DOMContentLoaded', initializeCheckoutLayout, { once: true });
     } else {
-        scheduleArrangement();
+        initializeCheckoutLayout();
     }
 
     document.addEventListener('change', captureShippingState, true);

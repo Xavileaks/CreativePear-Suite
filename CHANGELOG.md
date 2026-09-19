@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.17
+
+- WooCommerce: después de cada actualización AJAX, el radio visible se sincroniza con el método que el servidor usó para calcular el total.
+- WooCommerce: los productos variables muestran el nombre base y colocan `Size`, `Color`, `Design` y demás atributos en una línea separada.
+
 ## 1.0.16
 
 - WooCommerce: la selección del envío y el total proceden ahora de la misma respuesta AJAX, evitando que muestren métodos distintos.

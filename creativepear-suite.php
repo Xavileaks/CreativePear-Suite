@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.16
+Version: 1.0.17
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.16' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.17' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -973,6 +973,50 @@ function xw_render_product_loop_hover_image() {
 
 
 // WOOCOMMERCE: MOSTRAR IMÁGENES DE PRODUCTOS EN EL CHECKOUT
+
+add_filter( 'woocommerce_cart_item_name', 'xw_checkout_variation_parent_name', 9000, 3 );
+function xw_checkout_variation_parent_name( $name, $cart_item, $cart_item_key ) {
+    $product = isset( $cart_item['data'] ) && is_object( $cart_item['data'] )
+        ? $cart_item['data']
+        : null;
+
+    if (
+        ! xw_feature_enabled( 'woocommerce_checkout_css' ) ||
+        ! function_exists( 'is_checkout' ) ||
+        ! is_checkout() ||
+        ! $product ||
+        ! is_a( $product, 'WC_Product_Variation' )
+    ) {
+        return $name;
+    }
+
+    $parent_id = is_callable( array( $product, 'get_parent_id' ) )
+        ? absint( $product->get_parent_id() )
+        : 0;
+
+    if ( ! $parent_id || ! function_exists( 'wc_get_product' ) ) {
+        return $name;
+    }
+
+    $parent = wc_get_product( $parent_id );
+
+    return $parent && is_callable( array( $parent, 'get_name' ) )
+        ? $parent->get_name()
+        : $name;
+}
+
+add_filter( 'woocommerce_is_attribute_in_product_name', 'xw_show_checkout_variation_attributes', 9999, 3 );
+function xw_show_checkout_variation_attributes( $is_in_name, $attribute, $name ) {
+    if (
+        xw_feature_enabled( 'woocommerce_checkout_css' ) &&
+        function_exists( 'is_checkout' ) &&
+        is_checkout()
+    ) {
+        return false;
+    }
+
+    return $is_in_name;
+}
 
 add_filter( 'woocommerce_cart_item_name', 'xw_add_checkout_product_thumbnail', 9999, 3 );
 function xw_add_checkout_product_thumbnail( $name, $cart_item, $cart_item_key ) {
