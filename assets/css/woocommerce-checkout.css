@@ -187,6 +187,44 @@ body.woocommerce-checkout .woocommerce-checkout-review-order-table tfoot td {
     white-space: nowrap;
 }
 
+/* Keep the checkout still while WooCommerce recalculates a newly selected rate. */
+body.woocommerce-checkout.xw-checkout-shipping-updating form.checkout .blockUI.blockOverlay {
+    background: transparent !important;
+    opacity: 1 !important;
+}
+
+body.woocommerce-checkout.xw-checkout-shipping-updating .woocommerce-checkout-review-order-table tr.order-total > td {
+    position: relative;
+}
+
+body.woocommerce-checkout.xw-checkout-shipping-updating .woocommerce-checkout-review-order-table tr.order-total > td .amount {
+    visibility: hidden !important;
+}
+
+body.woocommerce-checkout.xw-checkout-shipping-updating .woocommerce-checkout-review-order-table tr.order-total > td::after {
+    position: absolute;
+    inset-inline-end: 10px;
+    top: 50%;
+    width: 64px;
+    height: 1em;
+    border-radius: 4px;
+    background: #e2e5e9;
+    content: '';
+    transform: translateY(-50%);
+    animation: xw-checkout-total-loading 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes xw-checkout-total-loading {
+    from { opacity: 0.55; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.woocommerce-checkout.xw-checkout-shipping-updating .woocommerce-checkout-review-order-table tr.order-total > td::after {
+        animation: none;
+    }
+}
+
 /* Keep WooCommerce Select2 fields vertically centred and their selected option legible. */
 body.woocommerce-checkout .select2-container .select2-selection--single {
     height: 45px !important;

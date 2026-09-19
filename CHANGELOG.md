@@ -1,5 +1,11 @@
 # Historial de cambios
 
+## 1.0.16
+
+- WooCommerce: la selección del envío y el total proceden ahora de la misma respuesta AJAX, evitando que muestren métodos distintos.
+- Se conserva el orden visual de las tarifas sin sobrescribir el método confirmado por WooCommerce.
+- Mientras se recalcula el envío, el importe total muestra un indicador gris y el resto del checkout permanece visualmente estable.
+
 ## 1.0.15
 
 - WooCommerce: cambiar el método de envío conserva su posición y actualiza el total por AJAX sin saltos visuales.

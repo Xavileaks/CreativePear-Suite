@@ -3,6 +3,32 @@
 
     let scheduled = false;
     let shippingState = null;
+    let shippingUpdateTimeout = 0;
+
+    function finishShippingUpdate() {
+        document.body.classList.remove('xw-checkout-shipping-updating');
+        window.clearTimeout(shippingUpdateTimeout);
+        shippingUpdateTimeout = 0;
+
+        const orderReview = document.querySelector('#order_review');
+
+        if (orderReview) {
+            orderReview.removeAttribute('aria-busy');
+        }
+    }
+
+    function startShippingUpdate() {
+        document.body.classList.add('xw-checkout-shipping-updating');
+
+        const orderReview = document.querySelector('#order_review');
+
+        if (orderReview) {
+            orderReview.setAttribute('aria-busy', 'true');
+        }
+
+        window.clearTimeout(shippingUpdateTimeout);
+        shippingUpdateTimeout = window.setTimeout(finishShippingUpdate, 15000);
+    }
 
     function shippingMethodKey(input) {
         return `${input.name}\u0000${input.value}`;
@@ -21,17 +47,7 @@
             return;
         }
 
-        const methods = Array.from(review.querySelectorAll('input[name^="shipping_method"]'));
-        const selected = {};
-
-        methods.forEach((method) => {
-            if (method.checked || 'hidden' === method.type) {
-                selected[method.name] = method.value;
-            }
-        });
-
         shippingState = {
-            selected,
             lists: Array.from(review.querySelectorAll('.woocommerce-shipping-methods')).map((list) => (
                 Array.from(list.children).map((item) => {
                     const method = item.querySelector('input[name^="shipping_method"]');
@@ -39,6 +55,8 @@
                 }).filter(Boolean)
             )),
         };
+
+        startShippingUpdate();
     }
 
     function restoreShippingState() {
@@ -82,22 +100,6 @@
             items.forEach((item) => list.appendChild(item));
         });
 
-        Object.entries(shippingState.selected).forEach(([name, value]) => {
-            const methods = Array.from(review.querySelectorAll('input[name^="shipping_method"]'))
-                .filter((method) => method.name === name);
-            const selectedMethod = methods.find((method) => method.value === value);
-
-            if (!selectedMethod) {
-                return;
-            }
-
-            methods.forEach((method) => {
-                if ('radio' === method.type) {
-                    method.checked = method === selectedMethod;
-                }
-            });
-        });
-
         shippingState = null;
     }
 
@@ -135,8 +137,11 @@
     if (window.jQuery) {
         window.jQuery(document.body).on('updated_checkout.xwShippingOrder', () => {
             restoreShippingState();
+            finishShippingUpdate();
             scheduleArrangement();
         });
+
+        window.jQuery(document.body).on('checkout_error.xwShippingOrder', finishShippingUpdate);
     }
 
     const checkout = document.querySelector('form.checkout') || document.body;
@@ -154,6 +159,7 @@
 
             if (reviewWasReplaced) {
                 restoreShippingState();
+                finishShippingUpdate();
             }
 
             scheduleArrangement();
