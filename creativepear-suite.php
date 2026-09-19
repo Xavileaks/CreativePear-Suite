@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.18
+Version: 1.0.19
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.18' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.19' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -1160,6 +1160,25 @@ function xw_enqueue_woocommerce_checkout_styles() {
             true
         );
     }
+}
+
+
+// WOOCOMMERCE: CONSERVAR EL ENVÍO ELEGIDO CUANDO EL PROVEEDOR REFRESCA LAS TARIFAS
+
+add_filter( 'woocommerce_shipping_chosen_method', 'xw_preserve_selected_checkout_shipping_method', 9999, 3 );
+function xw_preserve_selected_checkout_shipping_method( $default, $rates, $chosen_method ) {
+    if (
+        ! xw_feature_enabled( 'woocommerce_checkout_css' ) ||
+        ! defined( 'WOOCOMMERCE_CHECKOUT' ) ||
+        ! WOOCOMMERCE_CHECKOUT ||
+        ! is_string( $chosen_method ) ||
+        ! is_array( $rates ) ||
+        ! isset( $rates[ $chosen_method ] )
+    ) {
+        return $default;
+    }
+
+    return $chosen_method;
 }
 
 

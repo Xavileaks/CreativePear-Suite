@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.19
+
+- WooCommerce: conserva en una sola actualización AJAX el envío elegido cuando EasyPost u otro proveedor refresca las tarifas disponibles.
+- WooCommerce: evita que el recálculo de tarifas sustituya la selección válida por el primer método de la lista.
+
 ## 1.0.18
 
 - WooCommerce: evita selecciones simultáneas mientras el plugin de envío calcula, sin generar peticiones AJAX adicionales desde la suite.
