@@ -50,7 +50,8 @@
         });
 
         groups.forEach((methods) => {
-            const serverSelected = methods.find((method) => method.defaultChecked);
+            const serverSelected = methods.find((method) => method.defaultChecked)
+                || methods.find((method) => method.checked);
 
             if (!serverSelected) {
                 return;
@@ -133,8 +134,30 @@
         scheduleArrangement();
     }
 
+    function synchronizeCheckoutFieldHeights() {
+        document.querySelectorAll(
+            '.woocommerce-billing-fields__field-wrapper, .woocommerce-shipping-fields__field-wrapper'
+        ).forEach((wrapper) => {
+            const reference = Array.from(
+                wrapper.querySelectorAll('input.input-text:not([type="hidden"])')
+            ).find((input) => input.getBoundingClientRect().height > 0);
+
+            if (!reference) {
+                return;
+            }
+
+            const height = reference.getBoundingClientRect().height;
+
+            if (height > 0) {
+                wrapper.style.setProperty('--xw-checkout-field-height', `${height}px`);
+            }
+        });
+    }
+
     function arrangeProductVariations() {
         scheduled = false;
+
+        synchronizeCheckoutFieldHeights();
 
         document.querySelectorAll('.woocommerce-checkout-review-order-table td.product-name').forEach((cell) => {
             const line = Array.from(cell.children).find((child) => child.classList.contains('xw-checkout-product-line'));
@@ -189,7 +212,6 @@
 
             if (reviewWasReplaced) {
                 restoreShippingState();
-                finishShippingUpdate();
             }
 
             scheduleArrangement();

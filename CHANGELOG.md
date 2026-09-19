@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 1.0.18
+
+- WooCommerce: evita selecciones simultáneas mientras el plugin de envío calcula, sin generar peticiones AJAX adicionales desde la suite.
+- WooCommerce: iguala la altura de los campos Select2 con los campos configurados desde Elementor.
+- WooCommerce: en móvil coloca el encabezado de envío encima de los métodos para evitar solapamientos.
+- WooCommerce: mantiene el color de los nombres de producto heredado de Elementor, sin imponer un color desde el plugin.
+
 ## 1.0.17
 
 - WooCommerce: después de cada actualización AJAX, el radio visible se sincroniza con el método que el servidor usó para calcular el total.
