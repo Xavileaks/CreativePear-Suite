@@ -80,6 +80,10 @@ body.woocommerce-cart .woocommerce-cart-form td.product-name > dl.variation > dd
 }
 
 /* Menu Cart: move the visible quantity from the price line onto the image. */
+.elementor-menu-cart__main .elementor-menu-cart__products {
+    padding-block-start: 8px;
+}
+
 .elementor-menu-cart__product-image {
     position: relative;
     overflow: visible !important;
@@ -104,6 +108,11 @@ body.woocommerce-cart .woocommerce-cart-form td.product-name > dl.variation > dd
     line-height: 1;
     white-space: nowrap;
     pointer-events: none;
+}
+
+/* Keep the remove control clear of the products scrollbar. */
+.elementor-menu-cart__main .elementor-menu-cart__product-remove {
+    inset-inline-end: 10px;
 }
 
 /* Keep the original quantity available to assistive technology without duplicating it visually. */
