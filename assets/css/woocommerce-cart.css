@@ -1,0 +1,71 @@
+/* WooCommerce cart and mini-cart layout. Loaded only when the feature is enabled. */
+
+/*
+ * Product-title typography is intentionally not declared here. Elementor remains
+ * the only authority for family, size, weight, line height, spacing and color.
+ */
+
+body.woocommerce-cart .woocommerce-cart-form td.product-name > dl.variation,
+.woocommerce-mini-cart-item dl.variation,
+.elementor-menu-cart__product-name dl.variation {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0;
+    width: 100%;
+    margin: 4px 0 0 !important;
+    padding: 0 !important;
+    color: inherit;
+    font-family: inherit;
+    font-size: 0.86em;
+    font-style: normal;
+    line-height: 1.35;
+}
+
+body.woocommerce-cart .woocommerce-cart-form td.product-name > dl.variation > dt,
+body.woocommerce-cart .woocommerce-cart-form td.product-name > dl.variation > dd,
+.woocommerce-mini-cart-item dl.variation > dt,
+.woocommerce-mini-cart-item dl.variation > dd,
+.elementor-menu-cart__product-name dl.variation > dt,
+.elementor-menu-cart__product-name dl.variation > dd {
+    display: inline !important;
+    float: none !important;
+    clear: none !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: inherit;
+    font: inherit;
+}
+
+body.woocommerce-cart .woocommerce-cart-form td.product-name > dl.variation > dt,
+.woocommerce-mini-cart-item dl.variation > dt,
+.elementor-menu-cart__product-name dl.variation > dt {
+    font-weight: 600;
+}
+
+body.woocommerce-cart .woocommerce-cart-form td.product-name > dl.variation > dt:not(:first-of-type)::before,
+.woocommerce-mini-cart-item dl.variation > dt:not(:first-of-type)::before,
+.elementor-menu-cart__product-name dl.variation > dt:not(:first-of-type)::before {
+    display: inline-block;
+    margin: 0 6px;
+    color: currentColor;
+    font-weight: 400;
+    content: "|";
+}
+
+body.woocommerce-cart .woocommerce-cart-form td.product-name > dl.variation > dd,
+.woocommerce-mini-cart-item dl.variation > dd,
+.elementor-menu-cart__product-name dl.variation > dd {
+    margin-inline-start: 3px !important;
+}
+
+body.woocommerce-cart .woocommerce-cart-form td.product-name > dl.variation > dd p,
+.woocommerce-mini-cart-item dl.variation > dd p,
+.elementor-menu-cart__product-name dl.variation > dd p {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: inherit;
+    font: inherit;
+}

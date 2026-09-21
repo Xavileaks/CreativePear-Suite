@@ -1,5 +1,11 @@
 # Historial de cambios
 
+## 1.0.20
+
+- WooCommerce: nueva opción “CSS del carrito” para separar todas las variaciones del nombre base en el carrito y mini carrito.
+- WooCommerce: las variaciones aparecen debajo del título y se separan mediante `|`, igual que en el checkout.
+- Elementor conserva el control completo sobre la tipografía y el color del título de producto del Menu Cart.
+
 ## 1.0.19
 
 - WooCommerce: conserva en una sola actualización AJAX el envío elegido cuando EasyPost u otro proveedor refresca las tarifas disponibles.

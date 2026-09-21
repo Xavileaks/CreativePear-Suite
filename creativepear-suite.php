@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.19
+Version: 1.0.20
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.19' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.20' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -136,7 +136,7 @@ function xleon_suite_enqueue_styles() {
     $last_handle = '';
 
     foreach (glob($css_dir . '*.css') as $file) {
-        if ( in_array( basename( $file ), array( 'admin-settings.css', 'woocommerce-checkout.css' ), true ) ) {
+        if ( in_array( basename( $file ), array( 'admin-settings.css', 'woocommerce-cart.css', 'woocommerce-checkout.css' ), true ) ) {
             continue;
         }
 
@@ -972,7 +972,58 @@ function xw_render_product_loop_hover_image() {
 }
 
 
-// WOOCOMMERCE: MOSTRAR IMÁGENES DE PRODUCTOS EN EL CHECKOUT
+// WOOCOMMERCE: NOMBRES Y VARIACIONES EN CARRITO, MINI CARRITO Y CHECKOUT
+
+add_action( 'woocommerce_before_mini_cart', 'xw_begin_cart_css_mini_cart_context', 0 );
+add_action( 'woocommerce_before_mini_cart_contents', 'xw_begin_cart_css_mini_cart_context', 0 );
+function xw_begin_cart_css_mini_cart_context() {
+    if ( ! xw_feature_enabled( 'woocommerce_cart_css' ) ) {
+        return;
+    }
+
+    $depth = isset( $GLOBALS['xw_cart_css_mini_cart_depth'] )
+        ? absint( $GLOBALS['xw_cart_css_mini_cart_depth'] )
+        : 0;
+
+    $GLOBALS['xw_cart_css_mini_cart_depth'] = $depth + 1;
+}
+
+add_action( 'woocommerce_after_mini_cart', 'xw_end_cart_css_mini_cart_context', PHP_INT_MAX );
+add_action( 'woocommerce_after_mini_cart_contents', 'xw_end_cart_css_mini_cart_context', PHP_INT_MAX );
+function xw_end_cart_css_mini_cart_context() {
+    if ( empty( $GLOBALS['xw_cart_css_mini_cart_depth'] ) ) {
+        return;
+    }
+
+    $depth = absint( $GLOBALS['xw_cart_css_mini_cart_depth'] ) - 1;
+
+    if ( $depth > 0 ) {
+        $GLOBALS['xw_cart_css_mini_cart_depth'] = $depth;
+        return;
+    }
+
+    unset( $GLOBALS['xw_cart_css_mini_cart_depth'] );
+}
+
+function xw_is_cart_css_render_context() {
+    if ( function_exists( 'is_cart' ) && is_cart() ) {
+        return true;
+    }
+
+    return ! empty( $GLOBALS['xw_cart_css_mini_cart_depth'] );
+}
+
+function xw_use_styled_variation_layout() {
+    if (
+        xw_feature_enabled( 'woocommerce_checkout_css' ) &&
+        function_exists( 'is_checkout' ) &&
+        is_checkout()
+    ) {
+        return true;
+    }
+
+    return xw_feature_enabled( 'woocommerce_cart_css' ) && xw_is_cart_css_render_context();
+}
 
 add_filter( 'woocommerce_cart_item_name', 'xw_checkout_variation_parent_name', 9000, 3 );
 function xw_checkout_variation_parent_name( $name, $cart_item, $cart_item_key ) {
@@ -981,9 +1032,7 @@ function xw_checkout_variation_parent_name( $name, $cart_item, $cart_item_key ) 
         : null;
 
     if (
-        ! xw_feature_enabled( 'woocommerce_checkout_css' ) ||
-        ! function_exists( 'is_checkout' ) ||
-        ! is_checkout() ||
+        ! xw_use_styled_variation_layout() ||
         ! $product ||
         ! is_a( $product, 'WC_Product_Variation' )
     ) {
@@ -1007,16 +1056,15 @@ function xw_checkout_variation_parent_name( $name, $cart_item, $cart_item_key ) 
 
 add_filter( 'woocommerce_is_attribute_in_product_name', 'xw_show_checkout_variation_attributes', 9999, 3 );
 function xw_show_checkout_variation_attributes( $is_in_name, $attribute, $name ) {
-    if (
-        xw_feature_enabled( 'woocommerce_checkout_css' ) &&
-        function_exists( 'is_checkout' ) &&
-        is_checkout()
-    ) {
+    if ( xw_use_styled_variation_layout() ) {
         return false;
     }
 
     return $is_in_name;
 }
+
+
+// WOOCOMMERCE: MOSTRAR IMÁGENES DE PRODUCTOS EN EL CHECKOUT
 
 add_filter( 'woocommerce_cart_item_name', 'xw_add_checkout_product_thumbnail', 9999, 3 );
 function xw_add_checkout_product_thumbnail( $name, $cart_item, $cart_item_key ) {
@@ -1160,6 +1208,30 @@ function xw_enqueue_woocommerce_checkout_styles() {
             true
         );
     }
+}
+
+
+// WOOCOMMERCE: CSS DEL CARRITO Y MINI CARRITO
+
+add_action( 'wp_enqueue_scripts', 'xw_enqueue_woocommerce_cart_styles', 30 );
+function xw_enqueue_woocommerce_cart_styles() {
+    if ( is_admin() || ! xw_feature_enabled( 'woocommerce_cart_css' ) ) {
+        return;
+    }
+
+    $relative_path = 'assets/css/woocommerce-cart.css';
+    $file_path     = plugin_dir_path( __FILE__ ) . $relative_path;
+
+    if ( ! file_exists( $file_path ) ) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'xw-woocommerce-cart',
+        plugin_dir_url( __FILE__ ) . $relative_path,
+        array(),
+        filemtime( $file_path )
+    );
 }
 
 
