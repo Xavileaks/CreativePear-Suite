@@ -5,6 +5,15 @@
  * the only authority for family, size, weight, line height, spacing and color.
  */
 
+/*
+ * Elementor applies typography to the link, while its parent keeps WooCommerce's
+ * taller line box. A block link removes that parent strut so Elementor's line
+ * height becomes the sole visual value.
+ */
+.elementor-menu-cart__product-name > a {
+    display: block;
+}
+
 body.woocommerce-cart .woocommerce-cart-form td.product-name > dl.variation,
 .woocommerce-mini-cart-item dl.variation,
 .elementor-menu-cart__product-name dl.variation {
