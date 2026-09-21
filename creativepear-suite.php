@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.20
+Version: 1.0.21
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.20' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.21' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -1006,11 +1006,22 @@ function xw_end_cart_css_mini_cart_context() {
 }
 
 function xw_is_cart_css_render_context() {
+    if (
+        ( function_exists( 'is_checkout' ) && is_checkout() ) ||
+        ( defined( 'WOOCOMMERCE_CHECKOUT' ) && WOOCOMMERCE_CHECKOUT )
+    ) {
+        return false;
+    }
+
     if ( function_exists( 'is_cart' ) && is_cart() ) {
         return true;
     }
 
-    return ! empty( $GLOBALS['xw_cart_css_mini_cart_depth'] );
+    if ( ! empty( $GLOBALS['xw_cart_css_mini_cart_depth'] ) ) {
+        return true;
+    }
+
+    return ! is_admin() || ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() );
 }
 
 function xw_use_styled_variation_layout() {
@@ -1049,9 +1060,26 @@ function xw_checkout_variation_parent_name( $name, $cart_item, $cart_item_key ) 
 
     $parent = wc_get_product( $parent_id );
 
-    return $parent && is_callable( array( $parent, 'get_name' ) )
-        ? $parent->get_name()
-        : $name;
+    if ( ! $parent || ! is_callable( array( $parent, 'get_name' ) ) ) {
+        return $name;
+    }
+
+    $parent_name = $parent->get_name();
+
+    if ( false === stripos( (string) $name, '<a' ) ) {
+        return $parent_name;
+    }
+
+    $linked_name = preg_replace_callback(
+        '/(<a\b[^>]*>).*?(<\/a>)/is',
+        function ( $matches ) use ( $parent_name ) {
+            return $matches[1] . esc_html( $parent_name ) . $matches[2];
+        },
+        (string) $name,
+        1
+    );
+
+    return is_string( $linked_name ) ? $linked_name : $name;
 }
 
 add_filter( 'woocommerce_is_attribute_in_product_name', 'xw_show_checkout_variation_attributes', 9999, 3 );
@@ -1232,6 +1260,19 @@ function xw_enqueue_woocommerce_cart_styles() {
         array(),
         filemtime( $file_path )
     );
+
+    $script_relative_path = 'assets/js/woocommerce-cart.js';
+    $script_file_path     = plugin_dir_path( __FILE__ ) . $script_relative_path;
+
+    if ( file_exists( $script_file_path ) ) {
+        wp_enqueue_script(
+            'xw-woocommerce-cart',
+            plugin_dir_url( __FILE__ ) . $script_relative_path,
+            array(),
+            filemtime( $script_file_path ),
+            true
+        );
+    }
 }
 
 

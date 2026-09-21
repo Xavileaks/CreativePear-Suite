@@ -69,3 +69,44 @@ body.woocommerce-cart .woocommerce-cart-form td.product-name > dl.variation > dd
     color: inherit;
     font: inherit;
 }
+
+/* Menu Cart: move the visible quantity from the price line onto the image. */
+.elementor-menu-cart__product-image {
+    position: relative;
+    overflow: visible !important;
+}
+
+.elementor-menu-cart__product-image .xw-mini-cart-product-quantity {
+    position: absolute;
+    z-index: 2;
+    top: -7px;
+    inset-inline-end: -7px;
+    display: grid;
+    place-items: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 5px;
+    box-sizing: border-box;
+    border-radius: 999px;
+    background: #111;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* Keep the original quantity available to assistive technology without duplicating it visually. */
+.elementor-menu-cart__product-price .product-quantity {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    clip-path: inset(50%) !important;
+    border: 0 !important;
+    white-space: nowrap !important;
+}

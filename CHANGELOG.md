@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 1.0.21
+
+- WooCommerce: al separar las variaciones, el título conserva su enlace original en el carrito.
+- Elementor Menu Cart: la cantidad aparece como una insignia negra sobre la miniatura, igual que en el checkout.
+- Elementor Menu Cart: la insignia se restaura automáticamente después de cada actualización AJAX y la cantidad original sigue disponible para lectores de pantalla.
+- WooCommerce: la separación de variaciones también cubre el renderizado propio del Menu Cart de Elementor.
+
 ## 1.0.20
 
 - WooCommerce: nueva opción “CSS del carrito” para separar todas las variaciones del nombre base en el carrito y mini carrito.
