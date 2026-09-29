@@ -105,7 +105,6 @@ function xw_get_feature_definitions() {
             'title'       => 'WooCommerce Shipping',
             'description' => xw_t( 'Ordena los métodos de envío, selecciona el más económico y permite añadir cargos por rangos del subtotal.', 'Sorts shipping methods, selects the lowest-priced option, and can add fees based on subtotal ranges.' ),
             'settings'    => true,
-            'wide'        => true,
         ),
         'woocommerce_product_hover_image' => array(
             'title'       => xw_t( 'WooCommerce: segunda imagen al pasar el cursor', 'WooCommerce: second image on hover' ),

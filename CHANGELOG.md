@@ -1,5 +1,9 @@
 # Historial de cambios
 
+## 1.0.26
+
+- “WooCommerce Shipping” vuelve al ancho normal de las demás funciones y deja de ocupar toda la fila.
+
 ## 1.0.25
 
 - “WooCommerce Shipping” incorpora el submódulo opcional “Extra Fees”, que se activa por separado dentro de sus ajustes.
