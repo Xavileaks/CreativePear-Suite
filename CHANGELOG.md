@@ -1,5 +1,14 @@
 # Historial de cambios
 
+## 1.0.28
+
+- Nueva función “Variation Swatches” enfocada exclusivamente en la página de producto individual.
+- Convierte atributos en etiquetas, colores o imágenes manteniendo el selector nativo de WooCommerce para precio, stock, galería y compra.
+- Añade seis pestañas de configuración: General, Diseño, Etiquetas, Colores, Imágenes y Tooltip.
+- Incorpora tipos de atributo propios y campos para asignar colores, etiquetas o imágenes desde Productos → Atributos.
+- Reutiliza los metadatos de color e imagen del plugin gratuito de referencia para facilitar la migración.
+- Evita ejecutar dos interfaces de swatches a la vez si el plugin de referencia continúa activo.
+
 ## 1.0.27
 
 - Nueva función independiente “Botón flotante de WhatsApp”, desactivada por defecto.

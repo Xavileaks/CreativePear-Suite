@@ -309,9 +309,48 @@
         updateEnabled();
     }
 
+    function buildVariationSwatchesTabs() {
+        $('[data-xw-vs-tabs]').each(function () {
+            var container = $(this);
+            var tabs = container.find('[data-xw-vs-tab]');
+            var panels = container.find('[data-xw-vs-panel]');
+
+            function activate(tab) {
+                var key = $(tab).data('xw-vs-tab');
+                tabs.attr({ 'aria-selected': 'false', tabindex: '-1' });
+                $(tab).attr({ 'aria-selected': 'true', tabindex: '0' });
+                panels.prop('hidden', true);
+                panels.filter('[data-xw-vs-panel="' + key + '"]').prop('hidden', false);
+            }
+
+            tabs.on('click', function () {
+                activate(this);
+            }).on('keydown', function (event) {
+                if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight' && event.key !== 'Home' && event.key !== 'End') {
+                    return;
+                }
+                event.preventDefault();
+                var current = tabs.index(this);
+                var next = current;
+                if (event.key === 'Home') {
+                    next = 0;
+                } else if (event.key === 'End') {
+                    next = tabs.length - 1;
+                } else if (event.key === 'ArrowRight') {
+                    next = (current + 1) % tabs.length;
+                } else {
+                    next = (current - 1 + tabs.length) % tabs.length;
+                }
+                activate(tabs.get(next));
+                tabs.get(next).focus();
+            });
+        });
+    }
+
     $(function () {
         buildPhoneCountrySettings();
         buildExtraFeeSettings();
+        buildVariationSwatchesTabs();
 
         $('[data-xw-toggle]').each(function () {
             updateCard(this);

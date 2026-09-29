@@ -111,6 +111,11 @@ function xw_get_feature_definitions() {
             'description' => xw_t( 'Ordena los métodos de envío, selecciona el más económico y permite añadir cargos por rangos del subtotal.', 'Sorts shipping methods, selects the lowest-priced option, and can add fees based on subtotal ranges.' ),
             'settings'    => true,
         ),
+        'variation_swatches' => array(
+            'title'       => 'Variation Swatches',
+            'description' => xw_t( 'Convierte las variaciones del producto individual en botones, colores o imágenes configurables.', 'Turns single-product variations into configurable buttons, colors, or images.' ),
+            'settings'    => true,
+        ),
         'woocommerce_product_hover_image' => array(
             'title'       => xw_t( 'WooCommerce: segunda imagen al pasar el cursor', 'WooCommerce: second image on hover' ),
             'description' => xw_t( 'Cambia la imagen principal por la primera imagen de la galería en los listados de productos.', 'Changes the main image to the first gallery image in product listings.' ),
@@ -191,6 +196,7 @@ function xw_get_feature_groups() {
                 'woocommerce_cart_css',
                 'woocommerce_checkout_css',
                 'woocommerce_shipping',
+                'variation_swatches',
                 'woocommerce_product_hover_image',
                 'woocommerce_hide_cart_shipping',
                 'woocommerce_require_account_email',
@@ -286,6 +292,57 @@ function xw_get_default_settings() {
                 ),
             ),
         ),
+        'variation_swatches' => array(
+            'auto_label'                  => 1,
+            'variation_images'            => 1,
+            'clear_on_reselect'           => 1,
+            'auto_select'                 => 'none',
+            'hide_reset'                  => 0,
+            'show_selected_label'         => 0,
+            'alignment'                   => 'left',
+            'label_position'              => 'inherit',
+            'disabled_behavior'           => 'blur-cross',
+            'container_padding_top'       => 0,
+            'container_padding_right'     => 0,
+            'container_padding_bottom'    => 20,
+            'container_padding_left'      => 0,
+            'horizontal_gap'              => 10,
+            'vertical_gap'                => 10,
+            'attribute_gap'               => 20,
+            'label_shape'                 => 'square',
+            'label_flex'                  => 0,
+            'label_min_width'             => 40,
+            'label_height'                => 40,
+            'label_font_size'             => 13,
+            'label_text_color'            => '#666666',
+            'label_hover_text_color'      => '#1D2327',
+            'label_selected_text_color'   => '#FFFFFF',
+            'label_background'            => '#FFFFFF',
+            'label_hover_background'      => '#F6F7F7',
+            'label_selected_background'   => '#7A1C0B',
+            'label_border_color'          => '#DCDCDE',
+            'label_hover_border_color'    => '#A7AAAD',
+            'label_selected_border_color' => '#7A1C0B',
+            'color_shape'                 => 'circle',
+            'color_width'                 => 40,
+            'color_height'                => 40,
+            'color_padding'               => 2,
+            'color_border_color'          => '#DCDCDE',
+            'color_hover_border_color'    => '#A7AAAD',
+            'color_selected_border_color' => '#7A1C0B',
+            'image_shape'                 => 'circle',
+            'image_size'                  => 40,
+            'image_padding'               => 2,
+            'image_border_color'          => '#DCDCDE',
+            'image_hover_border_color'    => '#A7AAAD',
+            'image_selected_border_color' => '#7A1C0B',
+            'tooltip_enabled'             => 1,
+            'tooltip_image_size'          => 50,
+            'tooltip_padding'             => 8,
+            'tooltip_radius'              => 5,
+            'tooltip_background'          => '#1D2327',
+            'tooltip_text_color'          => '#FFFFFF',
+        ),
     );
 }
 
@@ -355,6 +412,7 @@ function xw_sanitize_settings( $input ) {
     $whatsapp_button = isset( $input['whatsapp_button'] ) && is_array( $input['whatsapp_button'] ) ? $input['whatsapp_button'] : array();
     $phone     = isset( $input['phone'] ) && is_array( $input['phone'] ) ? $input['phone'] : array();
     $woocommerce = isset( $input['woocommerce'] ) && is_array( $input['woocommerce'] ) ? $input['woocommerce'] : array();
+    $variation_swatches = isset( $input['variation_swatches'] ) && is_array( $input['variation_swatches'] ) ? $input['variation_swatches'] : array();
 
     foreach ( xw_get_feature_definitions() as $key => $definition ) {
         $sanitized['features'][ $key ] = empty( $features[ $key ] ) ? 0 : 1;
@@ -455,6 +513,13 @@ function xw_sanitize_settings( $input ) {
 
     foreach ( array( 'hide_mobile', 'hide_tablet', 'hide_desktop' ) as $visibility_key ) {
         $sanitized['whatsapp_button'][ $visibility_key ] = empty( $whatsapp_button[ $visibility_key ] ) ? 0 : 1;
+    }
+
+    if ( function_exists( 'xw_sanitize_variation_swatches_settings' ) ) {
+        $sanitized['variation_swatches'] = xw_sanitize_variation_swatches_settings(
+            $variation_swatches,
+            $defaults['variation_swatches']
+        );
     }
 
     $phone_mode = isset( $phone['mode'] ) && 'international' === $phone['mode'] ? 'international' : 'area_code';
@@ -1171,6 +1236,8 @@ function xw_render_settings_page() {
                                         </div>
                                     </template>
                                     </div>
+                                <?php elseif ( 'variation_swatches' === $key && function_exists( 'xw_render_variation_swatches_settings' ) ) : ?>
+                                    <?php xw_render_variation_swatches_settings( $settings['variation_swatches'] ); ?>
                                 <?php elseif ( 'woocommerce_product_hover_image' === $key ) : ?>
                                     <div class="xw-field-row xw-field-full">
                                         <label for="xw-product-hover-fade-seconds"><?php echo esc_html( xw_t( 'Duración del fade', 'Fade duration' ) ); ?></label>

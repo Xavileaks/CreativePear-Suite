@@ -292,6 +292,161 @@
     min-height: 40px;
 }
 
+.xw-vs-admin {
+    min-width: 0;
+    margin: -20px;
+}
+
+.xw-vs-scope-note {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #dcdcde;
+    background: #fff;
+}
+
+.xw-vs-scope-note .dashicons {
+    width: 30px;
+    height: 30px;
+    color: var(--xw-accent);
+    font-size: 30px;
+}
+
+.xw-vs-scope-note strong {
+    display: block;
+    margin-bottom: 3px;
+}
+
+.xw-vs-scope-note p,
+.xw-vs-setting p {
+    margin: 0;
+    color: #646970;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.xw-vs-tablist {
+    display: flex;
+    gap: 2px;
+    padding: 10px 10px 0;
+    overflow-x: auto;
+    border-bottom: 1px solid #dcdcde;
+    background: #fff;
+}
+
+.xw-vs-tablist button {
+    flex: 0 0 auto;
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    color: #50575e;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.xw-vs-tablist button:hover,
+.xw-vs-tablist button:focus-visible {
+    color: var(--xw-accent);
+}
+
+.xw-vs-tablist button:focus-visible {
+    outline: 2px solid #2271b1;
+    outline-offset: -2px;
+}
+
+.xw-vs-tablist button[aria-selected="true"] {
+    border-bottom-color: var(--xw-accent);
+    color: var(--xw-accent);
+}
+
+.xw-vs-panel {
+    padding: 18px;
+}
+
+.xw-vs-panel-help {
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--xw-accent);
+    background: #fff;
+    color: #50575e;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.xw-vs-panel[hidden] {
+    display: none;
+}
+
+.xw-vs-settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.xw-vs-setting {
+    min-width: 0;
+    padding: 13px;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.xw-vs-setting > label,
+.xw-vs-setting > div > strong {
+    display: block;
+    margin-bottom: 7px;
+    color: #1d2327;
+    font-weight: 600;
+}
+
+.xw-vs-setting > select {
+    width: 100%;
+    min-height: 38px;
+}
+
+.xw-vs-setting--switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.xw-vs-setting--switch > div > strong {
+    margin-bottom: 4px;
+}
+
+.xw-vs-setting--compact {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.xw-vs-setting--compact > label {
+    margin: 0;
+}
+
+.xw-vs-setting--compact .xw-number-control {
+    flex: 0 0 auto;
+}
+
+.xw-vs-setting--compact .xw-number-control input {
+    width: 66px;
+}
+
+@media (max-width: 782px) {
+    .xw-vs-settings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .xw-vs-tablist {
+        padding-bottom: 2px;
+    }
+}
+
 .xw-btt-icon-picker {
     margin: 0;
     padding: 0;
