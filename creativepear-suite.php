@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.23
+Version: 1.0.24
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.23' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.24' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -1292,6 +1292,112 @@ function xw_preserve_selected_checkout_shipping_method( $default, $rates, $chose
     }
 
     return $chosen_method;
+}
+
+
+// WOOCOMMERCE SHIPPING: ORDENAR POR PRECIO Y ELEGIR LA TARIFA MÁS ECONÓMICA
+
+function xw_shipping_rate_display_total( $rate ) {
+    if ( ! is_object( $rate ) || ! is_callable( array( $rate, 'get_cost' ) ) ) {
+        return PHP_FLOAT_MAX;
+    }
+
+    $total = (float) $rate->get_cost();
+
+    if (
+        function_exists( 'WC' ) &&
+        WC()->cart &&
+        WC()->cart->display_prices_including_tax() &&
+        is_callable( array( $rate, 'get_taxes' ) )
+    ) {
+        $total += array_sum( array_map( 'floatval', (array) $rate->get_taxes() ) );
+    }
+
+    return $total;
+}
+
+add_filter( 'woocommerce_package_rates', 'xw_sort_shipping_rates_lowest_first', PHP_INT_MAX, 2 );
+function xw_sort_shipping_rates_lowest_first( $rates, $package ) {
+    if (
+        ! xw_feature_enabled( 'woocommerce_shipping' ) ||
+        ! is_array( $rates ) ||
+        count( $rates ) < 2
+    ) {
+        return $rates;
+    }
+
+    $sortable = array();
+    $position = 0;
+
+    foreach ( $rates as $rate_id => $rate ) {
+        $sortable[] = array(
+            'id'       => $rate_id,
+            'rate'     => $rate,
+            'total'    => xw_shipping_rate_display_total( $rate ),
+            'position' => $position++,
+        );
+    }
+
+    usort(
+        $sortable,
+        static function ( $left, $right ) {
+            if ( abs( $left['total'] - $right['total'] ) < 0.00001 ) {
+                return $left['position'] <=> $right['position'];
+            }
+
+            return $left['total'] <=> $right['total'];
+        }
+    );
+
+    $ordered_rates = array();
+    foreach ( $sortable as $item ) {
+        $ordered_rates[ $item['id'] ] = $item['rate'];
+    }
+
+    return $ordered_rates;
+}
+
+add_action( 'template_redirect', 'xw_default_checkout_to_lowest_shipping_rate', 20 );
+function xw_default_checkout_to_lowest_shipping_rate() {
+    if (
+        ! xw_feature_enabled( 'woocommerce_shipping' ) ||
+        is_admin() ||
+        wp_doing_ajax() ||
+        ! function_exists( 'is_checkout' ) ||
+        ! is_checkout() ||
+        ( function_exists( 'is_wc_endpoint_url' ) && ( is_wc_endpoint_url( 'order-pay' ) || is_wc_endpoint_url( 'order-received' ) ) ) ||
+        ! function_exists( 'WC' ) ||
+        ! WC()->session
+    ) {
+        return;
+    }
+
+    WC()->session->set( 'chosen_shipping_methods', array() );
+}
+
+add_action( 'wp_head', 'xw_hide_checkout_recalculation_spinner', 100 );
+function xw_hide_checkout_recalculation_spinner() {
+    if (
+        ! xw_feature_enabled( 'woocommerce_shipping' ) ||
+        ! function_exists( 'is_checkout' ) ||
+        ! is_checkout() ||
+        is_admin()
+    ) {
+        return;
+    }
+    ?>
+    <style id="xw-checkout-recalculation-spinner">
+        body.woocommerce-checkout .blockUI.blockOverlay::before,
+        body.woocommerce-checkout .blockUI.blockOverlay::after,
+        body.woocommerce-checkout .blockUI.blockMsg {
+            display: none !important;
+        }
+
+        body.woocommerce-checkout .blockUI.blockOverlay {
+            cursor: progress;
+        }
+    </style>
+    <?php
 }
 
 

@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 1.0.24
+
+- Nueva opción independiente “WooCommerce Shipping”.
+- Ordena las tarifas de cualquier proveedor de menor a mayor y selecciona la más económica en cada nueva carga del checkout.
+- Conserva la elección manual del cliente durante las actualizaciones AJAX.
+- Oculta el indicador de carga de WooCommerce que podía superponerse al encabezado fijo, sin eliminar el bloqueo temporal del checkout.
+
 ## 1.0.23
 
 - Elementor Menu Cart: se añade espacio superior al listado para mostrar completa la insignia de cantidad del primer producto.

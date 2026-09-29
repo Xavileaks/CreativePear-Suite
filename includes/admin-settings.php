@@ -101,6 +101,10 @@ function xw_get_feature_definitions() {
             'title'       => xw_t( 'WooCommerce: CSS checkout', 'WooCommerce: checkout CSS' ),
             'description' => xw_t( 'Mejora el espacio de productos, cantidades, subtotales y métodos de envío en el resumen del pedido.', 'Improves the layout of products, quantities, subtotals, and shipping methods in the order summary.' ),
         ),
+        'woocommerce_shipping' => array(
+            'title'       => 'WooCommerce Shipping',
+            'description' => xw_t( 'Ordena los métodos de envío por precio, selecciona el más económico en cada nueva carga del checkout y evita que el cargador invada el encabezado.', 'Sorts shipping methods by price, selects the lowest-priced option on each new checkout load, and prevents the loader from covering the header.' ),
+        ),
         'woocommerce_product_hover_image' => array(
             'title'       => xw_t( 'WooCommerce: segunda imagen al pasar el cursor', 'WooCommerce: second image on hover' ),
             'description' => xw_t( 'Cambia la imagen principal por la primera imagen de la galería en los listados de productos.', 'Changes the main image to the first gallery image in product listings.' ),
@@ -179,6 +183,7 @@ function xw_get_feature_groups() {
                 'woocommerce_checkout_product_images',
                 'woocommerce_cart_css',
                 'woocommerce_checkout_css',
+                'woocommerce_shipping',
                 'woocommerce_product_hover_image',
                 'woocommerce_hide_cart_shipping',
                 'woocommerce_require_account_email',
