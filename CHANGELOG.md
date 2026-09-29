@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 1.0.25
+
+- “WooCommerce Shipping” incorpora el submódulo opcional “Extra Fees”, que se activa por separado dentro de sus ajustes.
+- Permite elegir entre importe fijo o porcentaje y añadir, eliminar y ordenar automáticamente hasta 50 rangos.
+- El porcentaje se calcula únicamente sobre el subtotal; se aplica un solo rango y el cargo se recalcula con WooCommerce.
+- La fila “Extra Fees” aparece antes de Total y copia la tipografía, color, alineación, espaciado y bordes calculados de Total, incluidos los cambios de Elementor y del checkout AJAX.
+
 ## 1.0.24
 
 - Nueva opción independiente “WooCommerce Shipping”.

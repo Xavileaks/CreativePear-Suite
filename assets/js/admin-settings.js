@@ -218,8 +218,100 @@
         updatePhoneMode();
     }
 
+    function buildExtraFeeSettings() {
+        var builder = $('[data-xw-extra-fee-builder]');
+
+        if (!builder.length) {
+            return;
+        }
+
+        var rules = builder.find('[data-xw-extra-fee-rules]');
+        var template = $('[data-xw-extra-fee-template]').get(0);
+        var enabledToggle = $('[data-xw-extra-fees-toggle]');
+        var settingsPanel = $('[data-xw-extra-fee-settings]');
+        var currencySymbol = builder.data('currency-symbol') || '$';
+        var fixedLabel = builder.data('fixed-label') || 'Fixed fee';
+        var percentageLabel = builder.data('percentage-label') || 'Percentage';
+
+        function getMode() {
+            return $('[data-xw-extra-fee-mode]:checked').val() === 'percentage' ? 'percentage' : 'fixed';
+        }
+
+        function updateEnabled() {
+            settingsPanel.prop('hidden', !enabledToggle.prop('checked'));
+        }
+
+        function reindexRules() {
+            rules.find('[data-xw-extra-fee-rule]').each(function (index) {
+                $(this).find('[data-xw-extra-fee-min]').attr(
+                    'name',
+                    'xw_settings[woocommerce][extra_fee_rules][' + index + '][min]'
+                );
+                $(this).find('[data-xw-extra-fee-max]').attr(
+                    'name',
+                    'xw_settings[woocommerce][extra_fee_rules][' + index + '][max]'
+                );
+                $(this).find('[data-xw-extra-fee-amount]').attr(
+                    'name',
+                    'xw_settings[woocommerce][extra_fee_rules][' + index + '][amount]'
+                );
+            });
+
+            builder.find('[data-xw-extra-fee-empty]').prop(
+                'hidden',
+                rules.find('[data-xw-extra-fee-rule]').length > 0
+            );
+        }
+
+        function updateMode() {
+            var percentage = getMode() === 'percentage';
+
+            rules.find('[data-xw-extra-fee-rule]').each(function () {
+                var row = $(this);
+                var amount = row.find('[data-xw-extra-fee-amount]');
+
+                row.find('[data-xw-extra-fee-amount-label]').text(percentage ? percentageLabel : fixedLabel);
+                row.find('[data-xw-extra-fee-unit]').text(percentage ? '%' : currencySymbol);
+                amount.attr('max', percentage ? '100' : '999999999');
+
+                if (percentage && parseFloat(amount.val()) > 100) {
+                    amount.val('100');
+                }
+            });
+        }
+
+        builder.on('click', '[data-xw-extra-fee-add]', function () {
+            if (!template || !template.content) {
+                return;
+            }
+
+            var previousMaximum = rules.find('[data-xw-extra-fee-rule]').last().find('[data-xw-extra-fee-max]').val();
+            rules.append(template.content.cloneNode(true));
+            reindexRules();
+            updateMode();
+
+            var newRow = rules.find('[data-xw-extra-fee-rule]').last();
+            if (previousMaximum !== undefined && previousMaximum !== '') {
+                newRow.find('[data-xw-extra-fee-min]').val(previousMaximum);
+            }
+            newRow.find('[data-xw-extra-fee-min]').trigger('focus');
+        });
+
+        builder.on('click', '[data-xw-extra-fee-remove]', function () {
+            $(this).closest('[data-xw-extra-fee-rule]').remove();
+            reindexRules();
+        });
+
+        $('[data-xw-extra-fee-mode]').on('change', updateMode);
+        enabledToggle.on('change', updateEnabled);
+        reindexRules();
+        updateMode();
+        updateEnabled();
+    }
+
     $(function () {
         buildPhoneCountrySettings();
+        buildExtraFeeSettings();
 
         $('[data-xw-toggle]').each(function () {
             updateCard(this);

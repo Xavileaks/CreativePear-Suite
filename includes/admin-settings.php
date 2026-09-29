@@ -103,7 +103,9 @@ function xw_get_feature_definitions() {
         ),
         'woocommerce_shipping' => array(
             'title'       => 'WooCommerce Shipping',
-            'description' => xw_t( 'Ordena los métodos de envío por precio, selecciona el más económico en cada nueva carga del checkout y evita que el cargador invada el encabezado.', 'Sorts shipping methods by price, selects the lowest-priced option on each new checkout load, and prevents the loader from covering the header.' ),
+            'description' => xw_t( 'Ordena los métodos de envío, selecciona el más económico y permite añadir cargos por rangos del subtotal.', 'Sorts shipping methods, selects the lowest-priced option, and can add fees based on subtotal ranges.' ),
+            'settings'    => true,
+            'wide'        => true,
         ),
         'woocommerce_product_hover_image' => array(
             'title'       => xw_t( 'WooCommerce: segunda imagen al pasar el cursor', 'WooCommerce: second image on hover' ),
@@ -251,6 +253,15 @@ function xw_get_default_settings() {
         'woocommerce' => array(
             'cart_update_delay'         => 1,
             'product_hover_fade_seconds' => 0.4,
+            'extra_fees_enabled'         => 0,
+            'extra_fee_mode'             => 'fixed',
+            'extra_fee_rules'            => array(
+                array(
+                    'min'    => 0,
+                    'max'    => 100,
+                    'amount' => 3,
+                ),
+            ),
         ),
     );
 }
@@ -280,7 +291,16 @@ function xw_get_settings() {
         }
     }
 
-    return array_replace_recursive( xw_get_default_settings(), $saved );
+    $settings = array_replace_recursive( xw_get_default_settings(), $saved );
+
+    // Las listas dinámicas deben poder guardarse vacías sin recuperar las filas predeterminadas.
+    if ( isset( $saved['woocommerce'] ) && is_array( $saved['woocommerce'] ) && array_key_exists( 'extra_fee_rules', $saved['woocommerce'] ) ) {
+        $settings['woocommerce']['extra_fee_rules'] = is_array( $saved['woocommerce']['extra_fee_rules'] )
+            ? array_values( $saved['woocommerce']['extra_fee_rules'] )
+            : array();
+    }
+
+    return $settings;
 }
 
 /**
@@ -423,6 +443,70 @@ function xw_sanitize_settings( $input ) {
         ? (float) str_replace( ',', '.', (string) $woocommerce['product_hover_fade_seconds'] )
         : $defaults['woocommerce']['product_hover_fade_seconds'];
     $sanitized['woocommerce']['product_hover_fade_seconds'] = max( 0, min( 5, round( $product_hover_fade_seconds, 1 ) ) );
+
+    $sanitized['woocommerce']['extra_fees_enabled'] = empty( $woocommerce['extra_fees_enabled'] ) ? 0 : 1;
+    $extra_fee_mode = isset( $woocommerce['extra_fee_mode'] ) && 'percentage' === $woocommerce['extra_fee_mode']
+        ? 'percentage'
+        : 'fixed';
+    $extra_fee_rules = isset( $woocommerce['extra_fee_rules'] ) && is_array( $woocommerce['extra_fee_rules'] )
+        ? $woocommerce['extra_fee_rules']
+        : array();
+    $sanitized_rules = array();
+    $price_decimals  = function_exists( 'wc_get_price_decimals' ) ? wc_get_price_decimals() : 2;
+
+    foreach ( array_slice( $extra_fee_rules, 0, 50 ) as $rule ) {
+        if ( ! is_array( $rule ) || ! isset( $rule['min'], $rule['max'], $rule['amount'] ) ) {
+            continue;
+        }
+
+        if (
+            ! is_scalar( $rule['min'] ) ||
+            ! is_scalar( $rule['max'] ) ||
+            ! is_scalar( $rule['amount'] ) ||
+            '' === trim( (string) $rule['min'] ) ||
+            '' === trim( (string) $rule['max'] ) ||
+            '' === trim( (string) $rule['amount'] )
+        ) {
+            continue;
+        }
+
+        $minimum = is_scalar( $rule['min'] )
+            ? (float) str_replace( ',', '.', (string) $rule['min'] )
+            : -1;
+        $maximum = is_scalar( $rule['max'] )
+            ? (float) str_replace( ',', '.', (string) $rule['max'] )
+            : -1;
+        $amount = is_scalar( $rule['amount'] )
+            ? (float) str_replace( ',', '.', (string) $rule['amount'] )
+            : -1;
+
+        if ( $minimum < 0 || $maximum < 0 || $amount < 0 ) {
+            continue;
+        }
+
+        $minimum = min( 999999999, $minimum );
+        $maximum = min( 999999999, max( $minimum, $maximum ) );
+
+        $sanitized_rules[] = array(
+            'min'    => round( $minimum, $price_decimals ),
+            'max'    => round( $maximum, $price_decimals ),
+            'amount' => round( min( 'percentage' === $extra_fee_mode ? 100 : 999999999, $amount ), $price_decimals ),
+        );
+    }
+
+    usort(
+        $sanitized_rules,
+        static function ( $left, $right ) {
+            if ( $left['min'] === $right['min'] ) {
+                return $left['max'] <=> $right['max'];
+            }
+
+            return $left['min'] <=> $right['min'];
+        }
+    );
+
+    $sanitized['woocommerce']['extra_fee_mode']  = $extra_fee_mode;
+    $sanitized['woocommerce']['extra_fee_rules'] = $sanitized_rules;
 
     return $sanitized;
 }
@@ -823,6 +907,135 @@ function xw_render_settings_page() {
                                             <span><?php echo esc_html( xw_t( 'segundos', 'seconds' ) ); ?></span>
                                         </div>
                                         <p><?php echo esc_html( xw_t( 'La espera comienza después del último cambio de cantidad. Use 0 para actualizar inmediatamente.', 'The delay starts after the last quantity change. Use 0 to update immediately.' ) ); ?></p>
+                                    </div>
+                                <?php elseif ( 'woocommerce_shipping' === $key ) : ?>
+                                    <?php
+                                    $extra_fees_enabled = ! empty( $settings['woocommerce']['extra_fees_enabled'] );
+                                    $extra_fee_mode = 'percentage' === $settings['woocommerce']['extra_fee_mode'] ? 'percentage' : 'fixed';
+                                    $extra_fee_rules = is_array( $settings['woocommerce']['extra_fee_rules'] ) ? $settings['woocommerce']['extra_fee_rules'] : array();
+                                    $currency_symbol = function_exists( 'get_woocommerce_currency_symbol' ) ? get_woocommerce_currency_symbol() : '$';
+                                    ?>
+                                    <div class="xw-extra-fee-master xw-field-full">
+                                        <div>
+                                            <strong><?php echo esc_html( xw_t( 'Extra Fees', 'Extra Fees' ) ); ?></strong>
+                                            <p><?php echo esc_html( xw_t( 'Añade un cargo fijo o porcentual según el rango del subtotal.', 'Adds a fixed or percentage fee based on the subtotal range.' ) ); ?></p>
+                                        </div>
+                                        <label class="xw-switch">
+                                            <span class="screen-reader-text"><?php echo esc_html( xw_t( 'Activar Extra Fees', 'Enable Extra Fees' ) ); ?></span>
+                                            <input
+                                                type="checkbox"
+                                                name="xw_settings[woocommerce][extra_fees_enabled]"
+                                                value="1"
+                                                <?php checked( $extra_fees_enabled ); ?>
+                                                data-xw-extra-fees-toggle
+                                            >
+                                            <span class="xw-switch-track" aria-hidden="true"><span></span></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="xw-extra-fee-settings xw-field-full" data-xw-extra-fee-settings<?php echo $extra_fees_enabled ? '' : ' hidden'; ?>>
+                                    <fieldset class="xw-extra-fee-modes xw-field-full" data-xw-extra-fee-modes>
+                                        <legend><?php echo esc_html( xw_t( 'Tipo de cargo', 'Fee type' ) ); ?></legend>
+                                        <label>
+                                            <input type="radio" name="xw_settings[woocommerce][extra_fee_mode]" value="fixed" <?php checked( $extra_fee_mode, 'fixed' ); ?> data-xw-extra-fee-mode>
+                                            <span>
+                                                <strong><?php echo esc_html( xw_t( 'Precio fijo', 'Fixed price' ) ); ?></strong>
+                                                <small><?php echo esc_html( xw_t( 'Cobra el importe indicado para el tramo.', 'Charges the amount entered for the tier.' ) ); ?></small>
+                                            </span>
+                                        </label>
+                                        <label>
+                                            <input type="radio" name="xw_settings[woocommerce][extra_fee_mode]" value="percentage" <?php checked( $extra_fee_mode, 'percentage' ); ?> data-xw-extra-fee-mode>
+                                            <span>
+                                                <strong><?php echo esc_html( xw_t( 'Porcentaje', 'Percentage' ) ); ?></strong>
+                                                <small><?php echo esc_html( xw_t( 'Calcula el porcentaje sobre el subtotal.', 'Calculates the percentage from the subtotal.' ) ); ?></small>
+                                            </span>
+                                        </label>
+                                    </fieldset>
+
+                                    <div
+                                        class="xw-extra-fee-builder xw-field-full"
+                                        data-xw-extra-fee-builder
+                                        data-currency-symbol="<?php echo esc_attr( $currency_symbol ); ?>"
+                                        data-fixed-label="<?php echo esc_attr( xw_t( 'Cargo fijo', 'Fixed fee' ) ); ?>"
+                                        data-percentage-label="<?php echo esc_attr( xw_t( 'Porcentaje', 'Percentage' ) ); ?>"
+                                    >
+                                        <div class="xw-extra-fee-builder-header">
+                                            <div>
+                                                <strong><?php echo esc_html( xw_t( 'Tramos por subtotal', 'Subtotal tiers' ) ); ?></strong>
+                                                <p><?php echo esc_html( xw_t( 'El cargo cambia cuando el subtotal entra en uno de los rangos configurados.', 'The fee changes when the subtotal falls within a configured range.' ) ); ?></p>
+                                            </div>
+                                            <button type="button" class="button" data-xw-extra-fee-add>
+                                                <span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>
+                                                <?php echo esc_html( xw_t( 'Agregar otro', 'Add another' ) ); ?>
+                                            </button>
+                                        </div>
+
+                                        <div class="xw-extra-fee-rules" data-xw-extra-fee-rules>
+                                            <?php foreach ( $extra_fee_rules as $rule_index => $rule ) : ?>
+                                                <div class="xw-extra-fee-rule" data-xw-extra-fee-rule>
+                                                    <div class="xw-field-row">
+                                                        <label><?php echo esc_html( xw_t( 'Desde', 'From' ) ); ?></label>
+                                                        <div class="xw-number-control">
+                                                            <span><?php echo esc_html( $currency_symbol ); ?></span>
+                                                            <input type="number" name="xw_settings[woocommerce][extra_fee_rules][<?php echo esc_attr( $rule_index ); ?>][min]" value="<?php echo esc_attr( $rule['min'] ); ?>" min="0" max="999999999" step="0.01" inputmode="decimal" data-xw-extra-fee-min>
+                                                        </div>
+                                                    </div>
+                                                    <div class="xw-field-row">
+                                                        <label><?php echo esc_html( xw_t( 'Hasta', 'To' ) ); ?></label>
+                                                        <div class="xw-number-control">
+                                                            <span><?php echo esc_html( $currency_symbol ); ?></span>
+                                                            <input type="number" name="xw_settings[woocommerce][extra_fee_rules][<?php echo esc_attr( $rule_index ); ?>][max]" value="<?php echo esc_attr( $rule['max'] ); ?>" min="0" max="999999999" step="0.01" inputmode="decimal" data-xw-extra-fee-max>
+                                                        </div>
+                                                    </div>
+                                                    <div class="xw-field-row">
+                                                        <label data-xw-extra-fee-amount-label><?php echo esc_html( 'percentage' === $extra_fee_mode ? xw_t( 'Porcentaje', 'Percentage' ) : xw_t( 'Cargo fijo', 'Fixed fee' ) ); ?></label>
+                                                        <div class="xw-number-control">
+                                                            <input type="number" name="xw_settings[woocommerce][extra_fee_rules][<?php echo esc_attr( $rule_index ); ?>][amount]" value="<?php echo esc_attr( $rule['amount'] ); ?>" min="0" max="<?php echo 'percentage' === $extra_fee_mode ? '100' : '999999999'; ?>" step="0.01" inputmode="decimal" data-xw-extra-fee-amount>
+                                                            <span data-xw-extra-fee-unit><?php echo esc_html( 'percentage' === $extra_fee_mode ? '%' : $currency_symbol ); ?></span>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" class="button-link-delete xw-extra-fee-remove" data-xw-extra-fee-remove aria-label="<?php echo esc_attr( xw_t( 'Eliminar este tramo', 'Remove this tier' ) ); ?>">
+                                                        <span class="dashicons dashicons-trash" aria-hidden="true"></span>
+                                                        <span><?php echo esc_html( xw_t( 'Eliminar', 'Remove' ) ); ?></span>
+                                                    </button>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+
+                                        <p class="xw-extra-fee-empty" data-xw-extra-fee-empty<?php echo empty( $extra_fee_rules ) ? '' : ' hidden'; ?>>
+                                            <?php echo esc_html( xw_t( 'Agregue al menos un tramo para aplicar el cargo.', 'Add at least one tier to apply the fee.' ) ); ?>
+                                        </p>
+                                    </div>
+
+                                    <template data-xw-extra-fee-template>
+                                        <div class="xw-extra-fee-rule" data-xw-extra-fee-rule>
+                                            <div class="xw-field-row">
+                                                <label><?php echo esc_html( xw_t( 'Desde', 'From' ) ); ?></label>
+                                                <div class="xw-number-control">
+                                                    <span><?php echo esc_html( $currency_symbol ); ?></span>
+                                                    <input type="number" min="0" max="999999999" step="0.01" inputmode="decimal" data-xw-extra-fee-min>
+                                                </div>
+                                            </div>
+                                            <div class="xw-field-row">
+                                                <label><?php echo esc_html( xw_t( 'Hasta', 'To' ) ); ?></label>
+                                                <div class="xw-number-control">
+                                                    <span><?php echo esc_html( $currency_symbol ); ?></span>
+                                                    <input type="number" min="0" max="999999999" step="0.01" inputmode="decimal" data-xw-extra-fee-max>
+                                                </div>
+                                            </div>
+                                            <div class="xw-field-row">
+                                                <label data-xw-extra-fee-amount-label><?php echo esc_html( xw_t( 'Cargo fijo', 'Fixed fee' ) ); ?></label>
+                                                <div class="xw-number-control">
+                                                    <input type="number" min="0" max="999999999" step="0.01" inputmode="decimal" data-xw-extra-fee-amount>
+                                                    <span data-xw-extra-fee-unit><?php echo esc_html( $currency_symbol ); ?></span>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="button-link-delete xw-extra-fee-remove" data-xw-extra-fee-remove aria-label="<?php echo esc_attr( xw_t( 'Eliminar este tramo', 'Remove this tier' ) ); ?>">
+                                                <span class="dashicons dashicons-trash" aria-hidden="true"></span>
+                                                <span><?php echo esc_html( xw_t( 'Eliminar', 'Remove' ) ); ?></span>
+                                            </button>
+                                        </div>
+                                    </template>
                                     </div>
                                 <?php elseif ( 'woocommerce_product_hover_image' === $key ) : ?>
                                     <div class="xw-field-row xw-field-full">

@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.24
+Version: 1.0.25
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.24' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.25' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -1398,6 +1398,105 @@ function xw_hide_checkout_recalculation_spinner() {
         }
     </style>
     <?php
+}
+
+
+// WOOCOMMERCE EXTRA FEES: CARGO POR RANGOS DEL SUBTOTAL
+
+function xw_extra_fees_enabled() {
+    $settings = xw_get_settings();
+
+    return ! empty( $settings['features']['woocommerce_shipping'] )
+        && ! empty( $settings['woocommerce']['extra_fees_enabled'] );
+}
+
+add_action( 'woocommerce_cart_calculate_fees', 'xw_apply_subtotal_extra_fee', 20 );
+function xw_apply_subtotal_extra_fee( $cart ) {
+    if (
+        ! xw_extra_fees_enabled() ||
+        ! is_object( $cart ) ||
+        ( is_admin() && ! wp_doing_ajax() )
+    ) {
+        return;
+    }
+
+    $settings = xw_get_settings();
+    $mode     = isset( $settings['woocommerce']['extra_fee_mode'] ) && 'percentage' === $settings['woocommerce']['extra_fee_mode']
+        ? 'percentage'
+        : 'fixed';
+    $rules    = isset( $settings['woocommerce']['extra_fee_rules'] ) && is_array( $settings['woocommerce']['extra_fee_rules'] )
+        ? $settings['woocommerce']['extra_fee_rules']
+        : array();
+    $subtotal = max( 0, (float) $cart->get_subtotal() );
+    $selected = null;
+
+    foreach ( $rules as $rule ) {
+        if ( ! is_array( $rule ) || ! isset( $rule['min'], $rule['max'], $rule['amount'] ) ) {
+            continue;
+        }
+
+        $minimum = max( 0, (float) $rule['min'] );
+        $maximum = max( $minimum, (float) $rule['max'] );
+
+        if (
+            $subtotal >= $minimum &&
+            $subtotal <= $maximum &&
+            ( null === $selected || $minimum >= $selected['min'] )
+        ) {
+            $selected = array(
+                'min'    => $minimum,
+                'amount' => max( 0, (float) $rule['amount'] ),
+            );
+        }
+    }
+
+    if ( null === $selected ) {
+        return;
+    }
+
+    $fee = 'percentage' === $mode
+        ? $subtotal * min( 100, $selected['amount'] ) / 100
+        : $selected['amount'];
+    $fee = round( $fee, function_exists( 'wc_get_price_decimals' ) ? wc_get_price_decimals() : 2 );
+
+    if ( $fee <= 0 ) {
+        return;
+    }
+
+    $cart->add_fee( 'Extra Fees', $fee, false );
+}
+
+add_action( 'wp_enqueue_scripts', 'xw_enqueue_extra_fee_checkout_script', 40 );
+function xw_enqueue_extra_fee_checkout_script() {
+    if (
+        is_admin() ||
+        ! xw_extra_fees_enabled() ||
+        ! function_exists( 'is_checkout' ) ||
+        ! is_checkout() ||
+        ( function_exists( 'is_wc_endpoint_url' ) && ( is_wc_endpoint_url( 'order-pay' ) || is_wc_endpoint_url( 'order-received' ) ) )
+    ) {
+        return;
+    }
+
+    $relative_path = 'assets/js/woocommerce-extra-fee.js';
+    $file_path     = plugin_dir_path( __FILE__ ) . $relative_path;
+
+    if ( ! file_exists( $file_path ) ) {
+        return;
+    }
+
+    wp_enqueue_script(
+        'xw-woocommerce-extra-fee',
+        plugin_dir_url( __FILE__ ) . $relative_path,
+        array( 'jquery' ),
+        filemtime( $file_path ),
+        true
+    );
+    wp_localize_script(
+        'xw-woocommerce-extra-fee',
+        'xwExtraFeeSettings',
+        array( 'label' => 'Extra Fees' )
+    );
 }
 
 
