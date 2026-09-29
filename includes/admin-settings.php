@@ -67,6 +67,11 @@ function xw_get_feature_definitions() {
             'description' => xw_t( 'Muestra un botón con progreso de lectura que regresa suavemente al inicio de la página.', 'Displays a reading-progress button that smoothly returns to the top of the page.' ),
             'settings'    => true,
         ),
+        'whatsapp_button' => array(
+            'title'       => xw_t( 'Botón flotante de WhatsApp', 'Floating WhatsApp button' ),
+            'description' => xw_t( 'Muestra un acceso flotante configurable que abre una conversación con el número indicado.', 'Displays a configurable floating shortcut that opens a conversation with the specified number.' ),
+            'settings'    => true,
+        ),
         'elementor_messages' => array(
             'title'       => xw_t( 'Form Elementor: mensajes flotantes', 'Form Elementor: floating messages' ),
             'description' => xw_t( 'Muestra las respuestas de formularios como avisos flotantes temporales.', 'Displays form responses as temporary floating notices.' ),
@@ -161,6 +166,7 @@ function xw_get_feature_groups() {
                 'admin_bar_style',
                 'admin_branding',
                 'back_to_top',
+                'whatsapp_button',
                 'preloader',
                 'admin_notices',
                 'plugin_export',
@@ -239,6 +245,24 @@ function xw_get_default_settings() {
             'border_color'      => '',
             'icon_color'        => '',
             'progress_color'    => '',
+            'hide_mobile'       => 0,
+            'hide_tablet'       => 0,
+            'hide_desktop'      => 0,
+        ),
+        'whatsapp_button' => array(
+            'phone_number'      => '',
+            'position'          => 'bottom-right',
+            'shape'             => 'circle',
+            'vertical_margin'   => 20,
+            'horizontal_margin' => 20,
+            'offset'            => 300,
+            'duration'          => 500,
+            'button_size'       => 46,
+            'border_size'       => 1,
+            'icon_size'         => 20,
+            'background_color'  => '#25D366',
+            'border_color'      => '#25D366',
+            'icon_color'        => '#FFFFFF',
             'hide_mobile'       => 0,
             'hide_tablet'       => 0,
             'hide_desktop'      => 0,
@@ -328,6 +352,7 @@ function xw_sanitize_settings( $input ) {
     $styles    = isset( $input['styles'] ) && is_array( $input['styles'] ) ? $input['styles'] : array();
     $branding  = isset( $input['admin_branding'] ) && is_array( $input['admin_branding'] ) ? $input['admin_branding'] : array();
     $back_to_top = isset( $input['back_to_top'] ) && is_array( $input['back_to_top'] ) ? $input['back_to_top'] : array();
+    $whatsapp_button = isset( $input['whatsapp_button'] ) && is_array( $input['whatsapp_button'] ) ? $input['whatsapp_button'] : array();
     $phone     = isset( $input['phone'] ) && is_array( $input['phone'] ) ? $input['phone'] : array();
     $woocommerce = isset( $input['woocommerce'] ) && is_array( $input['woocommerce'] ) ? $input['woocommerce'] : array();
 
@@ -399,6 +424,37 @@ function xw_sanitize_settings( $input ) {
 
     foreach ( array( 'hide_mobile', 'hide_tablet', 'hide_desktop' ) as $visibility_key ) {
         $sanitized['back_to_top'][ $visibility_key ] = empty( $back_to_top[ $visibility_key ] ) ? 0 : 1;
+    }
+
+    $whatsapp_phone = isset( $whatsapp_button['phone_number'] ) && is_scalar( $whatsapp_button['phone_number'] )
+        ? preg_replace( '/\D+/', '', (string) $whatsapp_button['phone_number'] )
+        : '';
+    $whatsapp_position = isset( $whatsapp_button['position'] ) ? sanitize_key( $whatsapp_button['position'] ) : $defaults['whatsapp_button']['position'];
+    $whatsapp_shape = isset( $whatsapp_button['shape'] ) ? sanitize_key( $whatsapp_button['shape'] ) : $defaults['whatsapp_button']['shape'];
+    $whatsapp_button_size = isset( $whatsapp_button['button_size'] ) ? absint( $whatsapp_button['button_size'] ) : $defaults['whatsapp_button']['button_size'];
+
+    $sanitized['whatsapp_button']['phone_number'] = substr( $whatsapp_phone, 0, 15 );
+    $sanitized['whatsapp_button']['position'] = in_array( $whatsapp_position, array( 'bottom-right', 'bottom-left' ), true )
+        ? $whatsapp_position
+        : $defaults['whatsapp_button']['position'];
+    $sanitized['whatsapp_button']['shape'] = in_array( $whatsapp_shape, array( 'circle', 'rounded', 'square' ), true )
+        ? $whatsapp_shape
+        : $defaults['whatsapp_button']['shape'];
+    $sanitized['whatsapp_button']['vertical_margin'] = max( 0, min( 200, isset( $whatsapp_button['vertical_margin'] ) ? absint( $whatsapp_button['vertical_margin'] ) : $defaults['whatsapp_button']['vertical_margin'] ) );
+    $sanitized['whatsapp_button']['horizontal_margin'] = max( 0, min( 200, isset( $whatsapp_button['horizontal_margin'] ) ? absint( $whatsapp_button['horizontal_margin'] ) : $defaults['whatsapp_button']['horizontal_margin'] ) );
+    $sanitized['whatsapp_button']['offset'] = max( 0, min( 5000, isset( $whatsapp_button['offset'] ) ? absint( $whatsapp_button['offset'] ) : $defaults['whatsapp_button']['offset'] ) );
+    $sanitized['whatsapp_button']['duration'] = max( 0, min( 3000, isset( $whatsapp_button['duration'] ) ? absint( $whatsapp_button['duration'] ) : $defaults['whatsapp_button']['duration'] ) );
+    $sanitized['whatsapp_button']['button_size'] = max( 32, min( 100, $whatsapp_button_size ) );
+    $sanitized['whatsapp_button']['border_size'] = max( 0, min( 10, isset( $whatsapp_button['border_size'] ) ? absint( $whatsapp_button['border_size'] ) : $defaults['whatsapp_button']['border_size'] ) );
+    $sanitized['whatsapp_button']['icon_size'] = max( 12, min( $sanitized['whatsapp_button']['button_size'] - 8, isset( $whatsapp_button['icon_size'] ) ? absint( $whatsapp_button['icon_size'] ) : $defaults['whatsapp_button']['icon_size'] ) );
+
+    foreach ( array( 'background_color', 'border_color', 'icon_color' ) as $color_key ) {
+        $color = isset( $whatsapp_button[ $color_key ] ) ? sanitize_hex_color( $whatsapp_button[ $color_key ] ) : '';
+        $sanitized['whatsapp_button'][ $color_key ] = $color ? $color : '';
+    }
+
+    foreach ( array( 'hide_mobile', 'hide_tablet', 'hide_desktop' ) as $visibility_key ) {
+        $sanitized['whatsapp_button'][ $visibility_key ] = empty( $whatsapp_button[ $visibility_key ] ) ? 0 : 1;
     }
 
     $phone_mode = isset( $phone['mode'] ) && 'international' === $phone['mode'] ? 'international' : 'area_code';
@@ -818,6 +874,85 @@ function xw_render_settings_page() {
                                             </label>
                                             <label class="xw-check-control">
                                                 <input type="checkbox" name="xw_settings[back_to_top][hide_desktop]" value="1" <?php checked( ! empty( $settings['back_to_top']['hide_desktop'] ) ); ?>>
+                                                <span><?php echo esc_html( xw_t( 'Escritorio', 'Desktop' ) ); ?></span>
+                                            </label>
+                                        </div>
+                                    </fieldset>
+                                <?php elseif ( 'whatsapp_button' === $key ) : ?>
+                                    <div class="xw-field-row xw-field-full xw-text-control">
+                                        <label for="xw-whatsapp-phone"><?php echo esc_html( xw_t( 'Número de WhatsApp', 'WhatsApp number' ) ); ?></label>
+                                        <input id="xw-whatsapp-phone" type="tel" name="xw_settings[whatsapp_button][phone_number]" value="<?php echo esc_attr( $settings['whatsapp_button']['phone_number'] ); ?>" inputmode="tel" autocomplete="tel" placeholder="+1 217 581 7106">
+                                        <p><?php echo esc_html( xw_t( 'Incluya el código del país. Se guardarán únicamente los números necesarios para el enlace de WhatsApp.', 'Include the country code. Only the digits required by the WhatsApp link will be saved.' ) ); ?></p>
+                                    </div>
+
+                                    <h3 class="xw-options-heading"><?php echo esc_html( xw_t( 'Posición y movimiento', 'Position and movement' ) ); ?></h3>
+                                    <div class="xw-field-row">
+                                        <label for="xw-whatsapp-position"><?php echo esc_html( xw_t( 'Posición del botón', 'Button position' ) ); ?></label>
+                                        <select id="xw-whatsapp-position" name="xw_settings[whatsapp_button][position]">
+                                            <option value="bottom-right" <?php selected( $settings['whatsapp_button']['position'], 'bottom-right' ); ?>><?php echo esc_html( xw_t( 'Abajo a la derecha', 'Bottom right' ) ); ?></option>
+                                            <option value="bottom-left" <?php selected( $settings['whatsapp_button']['position'], 'bottom-left' ); ?>><?php echo esc_html( xw_t( 'Abajo a la izquierda', 'Bottom left' ) ); ?></option>
+                                        </select>
+                                    </div>
+                                    <div class="xw-field-row">
+                                        <label for="xw-whatsapp-shape"><?php echo esc_html( xw_t( 'Forma del botón', 'Button shape' ) ); ?></label>
+                                        <select id="xw-whatsapp-shape" name="xw_settings[whatsapp_button][shape]">
+                                            <option value="circle" <?php selected( $settings['whatsapp_button']['shape'], 'circle' ); ?>><?php echo esc_html( xw_t( 'Circular', 'Circle' ) ); ?></option>
+                                            <option value="rounded" <?php selected( $settings['whatsapp_button']['shape'], 'rounded' ); ?>><?php echo esc_html( xw_t( 'Redondeado', 'Rounded' ) ); ?></option>
+                                            <option value="square" <?php selected( $settings['whatsapp_button']['shape'], 'square' ); ?>><?php echo esc_html( xw_t( 'Cuadrado', 'Square' ) ); ?></option>
+                                        </select>
+                                    </div>
+
+                                    <?php
+                                    $whatsapp_number_fields = array(
+                                        'vertical_margin'   => array( xw_t( 'Margen vertical', 'Vertical margin' ), 'px', 0, 200, 1 ),
+                                        'horizontal_margin' => array( xw_t( 'Margen horizontal', 'Horizontal margin' ), 'px', 0, 200, 1 ),
+                                        'offset'            => array( xw_t( 'Aparecer después', 'Show after' ), 'px', 0, 5000, 1 ),
+                                        'duration'          => array( xw_t( 'Duración', 'Duration' ), 'ms', 0, 3000, 50 ),
+                                        'button_size'       => array( xw_t( 'Botón', 'Button' ), 'px', 32, 100, 1 ),
+                                        'icon_size'         => array( xw_t( 'Icono', 'Icon' ), 'px', 12, 92, 1 ),
+                                        'border_size'       => array( xw_t( 'Borde', 'Border' ), 'px', 0, 10, 1 ),
+                                    );
+                                    ?>
+                                    <?php foreach ( $whatsapp_number_fields as $field_key => $field_data ) : ?>
+                                        <div class="xw-field-row xw-btt-compact-field">
+                                            <label for="xw-whatsapp-<?php echo esc_attr( str_replace( '_', '-', $field_key ) ); ?>"><?php echo esc_html( $field_data[0] ); ?></label>
+                                            <div class="xw-number-control">
+                                                <input id="xw-whatsapp-<?php echo esc_attr( str_replace( '_', '-', $field_key ) ); ?>" type="number" name="xw_settings[whatsapp_button][<?php echo esc_attr( $field_key ); ?>]" value="<?php echo esc_attr( $settings['whatsapp_button'][ $field_key ] ); ?>" min="<?php echo esc_attr( $field_data[2] ); ?>" max="<?php echo esc_attr( $field_data[3] ); ?>" step="<?php echo esc_attr( $field_data[4] ); ?>">
+                                                <span><?php echo esc_html( $field_data[1] ); ?></span>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+
+                                    <?php
+                                    $whatsapp_colors = array(
+                                        'background_color' => array( xw_t( 'Color de fondo', 'Background color' ), '#25D366' ),
+                                        'border_color'     => array( xw_t( 'Color del borde', 'Border color' ), '#25D366' ),
+                                        'icon_color'       => array( xw_t( 'Color del icono', 'Icon color' ), '#FFFFFF' ),
+                                    );
+                                    ?>
+                                    <?php foreach ( $whatsapp_colors as $color_key => $color_data ) : ?>
+                                        <div class="xw-field-row">
+                                            <label for="xw-whatsapp-<?php echo esc_attr( str_replace( '_', '-', $color_key ) ); ?>"><?php echo esc_html( $color_data[0] ); ?></label>
+                                            <div class="xw-color-control">
+                                                <input id="xw-whatsapp-<?php echo esc_attr( str_replace( '_', '-', $color_key ) ); ?>" type="color" class="<?php echo empty( $settings['whatsapp_button'][ $color_key ] ) ? 'is-empty' : ''; ?>" value="<?php echo esc_attr( $settings['whatsapp_button'][ $color_key ] ?: $color_data[1] ); ?>" data-xw-color-picker>
+                                                <input type="text" name="xw_settings[whatsapp_button][<?php echo esc_attr( $color_key ); ?>]" class="xw-color-text" value="<?php echo esc_attr( $settings['whatsapp_button'][ $color_key ] ); ?>" maxlength="7" spellcheck="false" placeholder="#RRGGBB" aria-label="<?php echo esc_attr( $color_data[0] ); ?>" data-xw-color-value>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+
+                                    <fieldset class="xw-btt-visibility xw-field-full">
+                                        <legend><?php echo esc_html( xw_t( 'Ocultar visibilidad por dispositivo', 'Hide visibility by device' ) ); ?></legend>
+                                        <div class="xw-btt-visibility-grid">
+                                            <label class="xw-check-control">
+                                                <input type="checkbox" name="xw_settings[whatsapp_button][hide_mobile]" value="1" <?php checked( ! empty( $settings['whatsapp_button']['hide_mobile'] ) ); ?>>
+                                                <span><?php echo esc_html( xw_t( 'Móvil', 'Mobile' ) ); ?></span>
+                                            </label>
+                                            <label class="xw-check-control">
+                                                <input type="checkbox" name="xw_settings[whatsapp_button][hide_tablet]" value="1" <?php checked( ! empty( $settings['whatsapp_button']['hide_tablet'] ) ); ?>>
+                                                <span>Tablet</span>
+                                            </label>
+                                            <label class="xw-check-control">
+                                                <input type="checkbox" name="xw_settings[whatsapp_button][hide_desktop]" value="1" <?php checked( ! empty( $settings['whatsapp_button']['hide_desktop'] ) ); ?>>
                                                 <span><?php echo esc_html( xw_t( 'Escritorio', 'Desktop' ) ); ?></span>
                                             </label>
                                         </div>
