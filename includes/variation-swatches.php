@@ -25,11 +25,13 @@ function xw_sanitize_variation_swatches_settings( $input, $defaults ) {
     $enums = array(
         'auto_select'       => array( 'none', 'page_load', 'after_first' ),
         'alignment'         => array( 'left', 'center', 'right' ),
+        'attribute_label_alignment' => array( 'left', 'center', 'right' ),
         'label_position'    => array( 'inherit', 'above', 'hidden' ),
         'disabled_behavior' => array( 'hide', 'blur', 'cross', 'blur-cross' ),
         'label_shape'       => array( 'square', 'circle', 'rounded' ),
         'color_shape'       => array( 'square', 'circle', 'rounded' ),
         'image_shape'       => array( 'square', 'circle', 'rounded' ),
+        'tooltip_content'   => array( 'text', 'image', 'text_image' ),
     );
 
     foreach ( $enums as $key => $allowed ) {
@@ -45,6 +47,8 @@ function xw_sanitize_variation_swatches_settings( $input, $defaults ) {
         'horizontal_gap'           => array( 0, 60 ),
         'vertical_gap'             => array( 0, 60 ),
         'attribute_gap'            => array( 0, 100 ),
+        'attribute_label_padding_left'  => array( 0, 100 ),
+        'attribute_label_padding_right' => array( 0, 100 ),
         'label_min_width'          => array( 20, 200 ),
         'label_height'             => array( 20, 120 ),
         'label_font_size'          => array( 8, 40 ),
@@ -81,6 +85,8 @@ function xw_sanitize_variation_swatches_settings( $input, $defaults ) {
         'image_selected_border_color',
         'tooltip_background',
         'tooltip_text_color',
+        'clear_color',
+        'clear_hover_color',
     );
 
     foreach ( $colors as $key ) {
@@ -218,6 +224,9 @@ function xw_render_variation_swatches_settings( $settings ) {
         <section id="xw-vs-panel-design" class="xw-vs-panel" role="tabpanel" aria-labelledby="xw-vs-tab-design" data-xw-vs-panel="design" hidden>
             <div class="xw-vs-settings-grid">
                 <?php xw_vs_admin_select( $settings, 'alignment', xw_t( 'Alineación', 'Alignment' ), array( 'left' => xw_t( 'Izquierda', 'Left' ), 'center' => xw_t( 'Centro', 'Center' ), 'right' => xw_t( 'Derecha', 'Right' ) ) ); ?>
+                <?php xw_vs_admin_select( $settings, 'attribute_label_alignment', xw_t( 'Alineación de etiquetas', 'Labels alignment' ), array( 'left' => xw_t( 'Izquierda', 'Left' ), 'center' => xw_t( 'Centro', 'Center' ), 'right' => xw_t( 'Derecha', 'Right' ) ), xw_t( 'Alinea los nombres de los atributos de forma independiente a los swatches.', 'Aligns the attribute names independently from the swatches.' ) ); ?>
+                <?php xw_vs_admin_number( $settings, 'attribute_label_padding_left', xw_t( 'Padding izquierdo de etiquetas', 'Labels left padding' ), 0, 100 ); ?>
+                <?php xw_vs_admin_number( $settings, 'attribute_label_padding_right', xw_t( 'Padding derecho de etiquetas', 'Labels right padding' ), 0, 100 ); ?>
                 <?php xw_vs_admin_select( $settings, 'label_position', xw_t( 'Posición de la etiqueta', 'Attribute label position' ), array( 'inherit' => xw_t( 'Heredar tema', 'Inherit theme' ), 'above' => xw_t( 'Encima de los swatches', 'Above swatches' ), 'hidden' => xw_t( 'Oculta', 'Hidden' ) ) ); ?>
                 <?php xw_vs_admin_select( $settings, 'disabled_behavior', xw_t( 'Opciones no disponibles', 'Unavailable options' ), array( 'hide' => xw_t( 'Ocultar', 'Hide' ), 'blur' => xw_t( 'Atenuar', 'Blur' ), 'cross' => xw_t( 'Tachar', 'Cross' ), 'blur-cross' => xw_t( 'Atenuar y tachar', 'Blur and cross' ) ) ); ?>
                 <?php xw_vs_admin_number( $settings, 'container_padding_top', 'Padding top', 0, 100 ); ?>
@@ -227,6 +236,8 @@ function xw_render_variation_swatches_settings( $settings ) {
                 <?php xw_vs_admin_number( $settings, 'horizontal_gap', xw_t( 'Espacio horizontal', 'Horizontal gap' ), 0, 60 ); ?>
                 <?php xw_vs_admin_number( $settings, 'vertical_gap', xw_t( 'Espacio vertical', 'Vertical gap' ), 0, 60 ); ?>
                 <?php xw_vs_admin_number( $settings, 'attribute_gap', xw_t( 'Espacio entre atributos', 'Gap between attributes' ), 0, 100 ); ?>
+                <?php xw_vs_admin_color( $settings, 'clear_color', xw_t( 'Color de Limpiar', 'Clear color' ) ); ?>
+                <?php xw_vs_admin_color( $settings, 'clear_hover_color', xw_t( 'Color hover de Limpiar', 'Clear hover color' ) ); ?>
             </div>
         </section>
 
@@ -275,6 +286,19 @@ function xw_render_variation_swatches_settings( $settings ) {
         <section id="xw-vs-panel-tooltip" class="xw-vs-panel" role="tabpanel" aria-labelledby="xw-vs-tab-tooltip" data-xw-vs-panel="tooltip" hidden>
             <div class="xw-vs-settings-grid">
                 <?php xw_vs_admin_switch( $settings, 'tooltip_enabled', xw_t( 'Activar tooltip', 'Enable tooltip' ), xw_t( 'Muestra el nombre y, para swatches de imagen, una vista previa.', 'Shows the name and, for image swatches, a preview.' ) ); ?>
+                <?php
+                xw_vs_admin_select(
+                    $settings,
+                    'tooltip_content',
+                    xw_t( 'Contenido del tooltip', 'Tooltip content' ),
+                    array(
+                        'text'       => xw_t( 'Solo texto', 'Text only' ),
+                        'image'      => xw_t( 'Solo imagen', 'Image only' ),
+                        'text_image' => xw_t( 'Texto e imagen', 'Text and image' ),
+                    ),
+                    xw_t( 'En swatches sin imagen se mostrará el texto para evitar un tooltip vacío.', 'Text is shown for swatches without an image so the tooltip is never empty.' )
+                );
+                ?>
                 <?php xw_vs_admin_number( $settings, 'tooltip_image_size', xw_t( 'Tamaño de imagen', 'Image size' ), 20, 200 ); ?>
                 <?php xw_vs_admin_number( $settings, 'tooltip_padding', xw_t( 'Relleno', 'Padding' ), 0, 40 ); ?>
                 <?php xw_vs_admin_number( $settings, 'tooltip_radius', xw_t( 'Radio del borde', 'Border radius' ), 0, 40 ); ?>
@@ -553,6 +577,7 @@ function xw_vs_enqueue_frontend_assets() {
             'clearOnReselect'  => ! empty( $settings['clear_on_reselect'] ),
             'autoSelect'       => $settings['auto_select'],
             'showSelectedLabel'=> ! empty( $settings['show_selected_label'] ),
+            'tooltipContent'   => $settings['tooltip_content'],
         )
     );
     wp_add_inline_style( 'xw-variation-swatches', xw_vs_inline_css( $settings ) );
@@ -567,6 +592,9 @@ function xw_vs_inline_css( $settings ) {
         '--xw-vs-gap-x'                => absint( $settings['horizontal_gap'] ) . 'px',
         '--xw-vs-gap-y'                => absint( $settings['vertical_gap'] ) . 'px',
         '--xw-vs-attribute-gap'        => absint( $settings['attribute_gap'] ) . 'px',
+        '--xw-vs-attribute-label-align'=> $settings['attribute_label_alignment'],
+        '--xw-vs-attribute-label-pad-left' => absint( $settings['attribute_label_padding_left'] ) . 'px',
+        '--xw-vs-attribute-label-pad-right'=> absint( $settings['attribute_label_padding_right'] ) . 'px',
         '--xw-vs-label-min-width'      => absint( $settings['label_min_width'] ) . 'px',
         '--xw-vs-label-height'         => absint( $settings['label_height'] ) . 'px',
         '--xw-vs-label-font-size'      => absint( $settings['label_font_size'] ) . 'px',
@@ -595,6 +623,8 @@ function xw_vs_inline_css( $settings ) {
         '--xw-vs-tooltip-radius'       => absint( $settings['tooltip_radius'] ) . 'px',
         '--xw-vs-tooltip-bg'           => sanitize_hex_color( $settings['tooltip_background'] ),
         '--xw-vs-tooltip-color'        => sanitize_hex_color( $settings['tooltip_text_color'] ),
+        '--xw-vs-clear-color'          => sanitize_hex_color( $settings['clear_color'] ),
+        '--xw-vs-clear-hover-color'    => sanitize_hex_color( $settings['clear_hover_color'] ),
     );
     $declarations = '';
     foreach ( $variables as $property => $value ) {
@@ -638,9 +668,10 @@ function xw_vs_variation_image_map( $product, $attribute ) {
         if ( ! $variation instanceof WC_Product_Variation || ! $variation->exists() ) {
             continue;
         }
-        $attributes = $variation->get_attributes();
-        $value      = isset( $attributes[ $attribute ] ) ? (string) $attributes[ $attribute ] : '';
-        $image_id   = $variation->get_image_id();
+        $attributes    = $variation->get_attributes();
+        $attribute_key = 0 === strpos( $attribute, 'attribute_' ) ? substr( $attribute, 10 ) : $attribute;
+        $value         = isset( $attributes[ $attribute ] ) ? (string) $attributes[ $attribute ] : ( isset( $attributes[ $attribute_key ] ) ? (string) $attributes[ $attribute_key ] : '' );
+        $image_id      = $variation->get_image_id();
         if ( '' !== $value && $image_id && ! isset( $cache[ $key ][ $value ] ) ) {
             $cache[ $key ][ $value ] = $image_id;
         }
@@ -700,7 +731,22 @@ function xw_vs_dropdown_html( $html, $args ) {
             $terms[ $term->slug ] = $term;
         }
     }
-    $image_map = 'image' === $type && ! empty( $settings['variation_images'] ) ? xw_vs_variation_image_map( $product, $attribute ) : array();
+    $image_map = array();
+    if ( ! empty( $settings['variation_images'] ) ) {
+        if ( 'image' === $type ) {
+            $image_map = xw_vs_variation_image_map( $product, $attribute );
+        } elseif ( 'label' === $type && ! taxonomy_exists( $attribute ) ) {
+            $local_attribute  = sanitize_title( str_replace( array( 'attribute_', 'pa_' ), '', $attribute ) );
+            $local_label      = sanitize_title( wc_attribute_label( $attribute, $product ) );
+            $image_attributes = array( 'color', 'colour', 'colores', 'imagen', 'imagenes', 'image', 'images' );
+            if ( in_array( $local_attribute, $image_attributes, true ) || in_array( $local_label, $image_attributes, true ) ) {
+                $image_map = xw_vs_variation_image_map( $product, $attribute );
+                if ( ! empty( $image_map ) ) {
+                    $type = 'image';
+                }
+            }
+        }
+    }
     $selected  = isset( $args['selected'] ) ? (string) $args['selected'] : '';
     $items     = '';
 
@@ -735,7 +781,14 @@ function xw_vs_dropdown_html( $html, $args ) {
         $is_selected = sanitize_title( $selected ) === sanitize_title( $slug );
         $items .= '<button type="button" class="xw-vs-item xw-vs-item--' . esc_attr( $item_type ) . ( $is_selected ? ' is-selected' : '' ) . '" data-value="' . esc_attr( $slug ) . '" data-label="' . esc_attr( wp_strip_all_tags( $name ) ) . '" role="radio" aria-checked="' . ( $is_selected ? 'true' : 'false' ) . '">';
         $items .= '<span class="xw-vs-item__content">' . $content . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Contenido construido y escapado arriba.
-        $items .= '<span class="xw-vs-tooltip" role="tooltip">' . $tooltip_image . '<span>' . esc_html( $name ) . '</span></span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Imagen construida y escapada arriba.
+        $tooltip_text    = '<span class="xw-vs-tooltip__text">' . esc_html( $name ) . '</span>';
+        $tooltip_content = $tooltip_image . $tooltip_text;
+        if ( 'text' === $settings['tooltip_content'] ) {
+            $tooltip_content = $tooltip_text;
+        } elseif ( 'image' === $settings['tooltip_content'] && '' !== $tooltip_image ) {
+            $tooltip_content = $tooltip_image;
+        }
+        $items .= '<span class="xw-vs-tooltip" role="tooltip">' . $tooltip_content . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Contenido construido y escapado arriba.
         $items .= '</button>';
     }
 

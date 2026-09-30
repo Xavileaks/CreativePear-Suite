@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 1.0.29
+
+- Finaliza Variation Swatches para producto individual con presentación compacta compatible con Elementor.
+- Añade tooltips configurables como texto, imagen o texto e imagen, con detección automática de imágenes de variaciones locales.
+- Permite alinear y ajustar el padding de las etiquetas de atributos sin alterar la alineación de los swatches.
+- Añade colores normal y hover configurables para el enlace “Clear / Limpiar”.
+
 ## 1.0.28
 
 - Nueva función “Variation Swatches” enfocada exclusivamente en la página de producto individual.
