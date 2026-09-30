@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.30
+
+- Corrige los swatches de imagen en productos con muchas combinaciones de variaciones.
+- Normaliza los valores de atributos locales para asociar correctamente imágenes aunque WooCommerce cambie mayúsculas, espacios o caracteres especiales.
+
 ## 1.0.29
 
 - Finaliza Variation Swatches para producto individual con presentación compacta compatible con Elementor.

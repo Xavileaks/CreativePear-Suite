@@ -668,12 +668,28 @@ function xw_vs_variation_image_map( $product, $attribute ) {
         if ( ! $variation instanceof WC_Product_Variation || ! $variation->exists() ) {
             continue;
         }
-        $attributes    = $variation->get_attributes();
-        $attribute_key = 0 === strpos( $attribute, 'attribute_' ) ? substr( $attribute, 10 ) : $attribute;
-        $value         = isset( $attributes[ $attribute ] ) ? (string) $attributes[ $attribute ] : ( isset( $attributes[ $attribute_key ] ) ? (string) $attributes[ $attribute_key ] : '' );
-        $image_id      = $variation->get_image_id();
-        if ( '' !== $value && $image_id && ! isset( $cache[ $key ][ $value ] ) ) {
-            $cache[ $key ][ $value ] = $image_id;
+        $attributes               = $variation->get_attributes();
+        $attribute_key            = 0 === strpos( $attribute, 'attribute_' ) ? substr( $attribute, 10 ) : $attribute;
+        $normalized_attribute_key = sanitize_title( str_replace( 'pa_', '', $attribute_key ) );
+        $value                    = isset( $attributes[ $attribute ] ) ? (string) $attributes[ $attribute ] : ( isset( $attributes[ $attribute_key ] ) ? (string) $attributes[ $attribute_key ] : '' );
+        if ( '' === $value ) {
+            foreach ( $attributes as $variation_attribute => $variation_value ) {
+                $normalized_variation_key = sanitize_title( str_replace( array( 'attribute_', 'pa_' ), '', (string) $variation_attribute ) );
+                if ( $normalized_variation_key === $normalized_attribute_key ) {
+                    $value = (string) $variation_value;
+                    break;
+                }
+            }
+        }
+        $image_id = $variation->get_image_id();
+        if ( '' !== $value && $image_id ) {
+            $normalized_value = sanitize_title( $value );
+            if ( ! isset( $cache[ $key ][ $value ] ) ) {
+                $cache[ $key ][ $value ] = $image_id;
+            }
+            if ( '' !== $normalized_value && ! isset( $cache[ $key ][ $normalized_value ] ) ) {
+                $cache[ $key ][ $normalized_value ] = $image_id;
+            }
         }
     }
     return $cache[ $key ];
@@ -762,8 +778,13 @@ function xw_vs_dropdown_html( $html, $args ) {
             $content = '<span class="xw-vs-color-chip" style="background-color:' . esc_attr( xw_vs_term_color( $term ? $term->term_id : 0 ) ) . '"></span>';
         } elseif ( 'image' === $type ) {
             $image_id = $term ? xw_vs_term_image_id( $term->term_id ) : 0;
-            if ( ! $image_id && isset( $image_map[ $slug ] ) ) {
-                $image_id = absint( $image_map[ $slug ] );
+            if ( ! $image_id ) {
+                $normalized_slug = sanitize_title( $slug );
+                if ( isset( $image_map[ $slug ] ) ) {
+                    $image_id = absint( $image_map[ $slug ] );
+                } elseif ( '' !== $normalized_slug && isset( $image_map[ $normalized_slug ] ) ) {
+                    $image_id = absint( $image_map[ $normalized_slug ] );
+                }
             }
             $image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'woocommerce_gallery_thumbnail' ) : '';
             if ( $image_url ) {
