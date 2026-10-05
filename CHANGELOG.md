@@ -1,5 +1,9 @@
 # Historial de cambios
 
+## 1.0.31
+
+- Añade un nombre personalizado de hasta 60 caracteres para mostrar el cargo adicional en el frontend y en el resumen del pedido.
+
 ## 1.0.30
 
 - Corrige los swatches de imagen en productos con muchas combinaciones de variaciones.

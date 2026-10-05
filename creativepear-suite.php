@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.30
+Version: 1.0.31
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.30' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.31' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -1423,6 +1423,9 @@ function xw_apply_subtotal_extra_fee( $cart ) {
     }
 
     $settings = xw_get_settings();
+    $fee_label = isset( $settings['woocommerce']['extra_fee_label'] )
+        ? trim( (string) $settings['woocommerce']['extra_fee_label'] )
+        : '';
     $mode     = isset( $settings['woocommerce']['extra_fee_mode'] ) && 'percentage' === $settings['woocommerce']['extra_fee_mode']
         ? 'percentage'
         : 'fixed';
@@ -1465,7 +1468,7 @@ function xw_apply_subtotal_extra_fee( $cart ) {
         return;
     }
 
-    $cart->add_fee( 'Extra Fees', $fee, false );
+    $cart->add_fee( '' !== $fee_label ? $fee_label : 'Extra Fees', $fee, false );
 }
 
 add_action( 'wp_enqueue_scripts', 'xw_enqueue_extra_fee_checkout_script', 40 );
@@ -1480,6 +1483,10 @@ function xw_enqueue_extra_fee_checkout_script() {
         return;
     }
 
+    $settings      = xw_get_settings();
+    $fee_label     = isset( $settings['woocommerce']['extra_fee_label'] )
+        ? trim( (string) $settings['woocommerce']['extra_fee_label'] )
+        : '';
     $relative_path = 'assets/js/woocommerce-extra-fee.js';
     $file_path     = plugin_dir_path( __FILE__ ) . $relative_path;
 
@@ -1497,7 +1504,7 @@ function xw_enqueue_extra_fee_checkout_script() {
     wp_localize_script(
         'xw-woocommerce-extra-fee',
         'xwExtraFeeSettings',
-        array( 'label' => 'Extra Fees' )
+        array( 'label' => '' !== $fee_label ? $fee_label : 'Extra Fees' )
     );
 }
 

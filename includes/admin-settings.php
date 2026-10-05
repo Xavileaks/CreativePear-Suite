@@ -283,6 +283,7 @@ function xw_get_default_settings() {
             'cart_update_delay'         => 1,
             'product_hover_fade_seconds' => 0.4,
             'extra_fees_enabled'         => 0,
+            'extra_fee_label'            => 'Extra Fees',
             'extra_fee_mode'             => 'fixed',
             'extra_fee_rules'            => array(
                 array(
@@ -571,6 +572,17 @@ function xw_sanitize_settings( $input ) {
     $sanitized['woocommerce']['product_hover_fade_seconds'] = max( 0, min( 5, round( $product_hover_fade_seconds, 1 ) ) );
 
     $sanitized['woocommerce']['extra_fees_enabled'] = empty( $woocommerce['extra_fees_enabled'] ) ? 0 : 1;
+    $extra_fee_label = isset( $woocommerce['extra_fee_label'] ) && is_scalar( $woocommerce['extra_fee_label'] )
+        ? trim( sanitize_text_field( (string) $woocommerce['extra_fee_label'] ) )
+        : $defaults['woocommerce']['extra_fee_label'];
+    if ( function_exists( 'mb_substr' ) ) {
+        $extra_fee_label = mb_substr( $extra_fee_label, 0, 60 );
+    } else {
+        $extra_fee_label = substr( $extra_fee_label, 0, 60 );
+    }
+    $sanitized['woocommerce']['extra_fee_label'] = '' !== $extra_fee_label
+        ? $extra_fee_label
+        : $defaults['woocommerce']['extra_fee_label'];
     $extra_fee_mode = isset( $woocommerce['extra_fee_mode'] ) && 'percentage' === $woocommerce['extra_fee_mode']
         ? 'percentage'
         : 'fixed';
@@ -1116,6 +1128,7 @@ function xw_render_settings_page() {
                                 <?php elseif ( 'woocommerce_shipping' === $key ) : ?>
                                     <?php
                                     $extra_fees_enabled = ! empty( $settings['woocommerce']['extra_fees_enabled'] );
+                                    $extra_fee_label = isset( $settings['woocommerce']['extra_fee_label'] ) ? (string) $settings['woocommerce']['extra_fee_label'] : 'Extra Fees';
                                     $extra_fee_mode = 'percentage' === $settings['woocommerce']['extra_fee_mode'] ? 'percentage' : 'fixed';
                                     $extra_fee_rules = is_array( $settings['woocommerce']['extra_fee_rules'] ) ? $settings['woocommerce']['extra_fee_rules'] : array();
                                     $currency_symbol = function_exists( 'get_woocommerce_currency_symbol' ) ? get_woocommerce_currency_symbol() : '$';
@@ -1173,6 +1186,19 @@ function xw_render_settings_page() {
                                                 <span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>
                                                 <?php echo esc_html( xw_t( 'Agregar otro', 'Add another' ) ); ?>
                                             </button>
+                                        </div>
+
+                                        <div class="xw-extra-fee-label-setting">
+                                            <label for="xw-extra-fee-label"><?php echo esc_html( xw_t( 'Nombre en el frontend', 'Frontend label' ) ); ?></label>
+                                            <input
+                                                id="xw-extra-fee-label"
+                                                type="text"
+                                                name="xw_settings[woocommerce][extra_fee_label]"
+                                                value="<?php echo esc_attr( $extra_fee_label ); ?>"
+                                                maxlength="60"
+                                                placeholder="<?php echo esc_attr( xw_t( 'Ej.: Cargo de manejo', 'Example: Handling fee' ) ); ?>"
+                                            >
+                                            <p><?php echo esc_html( xw_t( 'Este nombre aparecerá en el resumen del pedido. Máximo 60 caracteres.', 'This name appears in the order summary. Maximum 60 characters.' ) ); ?></p>
                                         </div>
 
                                         <div class="xw-extra-fee-rules" data-xw-extra-fee-rules>

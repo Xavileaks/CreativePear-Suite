@@ -929,6 +929,28 @@
     font-size: 16px;
 }
 
+.xw-extra-fee-label-setting {
+    display: grid;
+    gap: 6px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.xw-extra-fee-label-setting label {
+    font-weight: 600;
+}
+
+.xw-extra-fee-label-setting input[type="text"] {
+    width: min(100%, 360px);
+    min-height: 38px;
+}
+
+.xw-extra-fee-label-setting p {
+    margin: 0;
+    color: #646970;
+    font-size: 12px;
+}
+
 .xw-extra-fee-rules {
     display: grid;
 }
