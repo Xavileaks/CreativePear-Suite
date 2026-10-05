@@ -1,5 +1,9 @@
 # Historial de cambios
 
+## 1.0.32
+
+- Evita que Variation Swatches se renderice incorrectamente dentro del editor de Elementor; allí permanecen los selectores nativos de WooCommerce y el frontend conserva los swatches configurados.
+
 ## 1.0.31
 
 - Añade un nombre personalizado de hasta 60 caracteres para mostrar el cargo adicional en el frontend y en el resumen del pedido.

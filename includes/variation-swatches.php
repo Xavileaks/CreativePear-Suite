@@ -544,8 +544,29 @@ function xw_vs_get_settings() {
     return $settings['variation_swatches'];
 }
 
+/**
+ * Detecta la vista previa del editor de Elementor.
+ *
+ * Los swatches personalizados se sustituyen allí por los selectores nativos de
+ * WooCommerce para evitar duplicados y una representación distinta al frontend.
+ */
+function xw_vs_is_elementor_editor() {
+    if ( isset( $_GET['elementor-preview'] ) && '' !== sanitize_text_field( wp_unslash( $_GET['elementor-preview'] ) ) ) {
+        return true;
+    }
+
+    if ( class_exists( '\\Elementor\\Plugin' ) ) {
+        $elementor = \Elementor\Plugin::$instance;
+        if ( isset( $elementor->editor ) && is_object( $elementor->editor ) && method_exists( $elementor->editor, 'is_edit_mode' ) ) {
+            return (bool) $elementor->editor->is_edit_mode();
+        }
+    }
+
+    return false;
+}
+
 function xw_vs_body_classes( $classes ) {
-    if ( ! is_product() ) {
+    if ( ! is_product() || xw_vs_is_elementor_editor() ) {
         return $classes;
     }
     $settings  = xw_vs_get_settings();
@@ -560,7 +581,7 @@ function xw_vs_body_classes( $classes ) {
 }
 
 function xw_vs_enqueue_frontend_assets() {
-    if ( ! is_product() ) {
+    if ( ! is_product() || xw_vs_is_elementor_editor() ) {
         return;
     }
     $settings = xw_vs_get_settings();
@@ -712,7 +733,7 @@ function xw_vs_term_image_id( $term_id ) {
  * Añade la interfaz visual después del select original de WooCommerce.
  */
 function xw_vs_dropdown_html( $html, $args ) {
-    if ( ! is_product() ) {
+    if ( ! is_product() || xw_vs_is_elementor_editor() ) {
         return $html;
     }
 
