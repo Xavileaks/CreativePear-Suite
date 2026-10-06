@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 1.0.33
+
+- Añade el módulo opcional “WebP - Compress” para convertir y comprimir imágenes nuevas exclusivamente a WebP, sin AVIF ni servicios externos.
+- Incorpora cuatro niveles de calidad, opción de conservar originales, omisión de WebP existentes, redimensionado por ancho máximo y limpieza de nombres de archivo con vista previa.
+- Cuando se conservan originales, crea copias WebP para cada tamaño y las entrega en el frontend; también elimina esas copias al borrar el adjunto.
+- Detecta soporte WebP del servidor y pausa el módulo si QuickWebP continúa activo para evitar un procesamiento duplicado.
+
 ## 1.0.32
 
 - Evita que Variation Swatches se renderice incorrectamente dentro del editor de Elementor; allí permanecen los selectores nativos de WooCommerce y el frontend conserva los swatches configurados.

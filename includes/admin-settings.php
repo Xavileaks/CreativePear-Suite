@@ -44,6 +44,12 @@ function xw_get_feature_definitions() {
             'title'       => xw_t( 'Ocultar versión de WordPress', 'Hide WordPress version' ),
             'description' => xw_t( 'Elimina la etiqueta generator del código fuente público.', 'Removes the generator tag from the public source code.' ),
         ),
+        'webp_compress' => array(
+            'title'       => 'WebP - Compress',
+            'description' => xw_t( 'Convierte, comprime y redimensiona imágenes nuevas en WebP sin servicios externos.', 'Converts, compresses, and resizes new images to WebP without external services.' ),
+            'settings'    => true,
+            'wide'        => true,
+        ),
         'login_customization' => array(
             'title'       => xw_t( 'Personalizar acceso', 'Customize login' ),
             'description' => xw_t( 'Aplica el logotipo, los colores y el estilo personalizado a wp-login.php.', 'Applies the logo, colors, and custom styling to wp-login.php.' ),
@@ -166,6 +172,7 @@ function xw_get_feature_groups() {
                 'assets_styles',
                 'classic_editor',
                 'hide_wp_version',
+                'webp_compress',
                 'login_customization',
                 'hide_admin_bar',
                 'admin_bar_style',
@@ -278,6 +285,14 @@ function xw_get_default_settings() {
             'language'          => xw_interface_language(),
             'allowed_countries' => array(),
             'primary_countries' => array(),
+        ),
+        'webp' => array(
+            'quality'          => 'high',
+            'ignore_webp'      => 1,
+            'save_original'    => 0,
+            'resize_enabled'   => 1,
+            'max_width'        => 2000,
+            'cleanup_filename' => 1,
         ),
         'woocommerce' => array(
             'cart_update_delay'         => 1,
@@ -418,6 +433,7 @@ function xw_sanitize_settings( $input ) {
     $back_to_top = isset( $input['back_to_top'] ) && is_array( $input['back_to_top'] ) ? $input['back_to_top'] : array();
     $whatsapp_button = isset( $input['whatsapp_button'] ) && is_array( $input['whatsapp_button'] ) ? $input['whatsapp_button'] : array();
     $phone     = isset( $input['phone'] ) && is_array( $input['phone'] ) ? $input['phone'] : array();
+    $webp      = isset( $input['webp'] ) && is_array( $input['webp'] ) ? $input['webp'] : array();
     $woocommerce = isset( $input['woocommerce'] ) && is_array( $input['woocommerce'] ) ? $input['woocommerce'] : array();
     $variation_swatches = isset( $input['variation_swatches'] ) && is_array( $input['variation_swatches'] ) ? $input['variation_swatches'] : array();
 
@@ -560,6 +576,19 @@ function xw_sanitize_settings( $input ) {
     $sanitized['phone']['language']          = $phone_language;
     $sanitized['phone']['allowed_countries'] = $allowed_countries;
     $sanitized['phone']['primary_countries'] = array_slice( $primary_countries, 0, 2 );
+
+    $webp_quality = isset( $webp['quality'] ) ? sanitize_key( $webp['quality'] ) : $defaults['webp']['quality'];
+    $sanitized['webp']['quality'] = in_array( $webp_quality, array( 'low', 'medium', 'high', 'extra_high' ), true )
+        ? $webp_quality
+        : $defaults['webp']['quality'];
+    $sanitized['webp']['ignore_webp'] = empty( $webp['ignore_webp'] ) ? 0 : 1;
+    $sanitized['webp']['save_original'] = empty( $webp['save_original'] ) ? 0 : 1;
+    $sanitized['webp']['resize_enabled'] = empty( $webp['resize_enabled'] ) ? 0 : 1;
+    $sanitized['webp']['cleanup_filename'] = empty( $webp['cleanup_filename'] ) ? 0 : 1;
+    $sanitized['webp']['max_width'] = max(
+        320,
+        min( 10000, isset( $webp['max_width'] ) ? absint( $webp['max_width'] ) : $defaults['webp']['max_width'] )
+    );
 
     $cart_update_delay = isset( $woocommerce['cart_update_delay'] ) && is_scalar( $woocommerce['cart_update_delay'] )
         ? (float) str_replace( ',', '.', (string) $woocommerce['cart_update_delay'] )
@@ -836,6 +865,8 @@ function xw_render_settings_page() {
                                             <span>px</span>
                                         </div>
                                     </div>
+                                <?php elseif ( 'webp_compress' === $key && function_exists( 'xw_render_webp_compress_settings' ) ) : ?>
+                                    <?php xw_render_webp_compress_settings( $settings['webp'] ); ?>
                                 <?php elseif ( 'back_to_top' === $key ) : ?>
                                     <fieldset class="xw-btt-icon-picker xw-field-full">
                                         <legend><?php echo esc_html( xw_t( 'Tipo de icono', 'Icon type' ) ); ?></legend>

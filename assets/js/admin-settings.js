@@ -347,10 +347,76 @@
         });
     }
 
+    function buildWebpSettings() {
+        $('[data-xw-webp-settings]').each(function () {
+            var settings = $(this);
+            var resizeSection = settings.find('[data-xw-webp-resize]');
+            var resizeToggle = settings.find('[data-xw-webp-resize-toggle]');
+            var maxWidth = settings.find('[data-xw-webp-max-width]');
+            var saveOriginal = settings.find('[data-xw-webp-save-original]');
+            var guidance = settings.find('[data-xw-webp-guidance]');
+            var guidanceText = settings.find('[data-xw-webp-guidance-text]');
+            var filenameSection = settings.find('[data-xw-webp-filename]');
+            var filenameToggle = settings.find('[data-xw-webp-filename-toggle]');
+            var filenameInput = settings.find('[data-xw-webp-filename-input]');
+            var originalOutput = settings.find('[data-xw-webp-filename-original]');
+            var cleanOutput = settings.find('[data-xw-webp-filename-clean]');
+
+            function cleanFilename(value) {
+                var lastDot = value.lastIndexOf('.');
+                var base = lastDot > 0 ? value.substring(0, lastDot) : value;
+                var extension = lastDot > 0 ? value.substring(lastDot + 1).toLowerCase() : '';
+
+                base = base.normalize ? base.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : base;
+                base = base
+                    .replace(/[’']/g, '')
+                    .replace(/[^a-zA-Z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '')
+                    .toLowerCase();
+
+                if (!base) {
+                    base = 'image';
+                }
+
+                return extension ? base + '.' + extension : base;
+            }
+
+            function updateResize() {
+                var enabled = resizeToggle.prop('checked');
+                resizeSection.toggleClass('is-disabled', !enabled);
+                maxWidth.prop('readonly', !enabled).attr('aria-disabled', enabled ? 'false' : 'true');
+            }
+
+            function updateFilename() {
+                var enabled = filenameToggle.prop('checked');
+                var value = filenameInput.val().trim();
+
+                filenameSection.toggleClass('is-disabled', !enabled);
+                filenameInput.prop('disabled', !enabled);
+                originalOutput.text(value || '—');
+                cleanOutput.text(value ? cleanFilename(value) : '—');
+            }
+
+            function updateGuidance() {
+                var key = saveOriginal.prop('checked') ? 'preserveText' : 'replaceText';
+                guidanceText.text(guidance.data(key) || '');
+            }
+
+            resizeToggle.on('change', updateResize);
+            filenameToggle.on('change', updateFilename);
+            filenameInput.on('input', updateFilename);
+            saveOriginal.on('change', updateGuidance);
+            updateResize();
+            updateFilename();
+            updateGuidance();
+        });
+    }
+
     $(function () {
         buildPhoneCountrySettings();
         buildExtraFeeSettings();
         buildVariationSwatchesTabs();
+        buildWebpSettings();
 
         $('[data-xw-toggle]').each(function () {
             updateCard(this);
