@@ -48,7 +48,6 @@ function xw_get_feature_definitions() {
             'title'       => 'WebP - Compress',
             'description' => xw_t( 'Convierte, comprime y redimensiona imágenes nuevas en WebP sin servicios externos.', 'Converts, compresses, and resizes new images to WebP without external services.' ),
             'settings'    => true,
-            'wide'        => true,
         ),
         'login_customization' => array(
             'title'       => xw_t( 'Personalizar acceso', 'Customize login' ),
@@ -787,7 +786,7 @@ function xw_render_settings_page() {
                                     $feature = $feature_definitions[ $key ];
                                     ?>
                     <?php $enabled = ! empty( $settings['features'][ $key ] ); ?>
-                    <section class="xw-feature-card<?php echo $enabled ? ' is-enabled' : ''; ?><?php echo ! empty( $feature['wide'] ) ? ' xw-feature-card--wide' : ''; ?>" data-xw-feature>
+                    <section class="xw-feature-card<?php echo $enabled ? ' is-enabled' : ''; ?>" data-xw-feature>
                         <div class="xw-feature-summary">
                             <div class="xw-feature-copy">
                                 <h3><?php echo esc_html( $feature['title'] ); ?></h3>

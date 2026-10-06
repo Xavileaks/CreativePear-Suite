@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.34
+
+- Mantiene todas las cajas, incluida WebP - Compress, en dos columnas en escritorio y a ancho completo en tablet y móvil.
+- Adapta los controles WebP al ancho de su caja y guarda esta preferencia para futuras funciones.
+
 ## 1.0.33
 
 - Añade el módulo opcional “WebP - Compress” para convertir y comprimir imágenes nuevas exclusivamente a WebP, sin AVIF ni servicios externos.
