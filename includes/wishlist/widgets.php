@@ -135,6 +135,12 @@ class XW_Wishlist_Table_Widget extends XW_Wishlist_Widget {
         $this->surface( 'container', '{{WRAPPER}} .xw-wl-table' );
         $this->add_group_control( \Elementor\Group_Control_Box_Shadow::get_type(), array( 'name' => 'container_shadow', 'selector' => '{{WRAPPER}} .xw-wl-table' ) );
         $this->end_controls_section();
+        $this->section( 'style_table', xw_t( 'Tabla y tarjetas', 'Table and cards' ), true );
+        $this->dimensions( 'table_radius', xw_t( 'Redondeo de la tabla', 'Table border radius' ), '{{WRAPPER}} .xw-wl-table', '--xw-wl-table-radius' );
+        $this->add_group_control( \Elementor\Group_Control_Border::get_type(), array( 'name' => 'table_frame_border', 'selector' => '{{WRAPPER}} .xw-wl-table-frame' ) );
+        $this->dimensions( 'card_padding', xw_t( 'Padding de tarjetas (tablet y móvil)', 'Card padding (tablet and mobile)' ), '{{WRAPPER}} .xw-wl-table', '--xw-wl-card-padding' );
+        $this->slider( 'card_gap', xw_t( 'Separación de tarjetas (tablet y móvil)', 'Card gap (tablet and mobile)' ), '{{WRAPPER}} .xw-wl-table', '--xw-wl-card-gap: {{SIZE}}{{UNIT}};', 0, 80 );
+        $this->end_controls_section();
         $this->section( 'style_title', xw_t( 'Título', 'Title' ), true );
         $this->typography( 'title_typography', '{{WRAPPER}} .xw-wl-title' );
         $this->color( 'title_color', xw_t( 'Color', 'Color' ), '{{WRAPPER}} .xw-wl-title' );
@@ -146,8 +152,10 @@ class XW_Wishlist_Table_Widget extends XW_Wishlist_Widget {
         $this->end_controls_section();
         $this->section( 'style_rows', xw_t( 'Filas y celdas', 'Rows and cells' ), true );
         $this->surface( 'cells', '{{WRAPPER}} .xw-wl-grid td' );
-        $this->color( 'row_alt', xw_t( 'Fondo alterno', 'Alternate background' ), '{{WRAPPER}} .xw-wl-grid tbody tr:nth-child(even) td', 'background-color' );
-        $this->color( 'row_hover', xw_t( 'Fondo hover', 'Hover background' ), '{{WRAPPER}} .xw-wl-grid tbody tr:hover td', 'background-color' );
+        // Reuse the saved colors for the entire responsive card, not separate cell boxes.
+        $this->update_control( 'cells_background', array( 'selectors' => array( '{{WRAPPER}} .xw-wl-grid td' => '--xw-wl-cell-surface: {{VALUE}};', '{{WRAPPER}} .xw-wl-grid tbody tr' => '--xw-wl-row-surface: {{VALUE}};' ) ) );
+        $this->color( 'row_alt', xw_t( 'Fondo alterno', 'Alternate background' ), '{{WRAPPER}} .xw-wl-grid tbody tr:nth-child(even)', '--xw-wl-row-alt' );
+        $this->color( 'row_hover', xw_t( 'Fondo hover', 'Hover background' ), '{{WRAPPER}} .xw-wl-grid tbody tr:hover', '--xw-wl-row-hover' );
         $this->slider( 'row_height', xw_t( 'Altura mínima de filas', 'Minimum row height' ), '{{WRAPPER}} .xw-wl-grid tbody tr', 'height: {{SIZE}}{{UNIT}};', 0, 250 );
         $this->color( 'check_color', xw_t( 'Color de selección', 'Checkbox color' ), '{{WRAPPER}} .xw-wl-grid input[type="checkbox"]', 'accent-color' );
         $this->end_controls_section();
@@ -168,6 +176,7 @@ class XW_Wishlist_Table_Widget extends XW_Wishlist_Widget {
         }
         $this->section( 'style_image', xw_t( 'Foto', 'Image' ), true );
         $this->slider( 'image_size', xw_t( 'Tamaño', 'Size' ), '{{WRAPPER}} .xw-wl-image', 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};', 20, 300, 74 );
+        $this->update_control( 'image_size', array( 'selectors' => array( '{{WRAPPER}} .xw-wl-image' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};', '{{WRAPPER}} .xw-wl-table' => '--xw-wl-image-size: {{SIZE}}{{UNIT}};' ) ) );
         $this->add_control( 'image_shape', array( 'label' => xw_t( 'Forma', 'Shape' ), 'type' => \Elementor\Controls_Manager::SELECT, 'default' => 'square', 'options' => array( 'square' => xw_t( 'Cuadrada', 'Square' ), 'rounded' => xw_t( 'Bordes redondeados', 'Rounded corners' ), 'circle' => xw_t( 'Redonda', 'Circle' ) ), 'selectors_dictionary' => array( 'square' => '0', 'rounded' => '12px', 'circle' => '50%' ), 'selectors' => array( '{{WRAPPER}} .xw-wl-image' => 'border-radius: {{VALUE}};' ) ) );
         $this->add_control( 'image_fit', array( 'label' => xw_t( 'Ajuste', 'Fit' ), 'type' => \Elementor\Controls_Manager::SELECT, 'default' => 'contain', 'options' => array( 'contain' => xw_t( 'Contener', 'Contain' ), 'cover' => xw_t( 'Cubrir', 'Cover' ) ), 'selectors' => array( '{{WRAPPER}} .xw-wl-image' => 'object-fit: {{VALUE}};' ) ) );
         $this->surface( 'image', '{{WRAPPER}} .xw-wl-image', false );
@@ -175,6 +184,7 @@ class XW_Wishlist_Table_Widget extends XW_Wishlist_Widget {
         $this->section( 'style_remove', xw_t( 'Eliminar', 'Remove' ), true );
         $this->slider( 'remove_size', xw_t( 'Tamaño del icono', 'Icon size' ), '{{WRAPPER}} .xw-wl-remove', 'font-size: {{SIZE}}{{UNIT}};', 8, 80, 16 );
         $this->dimensions( 'remove_padding', 'Padding', '{{WRAPPER}} .xw-wl-remove' );
+        $this->slider( 'remove_min_size', xw_t( 'Tamaño mínimo (opcional)', 'Minimum size (optional)' ), '{{WRAPPER}} .xw-wl-remove', 'min-width: {{SIZE}}{{UNIT}}; min-height: {{SIZE}}{{UNIT}};', 0, 120 );
         $this->border( 'remove_border', '{{WRAPPER}} .xw-wl-remove' );
         $this->states( 'remove', '{{WRAPPER}} .xw-wl-remove' );
         $this->end_controls_section();
@@ -182,6 +192,7 @@ class XW_Wishlist_Table_Widget extends XW_Wishlist_Widget {
             $this->section( 'style_' . $id, $style[0], true );
             $this->typography( $id . '_typography', $style[1] );
             $this->dimensions( $id . '_padding', 'Padding', $style[1] );
+            $this->slider( $id . '_min_height', xw_t( 'Altura mínima (opcional)', 'Minimum height (optional)' ), $style[1], 'min-height: {{SIZE}}{{UNIT}};', 0, 180 );
             $this->border( $id . '_border', $style[1] );
             $this->slider( $id . '_icon_size', xw_t( 'Tamaño del icono', 'Icon size' ), $style[1] . ' .xw-wl-glyph', 'font-size: {{SIZE}}{{UNIT}};', 8, 80 );
             $this->states( $id, $style[1] );
@@ -217,6 +228,7 @@ class XW_Wishlist_Table_Widget extends XW_Wishlist_Widget {
         foreach ( array( 'cart', 'options', 'view', 'stock', 'unavailable' ) as $key ) { $labels[ $key ] = $s[ $key . '_text' ]; }
         echo '<section'; $this->root_attributes( $s, 'table' );
         echo ' data-xw-wl-labels="' . esc_attr( wp_json_encode( $labels ) ) . '"';
+        echo ' data-xw-wl-image="' . esc_attr( $s['show_image'] ) . '"';
         if ( $this->editing() ) {
             $preview = array();
             foreach ( wc_get_products( array( 'limit' => 3, 'status' => 'publish' ) ) as $product ) { $preview[] = array( 'id' => $product->get_id(), 'added' => time() ); }
@@ -226,20 +238,20 @@ class XW_Wishlist_Table_Widget extends XW_Wishlist_Widget {
         if ( $s['title'] ) { $tag = in_array( $s['title_tag'], array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div' ), true ) ? $s['title_tag'] : 'h2'; echo '<' . $tag . ' class="xw-wl-title">' . esc_html( $s['title'] ) . '</' . $tag . '>'; }
         echo '<p class="xw-wl-status" role="status" aria-live="polite"></p>';
         echo '<div class="xw-wl-empty" hidden><p>' . esc_html( $s['empty_text'] ) . '</p><a class="xw-wl-row-action" href="' . esc_url( wc_get_page_permalink( 'shop' ) ) . '">' . esc_html( $s['shop_text'] ) . '</a></div>';
-        echo '<div class="xw-wl-data" aria-busy="true"><table class="xw-wl-grid"><caption class="xw-wl-sr">' . esc_html( $s['title'] ?: xw_t( 'Lista de deseos', 'Wishlist' ) ) . '</caption>';
+        echo '<div class="xw-wl-data" aria-busy="true"><div class="xw-wl-table-frame"><table class="xw-wl-grid" role="table"><caption class="xw-wl-sr">' . esc_html( $s['title'] ?: xw_t( 'Lista de deseos', 'Wishlist' ) ) . '</caption>';
         if ( 'yes' === $s['show_heading'] ) {
-            echo '<thead><tr>';
+            echo '<thead role="rowgroup"><tr role="row">';
             foreach ( $columns as $key => $label ) {
-                echo '<th scope="col" class="xw-wl-col-' . esc_attr( $key ) . '">';
+                echo '<th role="columnheader" scope="col" class="xw-wl-col-' . esc_attr( $key ) . '">';
                 if ( 'select' === $key ) { echo '<label class="xw-wl-check"><input type="checkbox" data-xw-wl-select-all><span class="xw-wl-sr">' . esc_html( xw_t( 'Seleccionar todos', 'Select all' ) ) . '</span></label>'; }
                 else { echo $label ? esc_html( $label ) : '<span class="xw-wl-sr">' . esc_html( 'image' === $key ? xw_t( 'Foto', 'Image' ) : xw_t( 'Eliminar', 'Remove' ) ) . '</span>'; }
                 echo '</th>';
             }
             echo '</tr></thead>';
         }
-        echo '<tbody></tbody></table></div><template data-xw-wl-row><tr>';
+        echo '<tbody role="rowgroup"></tbody></table></div></div><template data-xw-wl-row><tr role="row">';
         foreach ( $columns as $key => $label ) {
-            echo '<td class="xw-wl-col-' . esc_attr( $key ) . '" data-label="' . esc_attr( $label ) . '">';
+            echo '<td role="cell" class="xw-wl-col-' . esc_attr( $key ) . '" data-label="' . esc_attr( $label ) . '">';
             switch ( $key ) {
                 case 'select': echo '<label class="xw-wl-check"><input type="checkbox" data-xw-wl-select><span class="xw-wl-sr" data-xw-wl-select-label></span></label>'; break;
                 case 'remove': echo '<button type="button" class="xw-wl-remove" data-xw-wl-remove>'; $this->icon_markup( $s['remove_icon'] ); echo '</button>'; break;
@@ -281,6 +293,7 @@ class XW_Wishlist_Counter_Widget extends XW_Wishlist_Widget {
         $this->alignment( 'align', xw_t( 'Alineación', 'Alignment' ), '{{WRAPPER}} .xw-wl-counter', 'justify-content' );
         $this->slider( 'icon_size', xw_t( 'Tamaño', 'Size' ), '{{WRAPPER}} .xw-wl-counter-link', 'font-size: {{SIZE}}{{UNIT}};', 8, 150, 24 );
         $this->dimensions( 'icon_padding', 'Padding', '{{WRAPPER}} .xw-wl-counter-link' );
+        $this->slider( 'icon_min_size', xw_t( 'Tamaño mínimo (opcional)', 'Minimum size (optional)' ), '{{WRAPPER}} .xw-wl-counter-link', 'min-width: {{SIZE}}{{UNIT}}; min-height: {{SIZE}}{{UNIT}};', 0, 180 );
         $this->border( 'icon_border', '{{WRAPPER}} .xw-wl-counter-link' );
         $this->states( 'icon', '{{WRAPPER}} .xw-wl-counter-link' );
         $this->end_controls_section();

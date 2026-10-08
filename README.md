@@ -25,6 +25,10 @@ No coloca widgets automáticamente, no cambia las plantillas existentes y no imp
 
 Los botones de carrito admiten productos simples disponibles y respetan la validación de WooCommerce. Los variables requieren abrir la ficha y seleccionar sus opciones. En el editor/preview de Elementor se muestran productos públicos de ejemplo y no se modifican la lista ni el carrito. No se habilitan permisos extra para subir SVG.
 
+En **Tabla > Estilo > Tabla y tarjetas** se configura el redondeo del contorno (0 para esquinas cuadradas), además del padding y separación de las tarjetas de tablet/móvil. Hasta 1024 px, cada producto muestra foto/nombre juntos, precio/disponibilidad en dos columnas y fecha/botón debajo. Los anchos de columna del escritorio no limitan estas tarjetas; tipografía, alineación y padding siguen siendo editables por dispositivo.
+
+El padding de contador, eliminar y botones determina su tamaño visible sin un mínimo fijo de 44 px. Los controles de tamaño mínimo son opcionales. En pantallas táctiles se amplía el área de pulsación sin agrandar el fondo visible. Tras esta revisión, la primera visita de un administrador con Wishlist activo regenera una sola vez la caché CSS/HTML de Elementor; no cambia plantillas, ajustes ni listas.
+
 ### Pruebas locales de Wishlist
 
 Requieren un WordPress aislado con `WP_ENVIRONMENT_TYPE=local`, WooCommerce, Elementor y esta suite activos. Nunca ejecutar el generador de fixtures contra producción: crea productos/página de prueba y activa el módulo únicamente en ese entorno.
@@ -33,6 +37,8 @@ Requieren un WordPress aislado con `WP_ENVIRONMENT_TYPE=local`, WooCommerce, Ele
 php tests/wishlist-integration.php C:/ruta/wordpress-local
 # Sirve esa instalación en localhost antes de ejecutar las pruebas HTTP.
 node tests/wishlist-http.mjs http://127.0.0.1:8097 11,12,13,14,15
+# CSS real de Elementor: compact, spacious, no-image o minimal.
+php tests/wishlist-style-fixture.php C:/ruta/wordpress-local compact
 ```
 
 Usa los IDs que devuelve la primera prueba, en el mismo orden. Cubre registro/controles nativos, render/contexto de producto, transacciones/rollback, límite, aislamiento de visitantes, nonces, productos privados, compartir, eliminación y carrito. La revisión visual adicional debe hacerse en el editor y en escritorio/tablet/móvil.
