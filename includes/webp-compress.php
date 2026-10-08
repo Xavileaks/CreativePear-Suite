@@ -90,7 +90,25 @@ function xw_webp_clean_filename( $filename ) {
 }
 
 /**
- * Crea un archivo WebP con la calidad configurada.
+ * Prefiere GD para las conversiones y tamaños WebP de esta suite.
+ *
+ * @param array $editors Editores disponibles.
+ * @return array
+ */
+function xw_webp_prefer_gd( $editors ) {
+    // Algunos builds de Imagick aceptan set_quality() pero guardan WebP
+    // siempre con la calidad predeterminada. GD pasa el valor a libwebp.
+    if ( function_exists( 'imagewebp' )
+        && class_exists( 'WP_Image_Editor_GD', false )
+        && WP_Image_Editor_GD::supports_mime_type( 'image/webp' ) ) {
+        return array_values( array_unique( array_merge( array( 'WP_Image_Editor_GD' ), $editors ) ) );
+    }
+
+    return $editors;
+}
+
+/**
+ * Crea WebP con la calidad configurada y un editor limitado a esta operación.
  *
  * @param string $source      Archivo origen.
  * @param string $destination Archivo WebP de salida.
@@ -102,7 +120,12 @@ function xw_webp_create_file( $source, $destination, $compare = true ) {
         return false;
     }
 
-    $editor = wp_get_image_editor( $source );
+    add_filter( 'wp_image_editors', 'xw_webp_prefer_gd', PHP_INT_MAX );
+    try {
+        $editor = wp_get_image_editor( $source );
+    } finally {
+        remove_filter( 'wp_image_editors', 'xw_webp_prefer_gd', PHP_INT_MAX );
+    }
 
     if ( is_wp_error( $editor ) ) {
         return false;
@@ -112,8 +135,26 @@ function xw_webp_create_file( $source, $destination, $compare = true ) {
         $editor->maybe_exif_rotate();
     }
 
-    $editor->set_quality( xw_webp_get_quality() );
-    $saved = $editor->save( $destination, 'image/webp' );
+    // save() vuelve a resolver la calidad al cambiar de formato. Mantenerla
+    // durante toda esta conversión, incluso en versiones que usan el MIME origen
+    // o cuando otro plugin impone su calidad JPEG/WebP global.
+    $quality = xw_webp_get_quality();
+    $force_quality = static function () use ( $quality ) {
+        return $quality;
+    };
+    add_filter( 'wp_editor_set_quality', $force_quality, PHP_INT_MAX );
+    add_filter( 'jpeg_quality', $force_quality, PHP_INT_MAX );
+
+    try {
+        $quality_result = $editor->set_quality( $quality );
+        $saved = is_wp_error( $quality_result )
+            ? $quality_result
+            : $editor->save( $destination, 'image/webp' );
+    } finally {
+        // No modificar otras conversiones ni otros formatos de esta petición.
+        remove_filter( 'wp_editor_set_quality', $force_quality, PHP_INT_MAX );
+        remove_filter( 'jpeg_quality', $force_quality, PHP_INT_MAX );
+    }
 
     if ( is_wp_error( $saved ) || empty( $saved['path'] ) || ! is_file( $saved['path'] ) ) {
         return false;
@@ -177,9 +218,20 @@ function xw_webp_prepare_upload( $file ) {
     $file['type']     = 'image/webp';
     $file['size']     = filesize( $file['tmp_name'] );
 
+    // Mantener la misma calidad en los tamaños que genera WordPress para
+    // esta subida. El filtro se retira cuando terminan sus metadatos.
+    add_filter( 'wp_image_editors', 'xw_webp_prefer_gd', PHP_INT_MAX );
+
     return $file;
 }
 add_filter( 'wp_handle_upload_prefilter', 'xw_webp_prepare_upload', 20 );
+
+/** Retira la preferencia temporal al terminar los tamaños de la subida. */
+function xw_webp_finish_upload( $metadata ) {
+    remove_filter( 'wp_image_editors', 'xw_webp_prefer_gd', PHP_INT_MAX );
+    return $metadata;
+}
+add_filter( 'wp_generate_attachment_metadata', 'xw_webp_finish_upload', PHP_INT_MAX );
 
 /**
  * Lista el original y todos sus tamaños generados.
@@ -335,7 +387,7 @@ function xw_webp_editor_quality( $quality, $mime_type ) {
 
     return $quality;
 }
-add_filter( 'wp_editor_set_quality', 'xw_webp_editor_quality', 20, 2 );
+add_filter( 'wp_editor_set_quality', 'xw_webp_editor_quality', PHP_INT_MAX, 2 );
 
 /**
  * Indica si deben entregarse los WebP paralelos en el frontend.

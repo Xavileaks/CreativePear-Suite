@@ -39,6 +39,9 @@ jobs:
             --exclude='.git/' \
             --exclude='.github/' \
             --exclude='build/' \
+            --exclude='tests/' \
+            --exclude='AGENTS.md' \
+            --exclude='.gitignore' \
             --exclude='*.zip' \
             --exclude='.idea/' \
             --exclude='.vscode/'

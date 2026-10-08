@@ -77,6 +77,11 @@ function xw_get_feature_definitions() {
             'description' => xw_t( 'Muestra un acceso flotante configurable que abre una conversación con el número indicado.', 'Displays a configurable floating shortcut that opens a conversation with the specified number.' ),
             'settings'    => true,
         ),
+        'elementor_wishlist' => array(
+            'title'       => 'Wishlist',
+            'description' => xw_t( 'Añade tres widgets a Elementor: tabla de deseos, icono con contador y botón para guardar productos.', 'Adds three Elementor widgets: wishlist table, counter icon, and save-product button.' ),
+            'settings'    => true,
+        ),
         'elementor_messages' => array(
             'title'       => xw_t( 'Form Elementor: mensajes flotantes', 'Form Elementor: floating messages' ),
             'description' => xw_t( 'Muestra las respuestas de formularios como avisos flotantes temporales.', 'Displays form responses as temporary floating notices.' ),
@@ -185,8 +190,9 @@ function xw_get_feature_groups() {
         ),
         'elementor' => array(
             'title'       => 'Elementor',
-            'description' => xw_t( 'Funciones que actúan sobre los formularios de Elementor.', 'Features that apply to Elementor forms.' ),
+            'description' => xw_t( 'Widgets y funciones para Elementor.', 'Widgets and features for Elementor.' ),
             'features'    => array(
+                'elementor_wishlist',
                 'elementor_messages',
                 'elementor_phone_mask',
                 'elementor_email_mask',
@@ -222,6 +228,7 @@ function xw_get_default_settings() {
 
     return array(
         'features' => $features,
+        'wishlist' => array( 'page_id' => 0 ),
         'login'    => array(
             'primary_color'     => '',
             'button_text_color' => '',
@@ -439,6 +446,9 @@ function xw_sanitize_settings( $input ) {
     foreach ( xw_get_feature_definitions() as $key => $definition ) {
         $sanitized['features'][ $key ] = empty( $features[ $key ] ) ? 0 : 1;
     }
+
+    $wishlist_page = absint( $input['wishlist']['page_id'] ?? 0 );
+    $sanitized['wishlist']['page_id'] = $wishlist_page && 'page' === get_post_type( $wishlist_page ) && 'publish' === get_post_status( $wishlist_page ) ? $wishlist_page : 0;
 
     $primary_color = isset( $login['primary_color'] ) ? sanitize_hex_color( $login['primary_color'] ) : '';
     $button_text_color = isset( $login['button_text_color'] ) ? sanitize_hex_color( $login['button_text_color'] ) : '';
@@ -863,6 +873,17 @@ function xw_render_settings_page() {
                                             <input id="xw-scrollbar-radius" type="number" name="xw_settings[styles][scrollbar_radius]" value="<?php echo esc_attr( $settings['styles']['scrollbar_radius'] ); ?>" min="0" max="50" step="1">
                                             <span>px</span>
                                         </div>
+                                    </div>
+                                <?php elseif ( 'elementor_wishlist' === $key ) : ?>
+                                    <div class="xw-field-row">
+                                        <label for="xw-wishlist-page"><?php echo esc_html( xw_t( 'Página de Wishlist', 'Wishlist page' ) ); ?></label>
+                                        <?php wp_dropdown_pages( array( 'id' => 'xw-wishlist-page', 'name' => 'xw_settings[wishlist][page_id]', 'selected' => $settings['wishlist']['page_id'], 'show_option_none' => xw_t( 'Seleccionar página', 'Select a page' ), 'option_none_value' => 0 ) ); ?>
+                                        <p><?php echo esc_html( xw_t( 'Coloca Wishlist — Tabla en esa página. El icono con contador enlazará a ella.', 'Place Wishlist — Table on that page. The counter icon will link to it.' ) ); ?></p>
+                                    </div>
+                                    <div class="xw-field-row">
+                                        <strong><?php echo esc_html( xw_t( 'Tres widgets', 'Three widgets' ) ); ?></strong>
+                                        <p>Wishlist — <?php echo esc_html( xw_t( 'Tabla · Contador · Añadir', 'Table · Counter · Add' ) ); ?></p>
+                                        <p><?php echo esc_html( xw_t( 'WooCommerce y Elementor deben estar activos. Diseño, iconos y textos se editan dentro de cada widget. No sustituye listas ni plantillas de otros plugins.', 'WooCommerce and Elementor must be active. Edit design, icons, and texts in each widget. Existing lists and templates from other plugins are not replaced.' ) ); ?></p>
                                     </div>
                                 <?php elseif ( 'webp_compress' === $key && function_exists( 'xw_render_webp_compress_settings' ) ) : ?>
                                     <?php xw_render_webp_compress_settings( $settings['webp'] ); ?>

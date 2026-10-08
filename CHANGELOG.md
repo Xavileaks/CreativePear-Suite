@@ -1,5 +1,13 @@
 # Historial de cambios
 
+## 1.0.35
+
+- Añade Wishlist, apagado por defecto, en la sección Elementor de Creative Pear Suite.
+- Registra tres widgets nativos y editables: tabla, icono con contador y añadir a Wishlist para loops/producto único.
+- Incluye listas independientes de visitantes/cuentas, sincronización de widgets, carrito validado y enlaces compartidos de solo lectura.
+- Conserva las dos columnas de cajas en escritorio y una columna en tablet/móvil; no modifica plantillas ni listas de otros plugins.
+- Corrige la calidad WebP para aplicar Low (50), Medium (60), High (75) y Extra High (90) durante la conversión y aislar los filtros de otras operaciones.
+
 ## 1.0.34
 
 - Mantiene todas las cajas, incluida WebP - Compress, en dos columnas en escritorio y a ancho completo en tablet y móvil.
