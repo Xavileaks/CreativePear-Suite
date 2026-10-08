@@ -4,11 +4,11 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
-## Versión 1.0.42
+## Versión 1.0.43
 
-- Wishlist: guarda la variación seleccionada en la ficha, incluyendo talla, color y demás atributos, con su precio, imagen y enlace preseleccionado.
-- Cada combinación se guarda por separado, sin duplicarse; el estado del botón se actualiza al cambiar las opciones.
-- Las variaciones guardadas se añaden al carrito con sus opciones exactas y se eliminan de la wishlist solo tras la confirmación de WooCommerce.
+- Wishlist: separa el título del producto y las opciones seleccionadas; estas se muestran debajo del nombre.
+- En **Tabla > Estilo > Product name > Variation options** permite editar color, color hover, tipografía por dispositivo y separación de la variación sin cambiar el título.
+- La vista previa de Elementor incluye una variación pública cuando hay un ejemplo completo disponible, sin modificar listas ni carritos.
 
 ## Extra Fees: carritos digitales
 
@@ -30,6 +30,8 @@ Selecciona una página publicada en los ajustes y coloca **Tabla** en ella; el c
 No coloca widgets automáticamente, no cambia las plantillas existentes y no importa ni reemplaza listas de otros plugins. La lista de visitantes usa una cookie HttpOnly de un año; al iniciar sesión se fusiona con la lista de la cuenta. Guarda IDs/fechas y atributos de las variaciones elegidas, un identificador de propietario y, únicamente al compartir, un token aleatorio. Cada lista admite hasta 200 productos o combinaciones. Los enlaces compartidos son públicos de solo lectura y no incluyen datos de la cuenta. Los visitantes del enlace no pueden modificar la lista del propietario. Los datos se conservan al apagar el módulo; no se eliminan automáticamente.
 
 Los botones de carrito admiten productos simples y variaciones disponibles y respetan la validación de WooCommerce. Al pulsar **Añadir** con una variación elegida se guarda esa combinación exacta (también si WooCommerce usa atributos «Cualquiera»). La tabla muestra sus opciones, precio e imagen, y permite añadirla al carrito sin volver a elegirlas. Sin una selección completa se conserva el producto general y hay que abrir su ficha para seleccionar opciones. Las listas existentes mantienen sus productos generales; no se sustituyen automáticamente. Los botones de otros productos en loops no heredan la selección de la ficha. En el editor/preview de Elementor se muestran productos públicos de ejemplo y no se modifican la lista ni el carrito. No se habilitan permisos extra para subir SVG.
+
+En **Tabla > Estilo > Product name > Variation options** (en español, **Nombre del producto > Opciones de la variación**) se editan el color, color hover, tipografía completa —incluido tamaño por dispositivo— y separación del nombre. El nombre conserva sus controles anteriores. Las opciones aparecen debajo, solo para variaciones; los productos generales no reservan espacio vacío. Cambiar estos estilos no modifica las combinaciones guardadas.
 
 Al añadir al carrito desde la tabla (un producto, seleccionados o todos), se quitan de la wishlist únicamente los productos que WooCommerce confirmó como añadidos. El cambio se guarda para futuras visitas y actualiza tabla, contador y botones de añadir. Los productos omitidos permanecen; abrir «Seleccionar opciones» no elimina nada. Una confirmación flotante accesible, sin desplazar la tabla, se cierra a los 5 segundos o mediante la ×. Si falla el guardado de la lista, el aviso explica que el carrito ya se actualizó y no hay que añadirlo otra vez.
 
@@ -58,7 +60,7 @@ node tests/wishlist-http.mjs http://127.0.0.1:8097 11,12,13,14,15
 node tests/wishlist-sharing.mjs
 node tests/wishlist-toast.mjs
 node tests/wishlist-selection.mjs
-# CSS real de Elementor: compact, spacious, no-image, minimal o no-icon.
+# CSS real de Elementor: compact, spacious, no-image, minimal, no-icon o variations.
 php tests/wishlist-style-fixture.php C:/ruta/wordpress-local compact
 ```
 

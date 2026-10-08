@@ -56,6 +56,7 @@
 .xw-wl .xw-wl-grid .xw-wl-col-image { width: 102px; text-align: center; }
 .xw-wl .xw-wl-product-name { color: var(--xw-wl-accent); text-decoration: none; }
 .xw-wl .xw-wl-product-name:hover { text-decoration: underline; }
+.xw-wl .xw-wl-variation { display: block; margin-top: 4px; font-size: .9em; color: inherit; }
 .xw-wl .xw-wl-col-price { font-variant-numeric: tabular-nums; }
 .xw-wl .xw-wl-image { width: 74px; height: 74px; object-fit: contain; vertical-align: middle; background: var(--xw-wl-surface); max-width: 100%; }
 .xw-wl .xw-wl-check { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; cursor: pointer; }

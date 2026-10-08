@@ -176,7 +176,14 @@ class XW_Wishlist_Table_Widget extends XW_Wishlist_Widget {
             $this->color( $column . '_color', xw_t( 'Color', 'Color' ), $selector . ' [data-xw-wl-field]' );
             $this->dimensions( $column . '_padding', 'Padding', $selector );
             $this->slider( $column . '_width', xw_t( 'Ancho', 'Width' ), $selector, 'width: {{SIZE}}{{UNIT}};', 0, 800, null, array( 'px', '%' ) );
-            if ( 'name' === $column ) { $this->color( 'name_hover', xw_t( 'Color hover', 'Hover color' ), $selector . ' a:hover' ); }
+            if ( 'name' === $column ) {
+                $this->color( 'name_hover', xw_t( 'Color hover', 'Hover color' ), $selector . ' a:hover' );
+                $this->add_control( 'variation_style_heading', array( 'label' => xw_t( 'Opciones de la variación', 'Variation options' ), 'type' => \Elementor\Controls_Manager::HEADING, 'separator' => 'before' ) );
+                $this->typography( 'variation_typography', $selector . ' .xw-wl-variation' );
+                $this->color( 'variation_color', xw_t( 'Color de la variación', 'Variation color' ), $selector . ' .xw-wl-variation' );
+                $this->color( 'variation_hover', xw_t( 'Color hover de la variación', 'Variation hover color' ), $selector . ' a:hover .xw-wl-variation' );
+                $this->slider( 'variation_gap', xw_t( 'Separación del nombre', 'Name spacing' ), $selector . ' .xw-wl-variation', 'margin-top: {{SIZE}}{{UNIT}};', 0, 80 );
+            }
             if ( 'stock' === $column ) {
                 $this->color( 'stock_available', xw_t( 'Disponible', 'Available' ), '{{WRAPPER}} .xw-wl-stock.is-available' );
                 $this->color( 'stock_unavailable', xw_t( 'Agotado', 'Unavailable' ), '{{WRAPPER}} .xw-wl-stock.is-unavailable' );
@@ -240,7 +247,15 @@ class XW_Wishlist_Table_Widget extends XW_Wishlist_Widget {
         echo ' data-xw-wl-image="' . esc_attr( $s['show_image'] ) . '"';
         if ( $this->editing() ) {
             $preview = array();
-            foreach ( wc_get_products( array( 'limit' => 3, 'status' => 'publish' ) ) as $product ) { $preview[] = array( 'id' => $product->get_id(), 'added' => time() ); }
+            foreach ( wc_get_products( array( 'limit' => 3, 'status' => 'publish' ) ) as $product ) {
+                $id = $product->get_id();
+                if ( $product->is_type( 'variable' ) ) {
+                    foreach ( array_slice( $product->get_children(), 0, 10 ) as $child ) {
+                        if ( xw_wishlist_product( $child ) ) { $id = $child; break; }
+                    }
+                }
+                $preview[] = array( 'id' => $id, 'added' => time() );
+            }
             echo ' data-xw-wl-preview="' . esc_attr( wp_json_encode( xw_wishlist_payload( $preview ) ) ) . '"';
         }
         echo '>';
@@ -265,7 +280,7 @@ class XW_Wishlist_Table_Widget extends XW_Wishlist_Widget {
                 case 'select': echo '<label class="xw-wl-check"><input type="checkbox" data-xw-wl-select><span class="xw-wl-sr" data-xw-wl-select-label></span></label>'; break;
                 case 'remove': echo '<button type="button" class="xw-wl-remove" data-xw-wl-remove>'; $this->icon_markup( $s['remove_icon'] ); echo '</button>'; break;
                 case 'image': echo '<a data-xw-wl-link><img class="xw-wl-image" width="74" height="74" loading="lazy" decoding="async" alt=""></a>'; break;
-                case 'name': echo '<a class="xw-wl-product-name" data-xw-wl-field="name" data-xw-wl-link></a>'; break;
+                case 'name': echo '<a class="xw-wl-product-name" data-xw-wl-field="name" data-xw-wl-link><span data-xw-wl-name-text></span><span class="xw-wl-variation" data-xw-wl-variation hidden></span></a>'; break;
                 case 'stock': echo '<span class="xw-wl-stock" data-xw-wl-field="stock">'; $this->icon_markup( $s['stock_icon'], 'xw-wl-glyph xw-wl-stock-in' ); $this->icon_markup( $s['unavailable_icon'], 'xw-wl-glyph xw-wl-stock-out' ); echo '<span data-xw-wl-stock-text></span></span>'; break;
                 case 'actions': echo '<button class="xw-wl-row-action" type="button" data-xw-wl-cart-row>'; $this->icon_markup( $s['cart_icon'] ); echo '<span data-xw-wl-action-text></span></button>'; break;
                 default: echo '<span data-xw-wl-field="' . esc_attr( $key ) . '"></span>';

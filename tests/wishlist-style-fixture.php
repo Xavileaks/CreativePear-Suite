@@ -8,15 +8,15 @@ if (!$admins) { throw new RuntimeException('A local administrator is required fo
 wp_set_current_user((int) $admins[0]);
 $refreshes = 0;
 add_action('elementor/core/files/clear_cache', static function() use (&$refreshes) { ++$refreshes; });
-update_option('xw_wishlist_style_revision', '4');
+update_option('xw_wishlist_style_revision', '5');
 xw_wishlist_refresh_elementor_styles();
 xw_wishlist_refresh_elementor_styles();
-if ($refreshes !== 1 || get_option('xw_wishlist_style_revision') !== '5') { throw new RuntimeException('Cache revision must refresh once only'); }
+if ($refreshes !== 1 || get_option('xw_wishlist_style_revision') !== '6') { throw new RuntimeException('Cache revision must refresh once only'); }
 echo "PASS: generated Elementor markup/CSS refreshed once only\n";
 $page = (int) get_option('wl_qa_page_id');
 if (!$page) { throw new RuntimeException('Run wishlist-integration.php first.'); }
 $mode = $argv[2] ?? 'compact';
-if (!in_array($mode, array('compact', 'spacious', 'no-image', 'minimal', 'no-icon', 'dividers', 'dividers-no-date', 'dividers-no-stock'), true)) { throw new RuntimeException('Unknown fixture mode.'); }
+if (!in_array($mode, array('compact', 'spacious', 'no-image', 'minimal', 'no-icon', 'dividers', 'dividers-no-date', 'dividers-no-stock', 'variations'), true)) { throw new RuntimeException('Unknown fixture mode.'); }
 $wide = $mode === 'spacious';
 $dimensions = static function($size) { return array('top'=>$size,'right'=>$size,'bottom'=>$size,'left'=>$size,'unit'=>'px','isLinked'=>true); };
 $data = json_decode(get_post_meta($page, '_elementor_data', true), true);
@@ -34,6 +34,12 @@ foreach ($data[0]['elements'] as &$element) {
     if (($element['widgetType'] ?? '') === 'xw-wishlist-table') {
         $s = &$element['settings'];
         $s['table_radius'] = $dimensions($wide ? 0 : 18);
+        if ($mode === 'variations') {
+            $s['name_typography_typography']='custom'; $s['name_typography_font_size']=array('size'=>18,'unit'=>'px'); $s['name_color']='#711704';
+            $s['variation_typography_typography']='custom'; $s['variation_typography_font_size']=array('size'=>13,'unit'=>'px');
+            $s['variation_typography_font_size_tablet']=array('size'=>14,'unit'=>'px'); $s['variation_typography_font_size_mobile']=array('size'=>12,'unit'=>'px');
+            $s['variation_color']='#375b70'; $s['variation_hover']='#223d4e'; $s['variation_gap']=array('size'=>8,'unit'=>'px');
+        }
         $s['header_background'] = '#711704'; $s['header_color'] = '#ffffff';
         $s['row_alt'] = '#ffffff'; $s['row_hover'] = '#fff4df';
         $s['cells_border_color'] = str_starts_with($mode, 'dividers') ? '#711704' : '#d8dce1';
@@ -65,6 +71,12 @@ update_post_meta($page, '_elementor_data', wp_slash(wp_json_encode($data)));
 delete_post_meta($page, '_elementor_element_cache');
 Elementor\Core\Files\CSS\Post::create($page)->update();
 $widgets = Elementor\Plugin::$instance->widgets_manager->get_widget_types();
+$table=$widgets['xw-wishlist-table'];
+foreach (array('variation_typography_font_size','variation_typography_font_size_tablet','variation_typography_font_size_mobile','variation_color','variation_hover','variation_gap') as $id) {
+    $control=$table->get_controls($id);
+    if (!$control || ($control['section'] ?? '')!=='style_col_name') { throw new RuntimeException('Variation control missing from Product name: '.$id); }
+}
+echo "PASS: independent variation color, hover, spacing and responsive typography are inside Product name\n";
 if ($widgets['xw-wishlist-counter']->get_controls('badge_min_width')) { throw new RuntimeException('Unnecessary badge width control still registered'); }
 if (!$widgets['xw-wishlist-counter']->get_controls('badge_padding')) { throw new RuntimeException('Badge padding control missing'); }
 echo "PASS: counter uses padding without minimum-width control\n";
@@ -94,6 +106,7 @@ foreach (array('table_radius','card_padding','card_gap','remove_min_size','row_b
     echo "PASS: $id registered in real Elementor\n";
 }
 $html = Elementor\Plugin::$instance->frontend->get_builder_content_for_display($page);
+if (strpos($html,'data-xw-wl-name-text')===false || strpos($html,'data-xw-wl-variation hidden')===false) { throw new RuntimeException('Separate variation markup missing'); }
 if (strpos($html, 'xw-wl-badge-value') === false) { throw new RuntimeException('Square counter value wrapper missing'); }
 if (!preg_match('/data-xw-wl-cart-row>(.*?)<span data-xw-wl-action-text>/s', $html, $action)) { throw new RuntimeException('Product button markup missing'); }
 if ($mode === 'no-icon' ? trim($action[1]) !== '' : strpos($action[1], 'xw-wl-glyph') === false) { throw new RuntimeException('Product button did not honor its icon setting'); }

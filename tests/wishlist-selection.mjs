@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 const source = fs.readFileSync(new URL('../assets/wishlist/wishlist.js', import.meta.url), 'utf8')
-    .replace('async function init(root)', 'window.__selectionTest = {selectedProduct, selectedItem, setOwn(data) { own = data; }};\n    async function init(root)');
+    .replace('async function init(root)', 'window.__selectionTest = {selectedProduct, selectedItem, renderName, setOwn(data) { own = data; }};\n    async function init(root)');
 const inputs = {variation: {value:'24'}, size:{name:'attribute_size',value:'X-Large'}, color:{name:'attribute_color',value:'Burgundy'}};
 const form = {dataset:{product_id:'23'}, querySelector() {return inputs.variation;}, querySelectorAll() {return [inputs.size,inputs.color];}};
 const document = {readyState:'loading',documentElement:{},addEventListener(){},querySelectorAll(){return [form];}};
@@ -28,3 +28,13 @@ inputs.variation.value='26'; api.setOwn({items:[{id:26,key:'small',attributes:{a
 assert.equal(api.selectedItem(api.selectedProduct(button())).key,'large'); inputs.size.value='Small';
 assert.equal(api.selectedItem(api.selectedProduct(button())).key,'small');
 console.log('PASS: two choices of the same Any-size variation retain independent button states');
+const title={textContent:''}, variation={textContent:'',hidden:true};
+const name={querySelector(selector){return selector==='[data-xw-wl-name-text]'?title:variation;}};
+api.renderName(name,{name:'T-Shirt — Color: Black',product_name:'T-Shirt',variation_text:'Color: Black'});
+assert.equal(title.textContent,'T-Shirt'); assert.equal(variation.textContent.trim(),'Color: Black'); assert.equal(variation.hidden,false);
+api.renderName(name,{name:'Simple product',product_name:'Simple product',variation_text:''});
+assert.equal(title.textContent,'Simple product'); assert.equal(variation.textContent,''); assert.equal(variation.hidden,true);
+const oldName={querySelector(){return null;},textContent:''};
+api.renderName(oldName,{name:'T-Shirt — Color: Black',product_name:'T-Shirt',variation_text:'Color: Black'});
+assert.equal(oldName.textContent,'T-Shirt — Color: Black');
+console.log('PASS: title and choices render independently; simple products hide choices and old cached markup stays readable');

@@ -100,6 +100,15 @@
             if (link) link.setAttribute('aria-label', `${link.dataset.xwWlCounterLabel} (${count})`);
         });
     }
+    function renderName(name, product) {
+        const nameText = name.querySelector('[data-xw-wl-name-text]');
+        const variation = name.querySelector('[data-xw-wl-variation]');
+        if (nameText && variation) {
+            nameText.textContent = product.product_name || product.name;
+            variation.textContent = product.variation_text ? ` ${product.variation_text}` : '';
+            variation.hidden = !product.variation_text;
+        } else { name.textContent = product.name; } // Older cached Elementor markup remains readable.
+    }
     function renderTable(root, data) {
         const labels = parse(root.dataset.xwWlLabels);
         const body = root.querySelector('tbody');
@@ -119,7 +128,7 @@
             row.querySelectorAll('[data-xw-wl-link]').forEach((a) => { a.href = safeUrl(product.url); });
             const image = row.querySelector('img');
             if (image) { image.src = safeUrl(product.image); image.alt = product.name; }
-            row.querySelector('[data-xw-wl-field="name"]').textContent = product.name;
+            renderName(row.querySelector('[data-xw-wl-field="name"]'), product);
             // El servidor devuelve únicamente HTML de precio filtrado con wp_kses_post.
             row.querySelector('[data-xw-wl-field="price"]').innerHTML = product.price;
             const date = row.querySelector('[data-xw-wl-field="date"]');

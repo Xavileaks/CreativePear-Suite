@@ -171,6 +171,8 @@ function xw_wishlist_product( $id, $added = 0, $attributes = array() ) {
         'id' => $product->get_id(), 'key' => xw_wishlist_item_key( array( 'id' => $id, 'attributes' => $attributes ) ),
         'parent_id' => $variation ? $product->get_parent_id() : 0, 'attributes' => $attributes,
         'name' => $variation ? wp_strip_all_tags( wc_get_product( $product->get_parent_id() )->get_name() . ' — ' . wc_get_formatted_variation( $display, true, true ) ) : $product->get_name(),
+        'product_name' => $variation ? wc_get_product( $product->get_parent_id() )->get_name() : $product->get_name(),
+        'variation_text' => $variation ? wp_strip_all_tags( wc_get_formatted_variation( $display, true, true ) ) : '',
         'url' => esc_url_raw( $variation ? $product->get_permalink( array( 'variation' => $attributes ) ) : $product->get_permalink() ),
         'image' => esc_url_raw( $image_id ? wp_get_attachment_image_url( $image_id, 'woocommerce_thumbnail' ) : wc_placeholder_img_src() ),
         'price' => wp_kses_post( $product->get_price_html() ),
@@ -330,7 +332,7 @@ add_action( 'elementor/preview/enqueue_scripts', 'xw_wishlist_register_assets', 
 
 /** Refresh generated CSS/markup once after the responsive widget revision. No templates or lists are changed. */
 function xw_wishlist_refresh_elementor_styles() {
-    $revision = '5';
+    $revision = '6';
     if ( ! xw_wishlist_enabled() || ! current_user_can( 'manage_options' ) || get_option( 'xw_wishlist_style_revision' ) === $revision || ! class_exists( '\Elementor\Plugin' ) ) { return; }
     $manager = \Elementor\Plugin::$instance->files_manager ?? null;
     if ( ! $manager || ! is_callable( array( $manager, 'clear_cache' ) ) ) { return; }
