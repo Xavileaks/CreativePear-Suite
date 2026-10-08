@@ -206,17 +206,28 @@ function xw_wishlist_ajax() {
     $ids = array_slice( array_unique( array_map( 'absint', (array) ( $_POST['ids'] ?? array() ) ) ), 0, 200 );
     if ( ! WC()->cart ) { wc_load_cart(); }
     $added = 0;
+    $added_ids = array();
     $skipped = 0;
     foreach ( $ids as $id ) {
         $product = in_array( $id, $allowed, true ) ? wc_get_product( $id ) : false;
         if ( ! $product || ! xw_wishlist_product( $id ) || ! $product->is_type( 'simple' ) || ! $product->is_purchasable() || ! $product->is_in_stock() ) { ++$skipped; continue; }
         try {
-            if ( apply_filters( 'woocommerce_add_to_cart_validation', true, $id, 1 ) && WC()->cart->add_to_cart( $id, 1 ) ) { ++$added; } else { ++$skipped; }
+            if ( apply_filters( 'woocommerce_add_to_cart_validation', true, $id, 1 ) && WC()->cart->add_to_cart( $id, 1 ) ) { ++$added; $added_ids[] = $id; } else { ++$skipped; }
         } catch ( Exception $e ) { ++$skipped; }
     }
-    $message = sprintf( xw_t( '%d productos añadidos al carrito.', '%d products added to cart.' ), $added );
+    $cleanup_failed = false;
+    if ( $added_ids ) {
+        // Only remove confirmed cart additions, preserving concurrent list changes.
+        $remaining = xw_wishlist_change( $owner, static function ( $items ) use ( $added_ids ) {
+            return array_filter( $items, static function ( $item ) use ( $added_ids ) { return ! in_array( $item['id'], $added_ids, true ); } );
+        } );
+        $cleanup_failed = is_wp_error( $remaining );
+    }
+    $message = sprintf( $added === 1 ? xw_t( '%d producto añadido al carrito.', '%d product added to cart.' ) : xw_t( '%d productos añadidos al carrito.', '%d products added to cart.' ), $added );
     if ( $skipped ) { $message .= ' ' . xw_t( 'Algunos productos necesitan opciones o no están disponibles; abre su ficha para elegirlos.', 'Some products require options or are unavailable; open their product page to choose them.' ); }
-    wp_send_json_success( array( 'message' => $message, 'added' => $added, 'skipped' => $skipped ) );
+    if ( $cleanup_failed ) { $message .= ' ' . xw_t( 'Se añadió al carrito, pero no se pudo actualizar Wishlist. Recarga la página; no necesitas añadirlo otra vez.', 'Added to cart, but Wishlist could not be updated. Reload the page; you do not need to add it again.' ); }
+    $row = xw_wishlist_get_row( $owner );
+    wp_send_json_success( array_merge( xw_wishlist_payload( $row ? json_decode( $row['items'], true ) : array() ), array( 'message' => $message, 'added' => $added, 'skipped' => $skipped, 'added_ids' => $added_ids, 'cleanup_failed' => $cleanup_failed ) ) );
 }
 add_action( 'wp_ajax_xw_wishlist', 'xw_wishlist_ajax' );
 add_action( 'wp_ajax_nopriv_xw_wishlist', 'xw_wishlist_ajax' );
@@ -237,6 +248,7 @@ function xw_wishlist_register_assets() {
         'removeLabel' => xw_t( 'Eliminar', 'Remove' ),
         'selectLabel' => xw_t( 'Seleccionar', 'Select' ),
         'copyLabel' => xw_t( 'Enlace de Wishlist', 'Wishlist link' ),
+        'dismiss' => xw_t( 'Cerrar mensaje', 'Dismiss message' ),
         'shop' => wc_get_page_permalink( 'shop' ),
     ) );
 }

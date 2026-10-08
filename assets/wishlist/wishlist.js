@@ -11,6 +11,9 @@
     let generation = 0;
     const shareToken = new URL(window.location.href).searchParams.get('xw_wishlist') || '';
     const initialized = new WeakSet();
+    let toastNode = null;
+    let toastTimer = null;
+    let toastRoot = null;
     const safeUrl = (value) => {
         if (!value || typeof value !== 'string') return '';
         try { const u = new URL(value, window.location.origin); return ['https:', 'http:'].includes(u.protocol) ? u.href : ''; } catch (_) { return ''; }
@@ -30,6 +33,38 @@
         return json.data;
     }
     const message = (root, text) => { const status = root.querySelector('.xw-wl-status'); if (status) status.textContent = text; };
+    function dismissToast() {
+        clearTimeout(toastTimer);
+        const restoreFocus = toastNode?.contains(document.activeElement);
+        const root = toastRoot;
+        toastNode?.remove();
+        toastNode = null;
+        toastRoot = null;
+        if (restoreFocus) (root?.querySelector('[data-xw-wl-cart-row]') || root?.querySelector('.xw-wl-empty a'))?.focus();
+    }
+    function cartToast(root, text) {
+        dismissToast();
+        message(root, '');
+        const notice = document.createElement('div');
+        notice.className = 'xw-wl xw-wl-toast';
+        notice.setAttribute('role', 'status');
+        notice.setAttribute('aria-live', 'polite');
+        notice.setAttribute('aria-atomic', 'true');
+        const content = document.createElement('span');
+        const close = document.createElement('button');
+        close.type = 'button'; close.className = 'xw-wl-toast-close';
+        close.textContent = '×'; close.setAttribute('aria-label', config.dismiss || 'Dismiss message');
+        close.addEventListener('click', () => {
+            dismissToast();
+            (root.querySelector('[data-xw-wl-cart-row]') || root.querySelector('.xw-wl-empty a'))?.focus();
+        });
+        notice.append(content, close);
+        document.body.append(notice);
+        content.textContent = text;
+        toastNode = notice;
+        toastRoot = root;
+        toastTimer = setTimeout(dismissToast, 5000);
+    }
     function updateButtons() {
         const ids = new Set((own?.items || []).map((p) => p.id));
         document.querySelectorAll('[data-xw-wl-add]').forEach((button) => {
@@ -215,11 +250,15 @@
             if (root.dataset.xwWlReadOnly) return;
             const ids = rowButton ? [rowButton.closest('tr').dataset.productId] : [...root.querySelectorAll(selected ? '[data-xw-wl-select]:checked' : 'tbody tr')].map((el) => el.closest('tr').dataset.productId);
             if (!ids.length) { message(root, config.select); return; }
+            const hadFocus = document.activeElement === button;
             const result = await busy(root, button, 'cart', {ids});
             if (result) {
-                message(root, result.message);
-                if (window.jQuery) { jQuery(document.body).trigger('wc_fragment_refresh'); jQuery(document.body).trigger('wc-blocks_added_to_cart'); }
-                window.dispatchEvent(new CustomEvent('wc-blocks_added_to_cart', {detail: {preserveCartData: false}}));
+                cartToast(root, result.message);
+                if (hadFocus && !button.isConnected) (root.querySelector('[data-xw-wl-cart-row]') || root.querySelector('.xw-wl-empty a'))?.focus();
+                if (result.added > 0) {
+                    if (window.jQuery) { jQuery(document.body).trigger('wc_fragment_refresh'); jQuery(document.body).trigger('wc-blocks_added_to_cart'); }
+                    window.dispatchEvent(new CustomEvent('wc-blocks_added_to_cart', {detail: {preserveCartData: false}}));
+                }
             }
             return;
         }
