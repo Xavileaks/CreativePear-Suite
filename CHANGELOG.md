@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.37
+
+- Añade un interruptor, apagado por defecto, para no cobrar Extra Fees cuando todos los productos o variaciones del carrito están marcados como Virtual.
+- Conserva los cargos habituales en carritos físicos o mixtos y permite excluir únicamente el cargo de la suite mediante el filtro `xw_should_apply_subtotal_extra_fee`.
+
 ## 1.0.36
 
 - Añade Wishlist, apagado por defecto, en la sección Elementor de Creative Pear Suite.

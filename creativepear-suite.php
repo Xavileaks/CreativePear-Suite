@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.36
+Version: 1.0.37
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.36' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.37' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -1414,6 +1414,22 @@ function xw_extra_fees_enabled() {
         && ! empty( $settings['woocommerce']['extra_fees_enabled'] );
 }
 
+/** Comprueba cada producto/variación, sin depender de filtros de envío del carrito. */
+function xw_extra_fee_cart_is_virtual_only( $cart ) {
+    $has_products = false;
+    foreach ( $cart->get_cart() as $item ) {
+        if ( (float) ( $item['quantity'] ?? 0 ) <= 0 ) {
+            continue;
+        }
+        $product = $item['data'] ?? null;
+        if ( ! $product instanceof WC_Product || ! $product->is_virtual() ) {
+            return false;
+        }
+        $has_products = true;
+    }
+    return $has_products;
+}
+
 add_action( 'woocommerce_cart_calculate_fees', 'xw_apply_subtotal_extra_fee', 20 );
 function xw_apply_subtotal_extra_fee( $cart ) {
     if (
@@ -1425,6 +1441,11 @@ function xw_apply_subtotal_extra_fee( $cart ) {
     }
 
     $settings = xw_get_settings();
+    $should_apply = ! ( ! empty( $settings['woocommerce']['extra_fee_exclude_virtual_only'] ) && xw_extra_fee_cart_is_virtual_only( $cart ) );
+    // Permite excluir únicamente este cargo desde un snippet externo.
+    if ( ! apply_filters( 'xw_should_apply_subtotal_extra_fee', $should_apply, $cart ) ) {
+        return;
+    }
     $fee_label = isset( $settings['woocommerce']['extra_fee_label'] )
         ? trim( (string) $settings['woocommerce']['extra_fee_label'] )
         : '';

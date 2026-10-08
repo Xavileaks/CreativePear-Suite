@@ -4,6 +4,12 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Extra Fees: carritos digitales
+
+En **WooCommerce Shipping > Extra Fees**, el interruptor **No cobrar si solo hay productos digitales** excluye el cargo cuando todos los productos del carrito están marcados como **Virtual**, incluidas las variaciones. Un descargable que también se envía físicamente no se excluye. Los carritos mixtos siguen las reglas habituales. El interruptor está apagado por defecto para conservar el comportamiento anterior.
+
+El filtro `xw_should_apply_subtotal_extra_fee` recibe un booleano y el carrito antes de calcular este cargo. Un snippet externo puede devolver `false` sin eliminar otros cargos ni desactivar el módulo. La lógica específica de donaciones no está incluida en el plugin.
+
 ## Wishlist de Elementor
 
 Módulo opcional e independiente: **Ajustes > Creative Pear Suite > Elementor > Wishlist**.

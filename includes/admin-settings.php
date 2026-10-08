@@ -304,6 +304,7 @@ function xw_get_default_settings() {
             'cart_update_delay'         => 1,
             'product_hover_fade_seconds' => 0.4,
             'extra_fees_enabled'         => 0,
+            'extra_fee_exclude_virtual_only' => 0,
             'extra_fee_label'            => 'Extra Fees',
             'extra_fee_mode'             => 'fixed',
             'extra_fee_rules'            => array(
@@ -610,6 +611,7 @@ function xw_sanitize_settings( $input ) {
     $sanitized['woocommerce']['product_hover_fade_seconds'] = max( 0, min( 5, round( $product_hover_fade_seconds, 1 ) ) );
 
     $sanitized['woocommerce']['extra_fees_enabled'] = empty( $woocommerce['extra_fees_enabled'] ) ? 0 : 1;
+    $sanitized['woocommerce']['extra_fee_exclude_virtual_only'] = empty( $woocommerce['extra_fee_exclude_virtual_only'] ) ? 0 : 1;
     $extra_fee_label = isset( $woocommerce['extra_fee_label'] ) && is_scalar( $woocommerce['extra_fee_label'] )
         ? trim( sanitize_text_field( (string) $woocommerce['extra_fee_label'] ) )
         : $defaults['woocommerce']['extra_fee_label'];
@@ -1203,6 +1205,17 @@ function xw_render_settings_page() {
                                     </div>
 
                                     <div class="xw-extra-fee-settings xw-field-full" data-xw-extra-fee-settings<?php echo $extra_fees_enabled ? '' : ' hidden'; ?>>
+                                    <div class="xw-extra-fee-master xw-field-full">
+                                        <div>
+                                            <strong><?php echo esc_html( xw_t( 'No cobrar si solo hay productos digitales', 'Skip fee for digital-only carts' ) ); ?></strong>
+                                            <p><?php echo esc_html( xw_t( 'Excluye el cargo cuando todos los productos o variaciones están marcados como Virtual. Si hay un producto físico, aplica las reglas habituales.', 'Skips the fee when every product or variation is marked Virtual. If any physical product is present, the usual rules apply.' ) ); ?></p>
+                                        </div>
+                                        <label class="xw-switch">
+                                            <span class="screen-reader-text"><?php echo esc_html( xw_t( 'Excluir Extra Fees en carritos solo digitales', 'Exclude Extra Fees for digital-only carts' ) ); ?></span>
+                                            <input type="checkbox" name="xw_settings[woocommerce][extra_fee_exclude_virtual_only]" value="1" <?php checked( ! empty( $settings['woocommerce']['extra_fee_exclude_virtual_only'] ) ); ?>>
+                                            <span class="xw-switch-track" aria-hidden="true"><span></span></span>
+                                        </label>
+                                    </div>
                                     <fieldset class="xw-extra-fee-modes xw-field-full" data-xw-extra-fee-modes>
                                         <legend><?php echo esc_html( xw_t( 'Tipo de cargo', 'Fee type' ) ); ?></legend>
                                         <label>
