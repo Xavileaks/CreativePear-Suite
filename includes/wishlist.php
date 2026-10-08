@@ -246,7 +246,7 @@ add_action( 'elementor/preview/enqueue_scripts', 'xw_wishlist_register_assets', 
 
 /** Refresh generated CSS/markup once after the responsive widget revision. No templates or lists are changed. */
 function xw_wishlist_refresh_elementor_styles() {
-    $revision = '2';
+    $revision = '3';
     if ( ! xw_wishlist_enabled() || ! current_user_can( 'manage_options' ) || get_option( 'xw_wishlist_style_revision' ) === $revision || ! class_exists( '\Elementor\Plugin' ) ) { return; }
     $manager = \Elementor\Plugin::$instance->files_manager ?? null;
     if ( ! $manager || ! is_callable( array( $manager, 'clear_cache' ) ) ) { return; }

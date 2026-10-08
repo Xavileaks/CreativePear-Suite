@@ -4,6 +4,12 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.39
+
+- Wishlist: padding real del número del contador, sin control de ancho mínimo.
+- Botones sin icono: eliminada la separación reservada por un contenedor vacío.
+- Móvil: separadores interiores en cruz con el color de borde de las celdas, sin cuadros individuales.
+
 ## Extra Fees: carritos digitales
 
 En **WooCommerce Shipping > Extra Fees**, el interruptor **No cobrar si solo hay productos digitales** excluye el cargo cuando todos los productos del carrito están marcados como **Virtual**, incluidas las variaciones. Un descargable que también se envía físicamente no se excluye. Los carritos mixtos siguen las reglas habituales. El interruptor está apagado por defecto para conservar el comportamiento anterior.
@@ -29,6 +35,12 @@ En **Tabla > Estilo > Tabla y tarjetas** se configura el redondeo del contorno (
 
 El padding de contador, eliminar y botones determina su tamaño visible sin un mínimo fijo de 44 px. Los controles de tamaño mínimo son opcionales. En pantallas táctiles se amplía el área de pulsación sin agrandar el fondo visible. Tras esta revisión, la primera visita de un administrador con Wishlist activo regenera una sola vez la caché CSS/HTML de Elementor; no cambia plantillas, ajustes ni listas.
 
+El número del contador también se dimensiona únicamente con su tipografía, borde y padding, sin ancho/alto mínimos ni un control de «Minimum width». Los valores antiguos de ese control dejan de aplicarse al regenerar el CSS.
+
+Al quitar el icono de un botón no se genera un contenedor vacío ni se reserva su separación. Al volver a elegir un icono, se conserva la separación entre icono y texto. El padding y el borde configurados siguen aplicándose en ambos casos.
+
+En móvil (hasta 767 px), precio/disponibilidad y fecha/botón se separan con líneas interiores en cruz, sin cuadros alrededor de las celdas. Usan el color de borde de **Filas y celdas**. Al ocultar fecha o disponibilidad se omiten los segmentos que separarían una celda ausente. Escritorio y tablet conservan su presentación.
+
 ### Pruebas locales de Wishlist
 
 Requieren un WordPress aislado con `WP_ENVIRONMENT_TYPE=local`, WooCommerce, Elementor y esta suite activos. Nunca ejecutar el generador de fixtures contra producción: crea productos/página de prueba y activa el módulo únicamente en ese entorno.
@@ -37,7 +49,7 @@ Requieren un WordPress aislado con `WP_ENVIRONMENT_TYPE=local`, WooCommerce, Ele
 php tests/wishlist-integration.php C:/ruta/wordpress-local
 # Sirve esa instalación en localhost antes de ejecutar las pruebas HTTP.
 node tests/wishlist-http.mjs http://127.0.0.1:8097 11,12,13,14,15
-# CSS real de Elementor: compact, spacious, no-image o minimal.
+# CSS real de Elementor: compact, spacious, no-image, minimal o no-icon.
 php tests/wishlist-style-fixture.php C:/ruta/wordpress-local compact
 ```
 

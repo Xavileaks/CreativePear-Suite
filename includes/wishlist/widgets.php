@@ -71,8 +71,15 @@ abstract class XW_Wishlist_Widget extends \Elementor\Widget_Base {
         $this->end_controls_tabs();
     }
     protected function icon_markup( $icon, $class = 'xw-wl-glyph' ) {
+        if ( empty( $icon['value'] ) ) { return; }
+        // An empty flex item would still reserve the icon/text gap.
+        ob_start();
+        \Elementor\Icons_Manager::render_icon( $icon, array( 'aria-hidden' => 'true' ) );
+        $markup = ob_get_clean();
+        if ( '' === trim( $markup ) ) { return; }
         echo '<span class="' . esc_attr( $class ) . '" aria-hidden="true">';
-        if ( ! empty( $icon['value'] ) ) { \Elementor\Icons_Manager::render_icon( $icon, array( 'aria-hidden' => 'true' ) ); }
+        // Trusted markup from Elementor's native icon/SVG renderer.
+        echo $markup;
         echo '</span>';
     }
     protected function root_attributes( $settings, $type ) {
@@ -152,6 +159,8 @@ class XW_Wishlist_Table_Widget extends XW_Wishlist_Widget {
         $this->end_controls_section();
         $this->section( 'style_rows', xw_t( 'Filas y celdas', 'Rows and cells' ), true );
         $this->surface( 'cells', '{{WRAPPER}} .xw-wl-grid td' );
+        // Mobile separators reuse the cell border color without boxing each cell.
+        $this->update_control( 'cells_border_color', array( 'selectors' => array( '{{WRAPPER}} .xw-wl-grid td' => 'border-color: {{VALUE}};', '{{WRAPPER}} .xw-wl-table' => '--xw-wl-cell-line: {{VALUE}};' ) ) );
         // Reuse the saved colors for the entire responsive card, not separate cell boxes.
         $this->update_control( 'cells_background', array( 'selectors' => array( '{{WRAPPER}} .xw-wl-grid td' => '--xw-wl-cell-surface: {{VALUE}};', '{{WRAPPER}} .xw-wl-grid tbody tr' => '--xw-wl-row-surface: {{VALUE}};' ) ) );
         $this->color( 'row_alt', xw_t( 'Fondo alterno', 'Alternate background' ), '{{WRAPPER}} .xw-wl-grid tbody tr:nth-child(even)', '--xw-wl-row-alt' );
@@ -303,7 +312,6 @@ class XW_Wishlist_Counter_Widget extends XW_Wishlist_Widget {
         $this->color( 'badge_bg', xw_t( 'Fondo', 'Background' ), '{{WRAPPER}} .xw-wl-badge', 'background-color' );
         $this->slider( 'badge_x', xw_t( 'Desplazamiento horizontal', 'Horizontal offset' ), '{{WRAPPER}} .xw-wl-badge', '--xw-wl-badge-x: {{SIZE}}{{UNIT}};', -150, 150, 6 );
         $this->slider( 'badge_y', xw_t( 'Desplazamiento vertical', 'Vertical offset' ), '{{WRAPPER}} .xw-wl-badge', '--xw-wl-badge-y: {{SIZE}}{{UNIT}};', -150, 150, -6 );
-        $this->slider( 'badge_min_width', xw_t( 'Ancho mínimo', 'Minimum width' ), '{{WRAPPER}} .xw-wl-badge', 'min-width: {{SIZE}}{{UNIT}};', 0, 100, 20 );
         $this->dimensions( 'badge_padding', 'Padding', '{{WRAPPER}} .xw-wl-badge' );
         $this->border( 'badge_border', '{{WRAPPER}} .xw-wl-badge' );
         $this->end_controls_section();
