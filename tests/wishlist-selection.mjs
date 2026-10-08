@@ -10,6 +10,15 @@ const window = {xwWishlist:{},location:{href:'https://shop.example/product/',ori
 const context = vm.createContext({window,document,URL,URLSearchParams,MutationObserver:class {observe(){}}});
 vm.runInContext(source,context);
 const api=window.__selectionTest;
+class TextElement {
+    constructor(tagName) {this.tagName=tagName; this.children=[]; this.hidden=false; this.className='';}
+    set textContent(value) {this.children=[{textContent:value}];}
+    get textContent() {return this.children.map(child=>child.textContent).join('');}
+    replaceChildren(...children) {this.children=children;}
+    append(...children) {this.children.push(...children);}
+}
+document.createElement=tag=>new TextElement(tag);
+document.createTextNode=text=>({textContent:text});
 function button(single=true, id='23', localForms=[]) {
     const root={querySelector(){return {dataset:{xwWlProductContext:single?'single':'loop'}};},querySelectorAll(){return localForms;}};
     return {dataset:{xwWlAdd:id},closest(selector){return selector==='[data-xw-wl]'?root:null;}};
@@ -28,10 +37,16 @@ inputs.variation.value='26'; api.setOwn({items:[{id:26,key:'small',attributes:{a
 assert.equal(api.selectedItem(api.selectedProduct(button())).key,'large'); inputs.size.value='Small';
 assert.equal(api.selectedItem(api.selectedProduct(button())).key,'small');
 console.log('PASS: two choices of the same Any-size variation retain independent button states');
-const title={textContent:''}, variation={textContent:'',hidden:true};
+const title={textContent:''}, variation=new TextElement('span');
 const name={querySelector(selector){return selector==='[data-xw-wl-name-text]'?title:variation;}};
 api.renderName(name,{name:'T-Shirt — Color: Black',product_name:'T-Shirt',variation_text:'Color: Black'});
 assert.equal(title.textContent,'T-Shirt'); assert.equal(variation.textContent.trim(),'Color: Black'); assert.equal(variation.hidden,false);
+api.renderName(name,{name:'T-Shirt',product_name:'T-Shirt',variation_details:[{label:'Style',value:'Script'},{label:'Size',value:'X-Large'},{label:'Color',value:'Pink, burgundy | <img src=x onerror=alert(1)>'}]});
+assert.equal(variation.textContent,'Style: Script | Size: X-Large | Color: Pink, burgundy | <img src=x onerror=alert(1)>');
+assert.equal(variation.children.filter(child=>child.tagName==='strong').length,3);
+assert.equal(variation.children.filter(child=>child.className==='xw-wl-variation-value').length,3);
+assert.equal(variation.children.some(child=>child.tagName==='img'),false);
+console.log('PASS: bold labels and vertical separators render safely without splitting commas, pipes or HTML-looking values');
 api.renderName(name,{name:'Simple product',product_name:'Simple product',variation_text:''});
 assert.equal(title.textContent,'Simple product'); assert.equal(variation.textContent,''); assert.equal(variation.hidden,true);
 const oldName={querySelector(){return null;},textContent:''};

@@ -8,10 +8,10 @@ if (!$admins) { throw new RuntimeException('A local administrator is required fo
 wp_set_current_user((int) $admins[0]);
 $refreshes = 0;
 add_action('elementor/core/files/clear_cache', static function() use (&$refreshes) { ++$refreshes; });
-update_option('xw_wishlist_style_revision', '5');
+update_option('xw_wishlist_style_revision', '6');
 xw_wishlist_refresh_elementor_styles();
 xw_wishlist_refresh_elementor_styles();
-if ($refreshes !== 1 || get_option('xw_wishlist_style_revision') !== '6') { throw new RuntimeException('Cache revision must refresh once only'); }
+if ($refreshes !== 1 || get_option('xw_wishlist_style_revision') !== '7') { throw new RuntimeException('Cache revision must refresh once only'); }
 echo "PASS: generated Elementor markup/CSS refreshed once only\n";
 $page = (int) get_option('wl_qa_page_id');
 if (!$page) { throw new RuntimeException('Run wishlist-integration.php first.'); }
@@ -72,11 +72,14 @@ delete_post_meta($page, '_elementor_element_cache');
 Elementor\Core\Files\CSS\Post::create($page)->update();
 $widgets = Elementor\Plugin::$instance->widgets_manager->get_widget_types();
 $table=$widgets['xw-wishlist-table'];
-foreach (array('variation_typography_font_size','variation_typography_font_size_tablet','variation_typography_font_size_mobile','variation_color','variation_hover','variation_gap') as $id) {
+foreach (array('variation_typography_font_size','variation_typography_font_size_tablet','variation_typography_font_size_mobile','variation_color') as $id) {
     $control=$table->get_controls($id);
     if (!$control || ($control['section'] ?? '')!=='style_col_name') { throw new RuntimeException('Variation control missing from Product name: '.$id); }
 }
-echo "PASS: independent variation color, hover, spacing and responsive typography are inside Product name\n";
+foreach (array('variation_typography_font_weight','variation_hover','variation_gap') as $id) {
+    if ($table->get_controls($id)) { throw new RuntimeException('Variation controls should only expose size and color: '.$id); }
+}
+echo "PASS: Product name variation options expose size by device and color, keeping the format fixed\n";
 if ($widgets['xw-wishlist-counter']->get_controls('badge_min_width')) { throw new RuntimeException('Unnecessary badge width control still registered'); }
 if (!$widgets['xw-wishlist-counter']->get_controls('badge_padding')) { throw new RuntimeException('Badge padding control missing'); }
 echo "PASS: counter uses padding without minimum-width control\n";

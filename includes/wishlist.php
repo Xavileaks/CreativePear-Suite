@@ -151,6 +151,22 @@ function xw_wishlist_page_url() {
     return $page && 'publish' === get_post_status( $page ) ? get_permalink( $page ) : '';
 }
 
+/** Friendly label/value pairs in the parent attribute order, never split display text. */
+function xw_wishlist_variation_details( $parent, $attributes ) {
+    $details = array();
+    foreach ( $parent->get_attributes() as $attribute ) {
+        $name = $attribute->get_name();
+        $value = $attributes[ 'attribute_' . sanitize_title( $name ) ] ?? '';
+        if ( ! $attribute->get_variation() || '' === $value ) { continue; }
+        if ( $attribute->is_taxonomy() ) {
+            $term = get_term_by( 'slug', $value, $name );
+            if ( $term && ! is_wp_error( $term ) ) { $value = $term->name; }
+        }
+        $details[] = array( 'label' => wp_strip_all_tags( wc_attribute_label( $name, $parent ) ), 'value' => wp_strip_all_tags( rawurldecode( $value ) ) );
+    }
+    return $details;
+}
+
 /** Solo devuelve datos públicos de productos publicados y visibles. */
 function xw_wishlist_product( $id, $added = 0, $attributes = array() ) {
     $product = wc_get_product( $id );
@@ -173,6 +189,7 @@ function xw_wishlist_product( $id, $added = 0, $attributes = array() ) {
         'name' => $variation ? wp_strip_all_tags( wc_get_product( $product->get_parent_id() )->get_name() . ' — ' . wc_get_formatted_variation( $display, true, true ) ) : $product->get_name(),
         'product_name' => $variation ? wc_get_product( $product->get_parent_id() )->get_name() : $product->get_name(),
         'variation_text' => $variation ? wp_strip_all_tags( wc_get_formatted_variation( $display, true, true ) ) : '',
+        'variation_details' => $variation ? xw_wishlist_variation_details( wc_get_product( $product->get_parent_id() ), $attributes ) : array(),
         'url' => esc_url_raw( $variation ? $product->get_permalink( array( 'variation' => $attributes ) ) : $product->get_permalink() ),
         'image' => esc_url_raw( $image_id ? wp_get_attachment_image_url( $image_id, 'woocommerce_thumbnail' ) : wc_placeholder_img_src() ),
         'price' => wp_kses_post( $product->get_price_html() ),
@@ -332,7 +349,7 @@ add_action( 'elementor/preview/enqueue_scripts', 'xw_wishlist_register_assets', 
 
 /** Refresh generated CSS/markup once after the responsive widget revision. No templates or lists are changed. */
 function xw_wishlist_refresh_elementor_styles() {
-    $revision = '6';
+    $revision = '7';
     if ( ! xw_wishlist_enabled() || ! current_user_can( 'manage_options' ) || get_option( 'xw_wishlist_style_revision' ) === $revision || ! class_exists( '\Elementor\Plugin' ) ) { return; }
     $manager = \Elementor\Plugin::$instance->files_manager ?? null;
     if ( ! $manager || ! is_callable( array( $manager, 'clear_cache' ) ) ) { return; }

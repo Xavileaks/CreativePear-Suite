@@ -179,10 +179,9 @@ class XW_Wishlist_Table_Widget extends XW_Wishlist_Widget {
             if ( 'name' === $column ) {
                 $this->color( 'name_hover', xw_t( 'Color hover', 'Hover color' ), $selector . ' a:hover' );
                 $this->add_control( 'variation_style_heading', array( 'label' => xw_t( 'Opciones de la variación', 'Variation options' ), 'type' => \Elementor\Controls_Manager::HEADING, 'separator' => 'before' ) );
-                $this->typography( 'variation_typography', $selector . ' .xw-wl-variation' );
+                // Reuse the previous typography size IDs so saved responsive sizes survive.
+                $this->slider( 'variation_typography_font_size', xw_t( 'Tamaño de fuente', 'Font size' ), $selector . ' .xw-wl-variation', 'font-size: {{SIZE}}{{UNIT}};', 0, 200, null, array( 'px', 'em', 'rem' ) );
                 $this->color( 'variation_color', xw_t( 'Color de la variación', 'Variation color' ), $selector . ' .xw-wl-variation' );
-                $this->color( 'variation_hover', xw_t( 'Color hover de la variación', 'Variation hover color' ), $selector . ' a:hover .xw-wl-variation' );
-                $this->slider( 'variation_gap', xw_t( 'Separación del nombre', 'Name spacing' ), $selector . ' .xw-wl-variation', 'margin-top: {{SIZE}}{{UNIT}};', 0, 80 );
             }
             if ( 'stock' === $column ) {
                 $this->color( 'stock_available', xw_t( 'Disponible', 'Available' ), '{{WRAPPER}} .xw-wl-stock.is-available' );

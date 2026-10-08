@@ -105,8 +105,18 @@
         const variation = name.querySelector('[data-xw-wl-variation]');
         if (nameText && variation) {
             nameText.textContent = product.product_name || product.name;
-            variation.textContent = product.variation_text ? ` ${product.variation_text}` : '';
-            variation.hidden = !product.variation_text;
+            variation.replaceChildren();
+            const details = Array.isArray(product.variation_details) ? product.variation_details : [];
+            details.forEach((detail, index) => {
+                if (index) variation.append(document.createTextNode(' | '));
+                const label = document.createElement('strong');
+                label.className = 'xw-wl-variation-label'; label.textContent = `${detail.label}:`;
+                const value = document.createElement('span');
+                value.className = 'xw-wl-variation-value'; value.textContent = ` ${detail.value}`;
+                variation.append(label, value);
+            });
+            if (!details.length) variation.textContent = product.variation_text ? ` ${product.variation_text}` : '';
+            variation.hidden = !details.length && !product.variation_text;
         } else { name.textContent = product.name; } // Older cached Elementor markup remains readable.
     }
     function renderTable(root, data) {

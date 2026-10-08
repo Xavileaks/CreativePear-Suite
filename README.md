@@ -4,11 +4,11 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
-## Versión 1.0.43
+## Versión 1.0.44
 
-- Wishlist: separa el título del producto y las opciones seleccionadas; estas se muestran debajo del nombre.
-- En **Tabla > Estilo > Product name > Variation options** permite editar color, color hover, tipografía por dispositivo y separación de la variación sin cambiar el título.
-- La vista previa de Elementor incluye una variación pública cuando hay un ejemplo completo disponible, sin modificar listas ni carritos.
+- Wishlist: muestra las opciones debajo del nombre, con etiquetas en negrita y separadores verticales `|`, siguiendo el orden de atributos del producto.
+- En **Tabla > Estilo > Product name > Variation options** solo se editan tamaño de fuente por dispositivo y color; el formato de etiquetas y valores queda fijo.
+- Conserva los tamaños y colores guardados. Los valores con comas, barras o símbolos se tratan como texto, sin dividirlos ni interpretar HTML.
 
 ## Extra Fees: carritos digitales
 
@@ -31,7 +31,7 @@ No coloca widgets automáticamente, no cambia las plantillas existentes y no imp
 
 Los botones de carrito admiten productos simples y variaciones disponibles y respetan la validación de WooCommerce. Al pulsar **Añadir** con una variación elegida se guarda esa combinación exacta (también si WooCommerce usa atributos «Cualquiera»). La tabla muestra sus opciones, precio e imagen, y permite añadirla al carrito sin volver a elegirlas. Sin una selección completa se conserva el producto general y hay que abrir su ficha para seleccionar opciones. Las listas existentes mantienen sus productos generales; no se sustituyen automáticamente. Los botones de otros productos en loops no heredan la selección de la ficha. En el editor/preview de Elementor se muestran productos públicos de ejemplo y no se modifican la lista ni el carrito. No se habilitan permisos extra para subir SVG.
 
-En **Tabla > Estilo > Product name > Variation options** (en español, **Nombre del producto > Opciones de la variación**) se editan el color, color hover, tipografía completa —incluido tamaño por dispositivo— y separación del nombre. El nombre conserva sus controles anteriores. Las opciones aparecen debajo, solo para variaciones; los productos generales no reservan espacio vacío. Cambiar estos estilos no modifica las combinaciones guardadas.
+En **Tabla > Estilo > Product name > Variation options** (en español, **Nombre del producto > Opciones de la variación**) se editan únicamente el tamaño de fuente por dispositivo y el color. Las etiquetas llevan peso 600, los valores peso 400 y se separan con `|`, en el orden definido en el producto. El nombre conserva sus controles anteriores. Las opciones aparecen debajo, solo para variaciones; los productos generales no reservan espacio vacío. Cambiar estos estilos no modifica las combinaciones guardadas.
 
 Al añadir al carrito desde la tabla (un producto, seleccionados o todos), se quitan de la wishlist únicamente los productos que WooCommerce confirmó como añadidos. El cambio se guarda para futuras visitas y actualiza tabla, contador y botones de añadir. Los productos omitidos permanecen; abrir «Seleccionar opciones» no elimina nada. Una confirmación flotante accesible, sin desplazar la tabla, se cierra a los 5 segundos o mediante la ×. Si falla el guardado de la lista, el aviso explica que el carrito ya se actualizó y no hay que añadirlo otra vez.
 

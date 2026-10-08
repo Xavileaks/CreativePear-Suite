@@ -36,6 +36,7 @@ try {
     $saved=wlv_ajax('add',$fields);
     wlv_check($saved['success'] && $saved['data']['count']===1,'selected variation saved');
     $item=$saved['data']['items'][0];
+    wlv_check(array_column($item['variation_details'],'label')===array('Style','Size','Color') && array_column($item['variation_details'],'value')===array('Script','X-Large','Burgundy'),'structured labels and selected values retain parent attribute order');
     wlv_check($item['product_name']==='Glitter Greek Letters T-Shirt QA' && strpos($item['variation_text'],'Color: Burgundy')!==false && strpos($item['variation_text'],$item['product_name'])===false,'product title and variation choices have independent public fields');
     wlv_check($item['id']===$fixture['variations'][0] && $item['parent_id']===$fixture['parent'] && strpos($item['name'],'Size: X-Large')!==false && strpos($item['name'],'Color: Burgundy')!==false,'variation name and exact choices returned');
     wlv_check(strpos($item['price'],'36.00')!==false && $item['cartable'] && strpos($item['url'],'attribute_size=X-Large')!==false,'variation price and preselected link returned');
