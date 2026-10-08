@@ -46,7 +46,7 @@
             const editor = root.hasAttribute('data-xw-wl-editor');
             const count = editor ? Number(root.dataset.xwWlPreviewCount || 4) : own?.count || 0;
             const badge = root.querySelector('[data-xw-wl-count]');
-            badge.textContent = String(count);
+            (badge.querySelector('.xw-wl-badge-value') || badge).textContent = String(count);
             badge.hidden = count === 0 && root.dataset.xwWlShowZero !== 'yes';
             root.querySelector('[data-xw-wl-count-label]').textContent = ` (${count})`;
             const link = root.querySelector('[data-xw-wl-counter-label]');
@@ -130,24 +130,31 @@
     }
     async function share(root, button) {
         const network = button.dataset.xwWlShare;
-        // Abrir en el gesto de usuario evita bloqueos de popups tras la petición.
-        const popup = ['facebook', 'x', 'pinterest', 'whatsapp'].includes(network) ? window.open('about:blank', '_blank') : null;
-        if (popup) popup.opener = null;
         const result = shareToken ? {url: window.location.href} : await busy(root, button, 'share');
-        if (!result) { if (popup) popup.close(); return; }
-        const url = result.url;
+        if (!result) return;
+        const url = safeUrl(result.url);
+        if (!url) { message(root, config.error); return; }
         const encoded = encodeURIComponent(url);
+        const title = encodeURIComponent(root.querySelector('.xw-wl-title')?.textContent || 'Wishlist');
         const routes = {
             facebook: `https://www.facebook.com/sharer/sharer.php?u=${encoded}`,
             x: `https://twitter.com/intent/tweet?url=${encoded}`,
             pinterest: `https://pinterest.com/pin/create/button/?url=${encoded}`,
             whatsapp: `https://api.whatsapp.com/send?text=${encoded}`,
+            telegram: `https://t.me/share/url?url=${encoded}&text=${title}`,
+            linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encoded}`,
+            reddit: `https://www.reddit.com/submit?url=${encoded}&title=${title}`,
         };
         if (routes[network]) {
-            if (popup) popup.location.href = routes[network];
-            else message(root, config.popup || 'Allow popups to share the list.');
-        } else if (network === 'email') window.location.href = `mailto:?subject=${encodeURIComponent(root.querySelector('.xw-wl-title')?.textContent || 'Wishlist')}&body=${encoded}`;
-        else {
+            // Never reserve an about:blank window. Only open a validated final URL.
+            // Async popup blocking must not leave the user stranded: navigate directly.
+            try {
+                const popup = window.open(routes[network], '_blank');
+                if (popup) popup.opener = null;
+                else window.location.href = routes[network];
+            } catch (_) { window.location.href = routes[network]; }
+        } else if (network === 'email') window.location.href = `mailto:?subject=${title}&body=${encoded}`;
+        else if (network === 'copy') {
             try { await navigator.clipboard.writeText(url); message(root, config.copied); }
             catch (_) {
                 const input = document.createElement('input'); input.readOnly = true; input.value = url;

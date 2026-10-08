@@ -236,7 +236,6 @@ function xw_wishlist_register_assets() {
         'select' => xw_t( 'Selecciona al menos un producto.', 'Select at least one product.' ),
         'removeLabel' => xw_t( 'Eliminar', 'Remove' ),
         'selectLabel' => xw_t( 'Seleccionar', 'Select' ),
-        'popup' => xw_t( 'Permite ventanas emergentes para compartir la lista.', 'Allow popups to share the list.' ),
         'copyLabel' => xw_t( 'Enlace de Wishlist', 'Wishlist link' ),
         'shop' => wc_get_page_permalink( 'shop' ),
     ) );
@@ -246,7 +245,7 @@ add_action( 'elementor/preview/enqueue_scripts', 'xw_wishlist_register_assets', 
 
 /** Refresh generated CSS/markup once after the responsive widget revision. No templates or lists are changed. */
 function xw_wishlist_refresh_elementor_styles() {
-    $revision = '3';
+    $revision = '4';
     if ( ! xw_wishlist_enabled() || ! current_user_can( 'manage_options' ) || get_option( 'xw_wishlist_style_revision' ) === $revision || ! class_exists( '\Elementor\Plugin' ) ) { return; }
     $manager = \Elementor\Plugin::$instance->files_manager ?? null;
     if ( ! $manager || ! is_callable( array( $manager, 'clear_cache' ) ) ) { return; }

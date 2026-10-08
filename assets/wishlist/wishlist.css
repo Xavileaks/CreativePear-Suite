@@ -72,7 +72,8 @@
 .xw-wl-counter, .xw-wl-add { display: flex; align-items: center; justify-content: flex-start; overflow: visible; }
 .xw-wl .xw-wl-counter-link { position: relative; display: inline-flex; align-items: center; justify-content: center; width: auto; height: auto; min-width: 0; min-height: 0; border: 1px solid transparent; border-radius: 6px; padding: 8px; font-size: 24px; line-height: 1; color: var(--xw-wl-accent); background: var(--xw-wl-button); text-decoration: none; }
 .xw-wl .xw-wl-counter-link:hover { color: var(--xw-wl-ink); }
-.xw-wl .xw-wl-badge { --xw-wl-badge-x: 6px; --xw-wl-badge-y: -6px; position: absolute; top: 0; right: 0; transform: translate(var(--xw-wl-badge-x), var(--xw-wl-badge-y)); display: inline-flex; align-items: center; justify-content: center; width: auto; height: auto; min-width: 0; min-height: 0; padding: 3px 5px; border-radius: 999px; color: #fff; background: var(--xw-wl-accent); font-size: 12px; font-weight: 600; font-family: inherit; line-height: 1; font-variant-numeric: tabular-nums; }
+.xw-wl .xw-wl-badge { --xw-wl-badge-x: 6px; --xw-wl-badge-y: -6px; position: absolute; top: 0; right: 0; transform: translate(var(--xw-wl-badge-x), var(--xw-wl-badge-y)); display: inline-flex; align-items: center; justify-content: center; width: auto; height: auto; min-width: 0; min-height: 0; padding: 4px; border-radius: 999px; color: #fff; background: var(--xw-wl-accent); font-size: 12px; font-weight: 600; font-family: inherit; line-height: 1; font-variant-numeric: tabular-nums; }
+.xw-wl .xw-wl-badge-value { display: inline-grid; place-items: center; min-width: 1em; min-width: 1lh; aspect-ratio: 1; }
 .xw-wl .xw-wl-add-button { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: auto; height: auto; min-width: 0; min-height: 0; padding: 10px 14px; font: inherit; line-height: 1.4; border: 1px solid var(--xw-wl-line); border-radius: 6px; color: var(--xw-wl-accent); background: var(--xw-wl-surface); transition: background-color .18s, color .18s; }
 .xw-wl .xw-wl-add-button:hover { background: #f2f2f4; }
 .xw-wl .xw-wl-add-button.is-added { color: var(--xw-wl-accent); background: #f5f0ee; }
@@ -121,9 +122,9 @@
     .xw-wl .xw-wl-bulk-button { flex: 1 1 auto; }
     .xw-wl.is-read-only .xw-wl-grid tbody tr { grid-template-rows: 0 auto auto auto; row-gap: 8px; }
 }
-/* Mobile-only internal dividers. Grid placement follows the real row heights,
+/* Tablet/mobile internal dividers. Grid placement follows the real row heights,
    including wrapped text, and leaves the image/name and outer edges untouched. */
-@media (max-width: 767px) {
+@media (max-width: 1024px) {
     .xw-wl .xw-wl-grid tbody tr:has(> .xw-wl-col-stock)::before,
     .xw-wl .xw-wl-grid tbody tr:has(> .xw-wl-col-date)::before {
         content: ""; grid-column: 1 / -1; grid-row: 3 / 5;

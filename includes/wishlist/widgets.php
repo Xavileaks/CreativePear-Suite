@@ -119,7 +119,7 @@ class XW_Wishlist_Table_Widget extends XW_Wishlist_Widget {
         $this->text( 'share_text', xw_t( 'Texto', 'Text' ), xw_t( 'Compartir en', 'Share on' ) );
         $this->add_control( 'share_help', array( 'type' => \Elementor\Controls_Manager::RAW_HTML, 'raw' => esc_html( xw_t( 'Compartir crea un enlace público de solo lectura. No muestra datos de la cuenta. Configura la página de Wishlist en la suite.', 'Sharing creates a public read-only link. Account details are not exposed. Configure the Wishlist page in the suite.' ) ) ) );
         $repeater = new \Elementor\Repeater();
-        $networks = array( 'facebook' => 'Facebook', 'x' => 'X / Twitter', 'pinterest' => 'Pinterest', 'whatsapp' => 'WhatsApp', 'email' => 'Email', 'copy' => xw_t( 'Copiar enlace', 'Copy link' ) );
+        $networks = array( 'facebook' => 'Facebook', 'x' => 'X / Twitter', 'pinterest' => 'Pinterest', 'whatsapp' => 'WhatsApp', 'telegram' => 'Telegram', 'linkedin' => 'LinkedIn', 'reddit' => 'Reddit', 'email' => 'Email', 'copy' => xw_t( 'Copiar enlace', 'Copy link' ) );
         $repeater->add_control( 'network', array( 'label' => xw_t( 'Servicio', 'Service' ), 'type' => \Elementor\Controls_Manager::SELECT, 'options' => $networks, 'default' => 'copy' ) );
         $repeater->add_control( 'label', array( 'label' => xw_t( 'Nombre accesible', 'Accessible name' ), 'type' => \Elementor\Controls_Manager::TEXT, 'default' => xw_t( 'Copiar enlace', 'Copy link' ) ) );
         $repeater->add_control( 'icon', array( 'label' => xw_t( 'Icono', 'Icon' ), 'type' => \Elementor\Controls_Manager::ICONS, 'default' => array( 'value' => 'fas fa-copy', 'library' => 'fa-solid' ) ) );
@@ -127,7 +127,7 @@ class XW_Wishlist_Table_Widget extends XW_Wishlist_Widget {
             $repeater->add_control( $key, array( 'label' => xw_t( $style[0], $style[1] ), 'type' => \Elementor\Controls_Manager::COLOR, 'selectors' => array( '{{WRAPPER}} .xw-wl-share-button{{CURRENT_ITEM}}' . $style[2] => $style[3] . ': {{VALUE}};' ) ) );
         }
         $default = array();
-        foreach ( array( 'facebook' => 'facebook-f', 'x' => 'twitter', 'pinterest' => 'pinterest-p', 'whatsapp' => 'whatsapp', 'copy' => 'copy', 'email' => 'envelope' ) as $network => $icon ) {
+        foreach ( array( 'facebook' => 'facebook-f', 'x' => 'twitter', 'pinterest' => 'pinterest-p', 'whatsapp' => 'whatsapp', 'telegram' => 'telegram-plane', 'linkedin' => 'linkedin-in', 'reddit' => 'reddit-alien', 'copy' => 'copy', 'email' => 'envelope' ) as $network => $icon ) {
             $brand = ! in_array( $network, array( 'copy', 'email' ), true );
             $default[] = array( 'network' => $network, 'label' => $networks[ $network ], 'icon' => array( 'value' => ( $brand ? 'fab' : 'fas' ) . ' fa-' . $icon, 'library' => $brand ? 'fa-brands' : 'fa-solid' ) );
         }
@@ -277,7 +277,7 @@ class XW_Wishlist_Table_Widget extends XW_Wishlist_Widget {
         if ( 'yes' === $s['show_share'] ) {
             echo '<div class="xw-wl-share"><span class="xw-wl-share-label">' . esc_html( $s['share_text'] ) . '</span>';
             foreach ( (array) $s['share_icons'] as $share ) {
-                if ( ! in_array( $share['network'] ?? '', array( 'facebook', 'x', 'pinterest', 'whatsapp', 'email', 'copy' ), true ) ) { continue; }
+                if ( ! in_array( $share['network'] ?? '', array( 'facebook', 'x', 'pinterest', 'whatsapp', 'telegram', 'linkedin', 'reddit', 'email', 'copy' ), true ) ) { continue; }
                 echo '<button type="button" class="xw-wl-share-button elementor-repeater-item-' . esc_attr( $share['_id'] ?? '' ) . '" data-xw-wl-share="' . esc_attr( $share['network'] ) . '" aria-label="' . esc_attr( $share['label'] ) . '" title="' . esc_attr( $share['label'] ) . '">'; $this->icon_markup( $share['icon'] ); echo '</button>';
             }
             echo '</div>';
@@ -323,7 +323,7 @@ class XW_Wishlist_Counter_Widget extends XW_Wishlist_Widget {
         echo '<div'; $this->root_attributes( $s, 'counter' ); echo ' data-xw-wl-show-zero="' . esc_attr( $s['show_zero'] ) . '" data-xw-wl-preview-count="' . absint( $s['preview_count'] ) . '">';
         echo '<a class="xw-wl-counter-link"' . ( $url ? ' href="' . esc_url( $url ) . '"' : ' aria-disabled="true"' ) . ' data-xw-wl-counter-label="' . esc_attr( $s['accessible_label'] ) . '" aria-label="' . esc_attr( $s['accessible_label'] ) . '">';
         $this->icon_markup( $s['icon'] );
-        echo '<span class="xw-wl-badge" data-xw-wl-count aria-hidden="true" hidden>0</span><span class="xw-wl-sr" data-xw-wl-count-label></span></a>';
+        echo '<span class="xw-wl-badge" data-xw-wl-count aria-hidden="true" hidden><span class="xw-wl-badge-value">0</span></span><span class="xw-wl-sr" data-xw-wl-count-label></span></a>';
         if ( $this->editing() && ! $url ) { echo '<small class="xw-wl-setup">' . esc_html( xw_t( 'Elige la página de Wishlist en la suite o introduce un enlace.', 'Choose the Wishlist page in the suite or enter a link.' ) ) . '</small>'; }
         echo '<span class="xw-wl-sr xw-wl-status" role="status" aria-live="polite"></span></div>';
     }

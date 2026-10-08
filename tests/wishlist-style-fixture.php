@@ -8,10 +8,10 @@ if (!$admins) { throw new RuntimeException('A local administrator is required fo
 wp_set_current_user((int) $admins[0]);
 $refreshes = 0;
 add_action('elementor/core/files/clear_cache', static function() use (&$refreshes) { ++$refreshes; });
-update_option('xw_wishlist_style_revision', '2');
+update_option('xw_wishlist_style_revision', '3');
 xw_wishlist_refresh_elementor_styles();
 xw_wishlist_refresh_elementor_styles();
-if ($refreshes !== 1 || get_option('xw_wishlist_style_revision') !== '3') { throw new RuntimeException('Cache revision must refresh once only'); }
+if ($refreshes !== 1 || get_option('xw_wishlist_style_revision') !== '4') { throw new RuntimeException('Cache revision must refresh once only'); }
 echo "PASS: generated Elementor markup/CSS refreshed once only\n";
 $page = (int) get_option('wl_qa_page_id');
 if (!$page) { throw new RuntimeException('Run wishlist-integration.php first.'); }
@@ -27,6 +27,7 @@ foreach ($data[0]['elements'] as &$element) {
         // A saved value from the removed control must no longer generate a width.
         $element['settings']['badge_min_width'] = array('size'=>80,'unit'=>'px');
         $element['settings']['badge_padding'] = $dimensions($wide ? 12 : 0);
+        if (isset($argv[3])) { $element['settings']['badge_padding'] = $dimensions((int) $argv[3]); }
         $element['settings']['badge_typography_typography'] = 'custom';
         $element['settings']['badge_typography_font_size'] = array('size'=>12,'unit'=>'px');
     }
@@ -67,6 +68,12 @@ $widgets = Elementor\Plugin::$instance->widgets_manager->get_widget_types();
 if ($widgets['xw-wishlist-counter']->get_controls('badge_min_width')) { throw new RuntimeException('Unnecessary badge width control still registered'); }
 if (!$widgets['xw-wishlist-counter']->get_controls('badge_padding')) { throw new RuntimeException('Badge padding control missing'); }
 echo "PASS: counter uses padding without minimum-width control\n";
+$sharing = $widgets['xw-wishlist-table']->get_controls('share_icons');
+$services = array_column($sharing['default'], 'network');
+foreach (array('telegram', 'linkedin', 'reddit') as $network) {
+    if (!in_array($network, $services, true)) { throw new RuntimeException('Missing sharing service: '.$network); }
+}
+echo "PASS: Telegram, LinkedIn and Reddit are available in new widget defaults\n";
 $cell_color = $widgets['xw-wishlist-table']->get_controls('cells_border_color');
 if (($cell_color['selectors']['{{WRAPPER}} .xw-wl-table'] ?? '') !== '--xw-wl-cell-line: {{VALUE}};') { throw new RuntimeException('Mobile dividers must share the cell border color control'); }
 echo "PASS: mobile dividers reuse the native cell border color control\n";
@@ -87,6 +94,7 @@ foreach (array('table_radius','card_padding','card_gap','remove_min_size','row_b
     echo "PASS: $id registered in real Elementor\n";
 }
 $html = Elementor\Plugin::$instance->frontend->get_builder_content_for_display($page);
+if (strpos($html, 'xw-wl-badge-value') === false) { throw new RuntimeException('Square counter value wrapper missing'); }
 if (!preg_match('/data-xw-wl-cart-row>(.*?)<span data-xw-wl-action-text>/s', $html, $action)) { throw new RuntimeException('Product button markup missing'); }
 if ($mode === 'no-icon' ? trim($action[1]) !== '' : strpos($action[1], 'xw-wl-glyph') === false) { throw new RuntimeException('Product button did not honor its icon setting'); }
 echo "PASS: product button icon setting rendered for $mode\n";

@@ -4,11 +4,11 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
-## Versión 1.0.39
+## Versión 1.0.40
 
-- Wishlist: padding real del número del contador, sin control de ancho mínimo.
-- Botones sin icono: eliminada la separación reservada por un contenedor vacío.
-- Móvil: separadores interiores en cruz con el color de borde de las celdas, sin cuadros individuales.
+- Wishlist: número del contador circular con padding uniforme, también con varias cifras.
+- Tablet y móvil: separadores interiores en cruz con el color de borde de las celdas.
+- Compartir: Telegram, LinkedIn y Reddit disponibles; apertura del destino final sin reservar una pestaña vacía.
 
 ## Extra Fees: carritos digitales
 
@@ -35,11 +35,13 @@ En **Tabla > Estilo > Tabla y tarjetas** se configura el redondeo del contorno (
 
 El padding de contador, eliminar y botones determina su tamaño visible sin un mínimo fijo de 44 px. Los controles de tamaño mínimo son opcionales. En pantallas táctiles se amplía el área de pulsación sin agrandar el fondo visible. Tras esta revisión, la primera visita de un administrador con Wishlist activo regenera una sola vez la caché CSS/HTML de Elementor; no cambia plantillas, ajustes ni listas.
 
-El número del contador también se dimensiona únicamente con su tipografía, borde y padding, sin ancho/alto mínimos ni un control de «Minimum width». Los valores antiguos de ese control dejan de aplicarse al regenerar el CSS.
+El número del contador usa un contenido cuadrado que crece con su tipografía y número de cifras. Con padding uniforme y el redondeo circular predeterminado conserva ancho y alto iguales. Padding, tipografía, borde y radio siguen siendo editables; los valores antiguos de «Minimum width» dejan de aplicarse al regenerar el CSS.
 
 Al quitar el icono de un botón no se genera un contenedor vacío ni se reserva su separación. Al volver a elegir un icono, se conserva la separación entre icono y texto. El padding y el borde configurados siguen aplicándose en ambos casos.
 
-En móvil (hasta 767 px), precio/disponibilidad y fecha/botón se separan con líneas interiores en cruz, sin cuadros alrededor de las celdas. Usan el color de borde de **Filas y celdas**. Al ocultar fecha o disponibilidad se omiten los segmentos que separarían una celda ausente. Escritorio y tablet conservan su presentación.
+En tablet y móvil (hasta 1024 px), precio/disponibilidad y fecha/botón se separan con líneas interiores en cruz, sin cuadros alrededor de las celdas. Usan el color de borde de **Filas y celdas**. Al ocultar fecha o disponibilidad se omiten los segmentos que separarían una celda ausente. Escritorio conserva su presentación.
+
+En **Tabla > Contenido > Compartir > Servicios e iconos** están disponibles Facebook, X/Twitter, Pinterest, WhatsApp, Telegram, LinkedIn, Reddit, email y copiar enlace. Los widgets existentes conservan sus servicios e iconos guardados: añade los nuevos con **Añadir elemento**. Primero se genera el enlace público de la lista y después se abre el destino; si el navegador bloquea la nueva pestaña, se navega al servicio en la actual. La app o web seleccionada pide al usuario confirmar el envío; no se publican mensajes automáticamente. [Telegram documenta este flujo de compartir](https://core.telegram.org/widgets/share).
 
 ### Pruebas locales de Wishlist
 
@@ -49,6 +51,7 @@ Requieren un WordPress aislado con `WP_ENVIRONMENT_TYPE=local`, WooCommerce, Ele
 php tests/wishlist-integration.php C:/ruta/wordpress-local
 # Sirve esa instalación en localhost antes de ejecutar las pruebas HTTP.
 node tests/wishlist-http.mjs http://127.0.0.1:8097 11,12,13,14,15
+node tests/wishlist-sharing.mjs
 # CSS real de Elementor: compact, spacious, no-image, minimal o no-icon.
 php tests/wishlist-style-fixture.php C:/ruta/wordpress-local compact
 ```
