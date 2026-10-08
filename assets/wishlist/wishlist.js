@@ -65,11 +65,23 @@
         toastRoot = root;
         toastTimer = setTimeout(dismissToast, 5000);
     }
+    function selectedProduct(button) {
+        const productId = Number(button.dataset.xwWlAdd);
+        const context = button.closest('[data-xw-wl]')?.querySelector('[data-xw-wl-product-context]');
+        const scope = context?.dataset.xwWlProductContext === 'single' ? document : button.closest('.product') || button.closest('[data-xw-wl]');
+        const form = [...(scope?.querySelectorAll('form.variations_form') || [])].find(form => Number(form.dataset.product_id || form.querySelector('[name="product_id"]')?.value) === productId);
+        const variationId = Number(form?.querySelector('[name="variation_id"]')?.value || 0);
+        const attributes = {};
+        if (variationId) form.querySelectorAll('select[name^="attribute_"]').forEach(select => { attributes[select.name] = select.value; });
+        return {productId, id: variationId || productId, variationId, attributes};
+    }
+    function selectedItem(selection) {
+        return (own?.items || []).find(item => item.id === selection.id && (!selection.variationId || Object.entries(item.attributes || {}).every(([key, value]) => selection.attributes[key] === value)));
+    }
     function updateButtons() {
-        const ids = new Set((own?.items || []).map((p) => p.id));
         document.querySelectorAll('[data-xw-wl-add]').forEach((button) => {
             if (button.closest('[data-xw-wl-editor]')) return;
-            const added = ids.has(Number(button.dataset.xwWlAdd));
+            const added = Boolean(selectedItem(selectedProduct(button)));
             button.classList.toggle('is-added', added);
             button.setAttribute('aria-pressed', String(added));
             const label = added ? button.dataset.xwWlAddedLabel : button.dataset.xwWlLabel;
@@ -93,7 +105,7 @@
         const body = root.querySelector('tbody');
         const template = root.querySelector('[data-xw-wl-row]');
         if (!body || !template) return;
-        const previous = new Set([...root.querySelectorAll('[data-xw-wl-select]:checked')].map((c) => c.closest('tr').dataset.productId));
+        const previous = new Set([...root.querySelectorAll('[data-xw-wl-select]:checked')].map((c) => c.closest('tr').dataset.wishlistKey || c.closest('tr').dataset.productId));
         body.replaceChildren();
         root.classList.toggle('is-read-only', Boolean(data.read_only));
         root.dataset.xwWlReadOnly = data.read_only ? '1' : '';
@@ -101,6 +113,7 @@
             const fragment = template.content.cloneNode(true);
             const row = fragment.querySelector('tr');
             row.dataset.productId = String(product.id);
+            row.dataset.wishlistKey = product.key || String(product.id);
             row.dataset.productUrl = safeUrl(product.url);
             row.dataset.simple = product.simple ? '1' : '';
             row.querySelectorAll('[data-xw-wl-link]').forEach((a) => { a.href = safeUrl(product.url); });
@@ -119,12 +132,12 @@
             row.querySelector('[data-xw-wl-remove]').setAttribute('aria-label', `${config.removeLabel || 'Remove'}: ${product.name}`);
             const select = row.querySelector('[data-xw-wl-select]');
             if (select) {
-                select.checked = previous.has(String(product.id));
+                select.checked = previous.has(row.dataset.wishlistKey);
                 row.querySelector('[data-xw-wl-select-label]').textContent = `${config.selectLabel || 'Select'}: ${product.name}`;
             }
             const action = row.querySelector('[data-xw-wl-cart-row]');
-            action.querySelector('[data-xw-wl-action-text]').textContent = data.read_only || !product.purchasable ? labels.view : product.simple ? labels.cart : labels.options;
-            action.dataset.cartable = product.simple && product.purchasable && !data.read_only ? '1' : '';
+            action.querySelector('[data-xw-wl-action-text]').textContent = data.read_only || !product.purchasable ? labels.view : (product.cartable ?? product.simple) ? labels.cart : labels.options;
+            action.dataset.cartable = (product.cartable ?? product.simple) && product.purchasable && !data.read_only ? '1' : '';
             body.append(fragment);
         });
         root.querySelector('.xw-wl-empty').hidden = (data.items || []).length > 0;
@@ -221,9 +234,11 @@
         if (add) {
             event.preventDefault();
             if (add.disabled) return;
-            if (add.classList.contains('is-added') && add.dataset.xwWlAddedAction === 'view' && safeUrl(add.dataset.xwWlUrl)) { window.location.href = safeUrl(add.dataset.xwWlUrl); return; }
-            const operation = add.classList.contains('is-added') ? 'remove' : 'add';
-            const result = await busy(root, add, operation, {product_id: add.dataset.xwWlAdd});
+            const selection = selectedProduct(add);
+            const item = selectedItem(selection);
+            if (item && add.dataset.xwWlAddedAction === 'view' && safeUrl(add.dataset.xwWlUrl)) { window.location.href = safeUrl(add.dataset.xwWlUrl); return; }
+            const operation = item ? 'remove' : 'add';
+            const result = await busy(root, add, operation, item ? {key: item.key || String(item.id)} : {product_id: selection.productId, variation_id: selection.variationId, attributes: JSON.stringify(selection.attributes)});
             if (result) message(root, operation === 'add' ? config.saved : config.removed);
             return;
         }
@@ -232,10 +247,10 @@
             event.preventDefault();
             const row = remove.closest('tr');
             const next = row.nextElementSibling?.querySelector('[data-xw-wl-remove]') || row.previousElementSibling?.querySelector('[data-xw-wl-remove]');
-            const nextId = next?.closest('tr').dataset.productId;
-            if (await busy(root, remove, 'remove', {product_id: row.dataset.productId})) {
+            const nextId = next?.closest('tr').dataset.wishlistKey;
+            if (await busy(root, remove, 'remove', {key: row.dataset.wishlistKey || row.dataset.productId})) {
                 message(root, config.removed);
-                const focus = [...root.querySelectorAll('tr')].find((r) => r.dataset.productId === nextId)?.querySelector('[data-xw-wl-remove]') || root.querySelector('.xw-wl-empty a');
+                const focus = [...root.querySelectorAll('tr')].find((r) => r.dataset.wishlistKey === nextId)?.querySelector('[data-xw-wl-remove]') || root.querySelector('.xw-wl-empty a');
                 focus?.focus();
             }
             return;
@@ -248,7 +263,8 @@
             const button = rowButton || selected || all;
             if (rowButton && !rowButton.dataset.cartable) { window.location.href = safeUrl(rowButton.closest('tr').dataset.productUrl); return; }
             if (root.dataset.xwWlReadOnly) return;
-            const ids = rowButton ? [rowButton.closest('tr').dataset.productId] : [...root.querySelectorAll(selected ? '[data-xw-wl-select]:checked' : 'tbody tr')].map((el) => el.closest('tr').dataset.productId);
+            const itemKey = row => row.dataset.wishlistKey || row.dataset.productId;
+            const ids = rowButton ? [itemKey(rowButton.closest('tr'))] : [...root.querySelectorAll(selected ? '[data-xw-wl-select]:checked' : 'tbody tr')].map(el => itemKey(el.closest('tr')));
             if (!ids.length) { message(root, config.select); return; }
             const hadFocus = document.activeElement === button;
             const result = await busy(root, button, 'cart', {ids});
@@ -266,6 +282,7 @@
         if (shareButton) { event.preventDefault(); if (!shareButton.disabled) await share(root, shareButton); }
     });
     document.addEventListener('change', (event) => {
+        if (event.target.matches('form.variations_form select, form.variations_form [name="variation_id"]')) updateButtons();
         const root = event.target.closest('[data-xw-wl="table"]');
         if (!root) return;
         if (event.target.matches('[data-xw-wl-select-all]')) root.querySelectorAll('[data-xw-wl-select]').forEach((c) => { c.checked = event.target.checked; });
@@ -277,6 +294,7 @@
         }
     });
     const scan = (container = document) => { container.querySelectorAll('[data-xw-wl]').forEach(init); };
+    if (window.jQuery) jQuery(document).on('found_variation.xwWishlist reset_data.xwWishlist hide_variation.xwWishlist', 'form.variations_form', () => setTimeout(updateButtons, 0));
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => scan()); else scan();
     // Elementor vuelve a renderizar widgets en el editor, loops y popups.
     const observer = new MutationObserver((records) => records.forEach((record) => record.addedNodes.forEach((node) => {

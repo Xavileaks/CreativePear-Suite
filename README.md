@@ -4,11 +4,11 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
-## Versión 1.0.41
+## Versión 1.0.42
 
-- Wishlist: confirmación flotante al añadir al carrito; desaparece a los 5 segundos y permite cerrar manualmente.
-- Los productos añadidos correctamente se eliminan de la wishlist y el contador se actualiza sin recargar.
-- Los productos rechazados o que requieren seleccionar opciones permanecen en la lista, también en acciones masivas.
+- Wishlist: guarda la variación seleccionada en la ficha, incluyendo talla, color y demás atributos, con su precio, imagen y enlace preseleccionado.
+- Cada combinación se guarda por separado, sin duplicarse; el estado del botón se actualiza al cambiar las opciones.
+- Las variaciones guardadas se añaden al carrito con sus opciones exactas y se eliminan de la wishlist solo tras la confirmación de WooCommerce.
 
 ## Extra Fees: carritos digitales
 
@@ -27,9 +27,9 @@ Está apagado por defecto y requiere WooCommerce y Elementor. Al encenderlo regi
 
 Selecciona una página publicada en los ajustes y coloca **Tabla** en ella; el contador enlaza a esa página, salvo que tenga un enlace personalizado. Los controles visuales están en cada widget. Las cajas de ajustes conservan dos columnas por encima de 1024 px y una en tablet/móvil. La tabla frontal se adapta a tarjetas en tablet/móvil.
 
-No coloca widgets automáticamente, no cambia las plantillas existentes y no importa ni reemplaza listas de otros plugins. La lista de visitantes usa una cookie HttpOnly de un año; al iniciar sesión se fusiona con la lista de la cuenta. Guarda IDs/fechas, un identificador de propietario y, únicamente al compartir, un token aleatorio. Cada lista admite hasta 200 productos. Los enlaces compartidos son públicos de solo lectura y no incluyen datos de la cuenta. Los visitantes del enlace no pueden modificar la lista del propietario. Los datos se conservan al apagar el módulo; no se eliminan automáticamente.
+No coloca widgets automáticamente, no cambia las plantillas existentes y no importa ni reemplaza listas de otros plugins. La lista de visitantes usa una cookie HttpOnly de un año; al iniciar sesión se fusiona con la lista de la cuenta. Guarda IDs/fechas y atributos de las variaciones elegidas, un identificador de propietario y, únicamente al compartir, un token aleatorio. Cada lista admite hasta 200 productos o combinaciones. Los enlaces compartidos son públicos de solo lectura y no incluyen datos de la cuenta. Los visitantes del enlace no pueden modificar la lista del propietario. Los datos se conservan al apagar el módulo; no se eliminan automáticamente.
 
-Los botones de carrito admiten productos simples disponibles y respetan la validación de WooCommerce. Los variables requieren abrir la ficha y seleccionar sus opciones. En el editor/preview de Elementor se muestran productos públicos de ejemplo y no se modifican la lista ni el carrito. No se habilitan permisos extra para subir SVG.
+Los botones de carrito admiten productos simples y variaciones disponibles y respetan la validación de WooCommerce. Al pulsar **Añadir** con una variación elegida se guarda esa combinación exacta (también si WooCommerce usa atributos «Cualquiera»). La tabla muestra sus opciones, precio e imagen, y permite añadirla al carrito sin volver a elegirlas. Sin una selección completa se conserva el producto general y hay que abrir su ficha para seleccionar opciones. Las listas existentes mantienen sus productos generales; no se sustituyen automáticamente. Los botones de otros productos en loops no heredan la selección de la ficha. En el editor/preview de Elementor se muestran productos públicos de ejemplo y no se modifican la lista ni el carrito. No se habilitan permisos extra para subir SVG.
 
 Al añadir al carrito desde la tabla (un producto, seleccionados o todos), se quitan de la wishlist únicamente los productos que WooCommerce confirmó como añadidos. El cambio se guarda para futuras visitas y actualiza tabla, contador y botones de añadir. Los productos omitidos permanecen; abrir «Seleccionar opciones» no elimina nada. Una confirmación flotante accesible, sin desplazar la tabla, se cierra a los 5 segundos o mediante la ×. Si falla el guardado de la lista, el aviso explica que el carrito ya se actualizó y no hay que añadirlo otra vez.
 
@@ -52,10 +52,12 @@ Requieren un WordPress aislado con `WP_ENVIRONMENT_TYPE=local`, WooCommerce, Ele
 ```powershell
 php tests/wishlist-integration.php C:/ruta/wordpress-local
 php tests/wishlist-cart.php C:/ruta/wordpress-local
+php tests/wishlist-variations.php C:/ruta/wordpress-local
 # Sirve esa instalación en localhost antes de ejecutar las pruebas HTTP.
 node tests/wishlist-http.mjs http://127.0.0.1:8097 11,12,13,14,15
 node tests/wishlist-sharing.mjs
 node tests/wishlist-toast.mjs
+node tests/wishlist-selection.mjs
 # CSS real de Elementor: compact, spacious, no-image, minimal o no-icon.
 php tests/wishlist-style-fixture.php C:/ruta/wordpress-local compact
 ```

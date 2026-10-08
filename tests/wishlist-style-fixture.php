@@ -8,10 +8,10 @@ if (!$admins) { throw new RuntimeException('A local administrator is required fo
 wp_set_current_user((int) $admins[0]);
 $refreshes = 0;
 add_action('elementor/core/files/clear_cache', static function() use (&$refreshes) { ++$refreshes; });
-update_option('xw_wishlist_style_revision', '3');
+update_option('xw_wishlist_style_revision', '4');
 xw_wishlist_refresh_elementor_styles();
 xw_wishlist_refresh_elementor_styles();
-if ($refreshes !== 1 || get_option('xw_wishlist_style_revision') !== '4') { throw new RuntimeException('Cache revision must refresh once only'); }
+if ($refreshes !== 1 || get_option('xw_wishlist_style_revision') !== '5') { throw new RuntimeException('Cache revision must refresh once only'); }
 echo "PASS: generated Elementor markup/CSS refreshed once only\n";
 $page = (int) get_option('wl_qa_page_id');
 if (!$page) { throw new RuntimeException('Run wishlist-integration.php first.'); }

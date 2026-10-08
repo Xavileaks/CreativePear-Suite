@@ -57,14 +57,52 @@ function xw_wishlist_owner() {
     return is_user_logged_in() ? 'u:' . get_current_user_id() : 'g:' . hash( 'sha256', xw_wishlist_guest_token( true ) );
 }
 
+function xw_wishlist_attributes( $attributes ) {
+    $result = array();
+    foreach ( is_array( $attributes ) ? array_slice( $attributes, 0, 32, true ) : array() as $key => $value ) {
+        if ( strpos( (string) $key, 'attribute_' ) !== 0 || ! is_scalar( $value ) ) { continue; }
+        $result[ 'attribute_' . sanitize_title( substr( $key, 10 ) ) ] = wc_clean( (string) $value );
+    }
+    ksort( $result );
+    return $result;
+}
+
+function xw_wishlist_item_key( $item ) {
+    $attributes = xw_wishlist_attributes( $item['attributes'] ?? array() );
+    return (string) absint( $item['id'] ?? 0 ) . ( $attributes ? ':' . md5( wp_json_encode( $attributes ) ) : '' );
+}
+
+/** Validate saved choices, including variations with an "Any" attribute. */
+function xw_wishlist_variation_attributes( $product, $selected = array() ) {
+    $parent = wc_get_product( $product->get_parent_id() );
+    if ( ! $parent || ! $parent->is_type( 'variable' ) || 'publish' !== $parent->get_status() || ! $parent->is_visible() || ! $product->variation_is_visible() ) { return null; }
+    $selected = xw_wishlist_attributes( $selected );
+    $fixed = $product->get_variation_attributes();
+    $result = array();
+    foreach ( $parent->get_attributes() as $attribute ) {
+        if ( ! $attribute->get_variation() ) { continue; }
+        $key = 'attribute_' . sanitize_title( $attribute->get_name() );
+        $expected = $fixed[ $key ] ?? '';
+        $value = $selected[ $key ] ?? $expected;
+        $value = $attribute->is_taxonomy() ? sanitize_title( $value ) : html_entity_decode( wc_clean( $value ), ENT_QUOTES, get_bloginfo( 'charset' ) );
+        if ( '' === $value || ( '' !== $expected ? $expected !== $value : ! in_array( $value, $attribute->get_slugs(), true ) ) ) { return null; }
+        $result[ $key ] = $value;
+    }
+    ksort( $result );
+    return $result;
+}
+
 /** Normaliza registros, elimina duplicados y limita el tamaño de una lista. */
 function xw_wishlist_normalize( $items ) {
     $result = array();
     foreach ( is_array( $items ) ? $items : array() as $item ) {
         if ( ! is_array( $item ) ) { continue; }
         $id = absint( $item['id'] ?? 0 );
-        if ( ! $id || isset( $result[ $id ] ) ) { continue; }
-        $result[ $id ] = array( 'id' => $id, 'added' => max( 1, absint( $item['added'] ?? time() ) ) );
+        $attributes = xw_wishlist_attributes( $item['attributes'] ?? array() );
+        $key = xw_wishlist_item_key( array( 'id' => $id, 'attributes' => $attributes ) );
+        if ( ! $id || isset( $result[ $key ] ) ) { continue; }
+        $result[ $key ] = array( 'id' => $id, 'added' => max( 1, absint( $item['added'] ?? time() ) ) );
+        if ( $attributes ) { $result[ $key ]['attributes'] = $attributes; }
         if ( count( $result ) >= 200 ) { break; }
     }
     return array_values( $result );
@@ -114,23 +152,33 @@ function xw_wishlist_page_url() {
 }
 
 /** Solo devuelve datos públicos de productos publicados y visibles. */
-function xw_wishlist_product( $id, $added = 0 ) {
+function xw_wishlist_product( $id, $added = 0, $attributes = array() ) {
     $product = wc_get_product( $id );
     if ( ! $product || 'publish' !== $product->get_status() || ! $product->is_visible() ) { return null; }
+    $variation = $product->is_type( 'variation' );
+    if ( $variation ) {
+        $attributes = xw_wishlist_variation_attributes( $product, $attributes );
+        if ( null === $attributes ) { return null; }
+        $display = clone $product;
+        $display->set_attributes( $attributes );
+    } else { $attributes = array(); }
     $image_id = $product->get_image_id();
     if ( ! $image_id && $product->get_parent_id() ) {
         $parent = wc_get_product( $product->get_parent_id() );
         $image_id = $parent ? $parent->get_image_id() : 0;
     }
     return array(
-        'id' => $product->get_id(), 'name' => $product->get_name(),
-        'url' => esc_url_raw( $product->get_permalink() ),
+        'id' => $product->get_id(), 'key' => xw_wishlist_item_key( array( 'id' => $id, 'attributes' => $attributes ) ),
+        'parent_id' => $variation ? $product->get_parent_id() : 0, 'attributes' => $attributes,
+        'name' => $variation ? wp_strip_all_tags( wc_get_product( $product->get_parent_id() )->get_name() . ' — ' . wc_get_formatted_variation( $display, true, true ) ) : $product->get_name(),
+        'url' => esc_url_raw( $variation ? $product->get_permalink( array( 'variation' => $attributes ) ) : $product->get_permalink() ),
         'image' => esc_url_raw( $image_id ? wp_get_attachment_image_url( $image_id, 'woocommerce_thumbnail' ) : wc_placeholder_img_src() ),
         'price' => wp_kses_post( $product->get_price_html() ),
         'date' => $added ? wp_date( get_option( 'date_format' ), $added ) : '',
         'in_stock' => $product->is_in_stock(),
         'stock' => wp_strip_all_tags( wc_get_stock_html( $product ) ),
         'simple' => $product->is_type( 'simple' ),
+        'cartable' => $product->is_type( 'simple' ) || $variation,
         'purchasable' => $product->is_purchasable() && $product->is_in_stock(),
     );
 }
@@ -138,8 +186,8 @@ function xw_wishlist_product( $id, $added = 0 ) {
 function xw_wishlist_payload( $items, $read_only = false ) {
     $products = array();
     foreach ( xw_wishlist_normalize( $items ) as $item ) {
-        $product = xw_wishlist_product( $item['id'], $item['added'] );
-        if ( $product ) { $products[] = $product; }
+        $product = xw_wishlist_product( $item['id'], $item['added'], $item['attributes'] ?? array() );
+        if ( $product ) { $product['key'] = xw_wishlist_item_key( $item ); $products[] = $product; }
     }
     return array( 'items' => $products, 'count' => count( $products ), 'read_only' => $read_only );
 }
@@ -172,15 +220,31 @@ function xw_wishlist_ajax() {
     if ( ! in_array( $operation, array( 'add', 'remove', 'share', 'cart' ), true ) ) { wp_send_json_error( array( 'message' => xw_t( 'Acción no válida.', 'Invalid action.' ) ), 400 ); }
     if ( 'add' === $operation || 'remove' === $operation ) {
         $id = absint( $_POST['product_id'] ?? 0 );
-        if ( 'add' === $operation && ! xw_wishlist_product( $id ) ) { wp_send_json_error( array( 'message' => xw_t( 'Producto no disponible.', 'Product unavailable.' ) ), 404 ); }
-        $items = xw_wishlist_change( $owner, static function ( $items ) use ( $id, $operation ) {
-            if ( 'remove' === $operation ) { return array_filter( $items, static function ( $item ) use ( $id ) { return $id !== $item['id']; } ); }
+        $key = sanitize_text_field( wp_unslash( $_POST['key'] ?? '' ) );
+        $attributes = array();
+        if ( 'add' === $operation ) {
+            $variation_id = absint( $_POST['variation_id'] ?? 0 );
+            if ( $variation_id ) {
+                $variation = wc_get_product( $variation_id );
+                if ( ! $variation || ! $variation->is_type( 'variation' ) || $variation->get_parent_id() !== $id ) { wp_send_json_error( array( 'message' => xw_t( 'La variación no corresponde a este producto.', 'The variation does not belong to this product.' ) ), 400 ); }
+                $id = $variation_id;
+            }
+            $selected = json_decode( wp_unslash( is_string( $_POST['attributes'] ?? null ) ? $_POST['attributes'] : '{}' ), true );
+            $public = xw_wishlist_product( $id, 0, $selected );
+            if ( ! $public ) { wp_send_json_error( array( 'message' => xw_t( 'Producto o variación no disponible. Comprueba las opciones.', 'Product or variation unavailable. Check the selected options.' ) ), 404 ); }
+            $attributes = $public['attributes'];
+            $key = $public['key'];
+        }
+        $items = xw_wishlist_change( $owner, static function ( $items ) use ( $id, $key, $attributes, $operation ) {
+            if ( 'remove' === $operation ) { return array_filter( $items, static function ( $item ) use ( $id, $key ) { return $key ? $key !== xw_wishlist_item_key( $item ) : $id !== $item['id']; } ); }
             // Productos borrados/privados no deben bloquear para siempre el límite.
-            $items = array_values( array_filter( $items, static function ( $item ) { return null !== xw_wishlist_product( $item['id'] ); } ) );
-            $existing = array_column( $items, 'id' );
-            if ( in_array( $id, $existing, true ) ) { return $items; }
+            $items = array_values( array_filter( $items, static function ( $item ) { return null !== xw_wishlist_product( $item['id'], 0, $item['attributes'] ?? array() ); } ) );
+            $existing = array_map( 'xw_wishlist_item_key', $items );
+            if ( in_array( $key, $existing, true ) ) { return $items; }
             if ( count( $items ) >= 200 ) { return new WP_Error( 'limit', xw_t( 'La lista admite hasta 200 productos.', 'The list supports up to 200 products.' ) ); }
-            $items[] = array( 'id' => $id, 'added' => time() );
+            $item = array( 'id' => $id, 'added' => time() );
+            if ( $attributes ) { $item['attributes'] = $attributes; }
+            $items[] = $item;
             return $items;
         } );
         if ( is_wp_error( $items ) ) { wp_send_json_error( array( 'message' => $items->get_error_message() ), 400 ); }
@@ -202,24 +266,33 @@ function xw_wishlist_ajax() {
     }
     // Carrito: nunca inventar una variación ni omitir la validación de WooCommerce.
     $row = xw_wishlist_get_row( $owner );
-    $allowed = array_column( xw_wishlist_normalize( $row ? json_decode( $row['items'], true ) : array() ), 'id' );
-    $ids = array_slice( array_unique( array_map( 'absint', (array) ( $_POST['ids'] ?? array() ) ) ), 0, 200 );
+    $items = xw_wishlist_normalize( $row ? json_decode( $row['items'], true ) : array() );
+    $allowed = array_combine( array_map( 'xw_wishlist_item_key', $items ), $items );
+    $ids = array_slice( array_unique( array_map( 'sanitize_text_field', (array) ( $_POST['ids'] ?? array() ) ) ), 0, 200 );
     if ( ! WC()->cart ) { wc_load_cart(); }
     $added = 0;
     $added_ids = array();
+    $added_keys = array();
     $skipped = 0;
-    foreach ( $ids as $id ) {
-        $product = in_array( $id, $allowed, true ) ? wc_get_product( $id ) : false;
-        if ( ! $product || ! xw_wishlist_product( $id ) || ! $product->is_type( 'simple' ) || ! $product->is_purchasable() || ! $product->is_in_stock() ) { ++$skipped; continue; }
+    foreach ( $ids as $key ) {
+        $item = $allowed[ $key ] ?? null;
+        $id = $item ? $item['id'] : 0;
+        $public = $item ? xw_wishlist_product( $id, 0, $item['attributes'] ?? array() ) : null;
+        $product = $public ? wc_get_product( $id ) : false;
+        if ( ! $product || ! $public['cartable'] || ! $product->is_purchasable() || ! $product->is_in_stock() ) { ++$skipped; continue; }
         try {
-            if ( apply_filters( 'woocommerce_add_to_cart_validation', true, $id, 1 ) && WC()->cart->add_to_cart( $id, 1 ) ) { ++$added; $added_ids[] = $id; } else { ++$skipped; }
+            $variation_id = $product->is_type( 'variation' ) ? $id : 0;
+            $product_id = $variation_id ? $product->get_parent_id() : $id;
+            $attributes = $public['attributes'];
+            $valid = $variation_id ? apply_filters( 'woocommerce_add_to_cart_validation', true, $product_id, 1, $variation_id, $attributes ) : apply_filters( 'woocommerce_add_to_cart_validation', true, $product_id, 1 );
+            if ( $valid && WC()->cart->add_to_cart( $product_id, 1, $variation_id, $attributes ) ) { ++$added; $added_ids[] = $id; $added_keys[] = $key; } else { ++$skipped; }
         } catch ( Exception $e ) { ++$skipped; }
     }
     $cleanup_failed = false;
     if ( $added_ids ) {
         // Only remove confirmed cart additions, preserving concurrent list changes.
-        $remaining = xw_wishlist_change( $owner, static function ( $items ) use ( $added_ids ) {
-            return array_filter( $items, static function ( $item ) use ( $added_ids ) { return ! in_array( $item['id'], $added_ids, true ); } );
+        $remaining = xw_wishlist_change( $owner, static function ( $items ) use ( $added_keys ) {
+            return array_filter( $items, static function ( $item ) use ( $added_keys ) { return ! in_array( xw_wishlist_item_key( $item ), $added_keys, true ); } );
         } );
         $cleanup_failed = is_wp_error( $remaining );
     }
@@ -237,7 +310,7 @@ function xw_wishlist_register_assets() {
     $url = plugin_dir_url( XW_FUNCTIONS_FILE );
     $path = plugin_dir_path( XW_FUNCTIONS_FILE );
     wp_register_style( 'xw-wishlist', $url . 'assets/wishlist/wishlist.css', array(), filemtime( $path . 'assets/wishlist/wishlist.css' ) );
-    wp_register_script( 'xw-wishlist', $url . 'assets/wishlist/wishlist.js', array(), filemtime( $path . 'assets/wishlist/wishlist.js' ), true );
+    wp_register_script( 'xw-wishlist', $url . 'assets/wishlist/wishlist.js', array( 'jquery' ), filemtime( $path . 'assets/wishlist/wishlist.js' ), true );
     wp_localize_script( 'xw-wishlist', 'xwWishlist', array(
         'ajax' => admin_url( 'admin-ajax.php' ),
         'error' => xw_t( 'No se pudo actualizar la lista. Inténtalo de nuevo.', 'Could not update the list. Try again.' ),
@@ -257,7 +330,7 @@ add_action( 'elementor/preview/enqueue_scripts', 'xw_wishlist_register_assets', 
 
 /** Refresh generated CSS/markup once after the responsive widget revision. No templates or lists are changed. */
 function xw_wishlist_refresh_elementor_styles() {
-    $revision = '4';
+    $revision = '5';
     if ( ! xw_wishlist_enabled() || ! current_user_can( 'manage_options' ) || get_option( 'xw_wishlist_style_revision' ) === $revision || ! class_exists( '\Elementor\Plugin' ) ) { return; }
     $manager = \Elementor\Plugin::$instance->files_manager ?? null;
     if ( ! $manager || ! is_callable( array( $manager, 'clear_cache' ) ) ) { return; }

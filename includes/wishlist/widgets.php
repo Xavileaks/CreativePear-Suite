@@ -364,6 +364,8 @@ class XW_Wishlist_Add_Widget extends XW_Wishlist_Widget {
         if ( ! $product && $this->editing() ) { $products = wc_get_products( array( 'limit' => 1, 'status' => 'publish' ) ); $product = $products ? $products[0] : false; }
         if ( ! $product ) { if ( $this->editing() ) { echo '<p class="xw-wl-setup">' . esc_html( xw_t( 'Elige un producto de vista previa para el loop o la plantilla.', 'Choose a preview product for the loop or template.' ) ) . '</p>'; } return; }
         echo '<div'; $this->root_attributes( $s, 'add' ); echo '>';
+        $single = is_product() && (int) get_queried_object_id() === $product->get_id();
+        echo '<span hidden data-xw-wl-product-context="' . ( $single ? 'single' : 'loop' ) . '"></span>';
         echo '<button type="button" class="xw-wl-add-button xw-wl-display-' . esc_attr( $s['display'] ) . '" data-xw-wl-add="' . absint( $product->get_id() ) . '" data-xw-wl-label="' . esc_attr( $s['label'] ) . '" data-xw-wl-added-label="' . esc_attr( $s['added_label'] ) . '" data-xw-wl-product-name="' . esc_attr( $product->get_name() ) . '" data-xw-wl-added-action="' . esc_attr( $s['added_action'] ) . '" data-xw-wl-url="' . esc_url( xw_wishlist_page_url() ) . '" aria-pressed="false" aria-label="' . esc_attr( $s['label'] . ': ' . $product->get_name() ) . '">';
         $this->icon_markup( $s['icon'], 'xw-wl-glyph xw-wl-icon-normal' ); $this->icon_markup( $s['added_icon'], 'xw-wl-glyph xw-wl-icon-added' );
         echo '<span class="xw-wl-add-label">' . esc_html( $s['label'] ) . '</span></button><span class="xw-wl-sr xw-wl-status" role="status" aria-live="polite"></span></div>';
