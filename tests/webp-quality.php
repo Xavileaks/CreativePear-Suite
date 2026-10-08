@@ -36,7 +36,9 @@ function apply_filters( $hook, $value, ...$args ) {
 function xw_get_settings() { global $settings; return $settings; }
 function xw_feature_enabled( $feature ) { return true; }
 function wp_image_editor_supports( $args ) { return true; }
-function imagewebp() {}
+if ( ! function_exists( 'imagewebp' ) ) {
+    function imagewebp() {}
+}
 class WP_Error {}
 function is_wp_error( $value ) { return $value instanceof WP_Error; }
 class WP_Image_Editor_GD {
