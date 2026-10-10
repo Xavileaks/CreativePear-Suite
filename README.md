@@ -4,6 +4,11 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.47
+
+- Corrige el aviso de cambios sin guardar después de un guardado AJAX confirmado: la reescritura HTML del editor visual al salir no cuenta como una edición nueva.
+- Sincroniza el texto del pie con el guardado AJAX y refleja su contenido saneado. Las ediciones nuevas, las realizadas durante el guardado y los fallos siguen protegidos.
+
 ## Versión 1.0.46
 
 - Ajustes: Guardar cambios queda gris y desactivado sin cambios pendientes; vuelve a azul al editar y a gris al guardar o deshacer la edición.
