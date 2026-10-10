@@ -4,6 +4,11 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.45
+
+- WooCommerce Cart CSS: imágenes cuadradas `1:1` con `object-fit: contain` en carrito y mini carrito, incluido Menu Cart de Elementor. Conserva el ancho configurado.
+- Las imágenes del checkout usan el mismo encuadre, tanto con la caja «Mostrar imágenes» sola como junto a Checkout CSS, conservando sus tamaños responsive.
+
 ## Versión 1.0.44
 
 - Wishlist: muestra las opciones debajo del nombre, con etiquetas en negrita y separadores verticales `|`, siguiendo el orden de atributos del producto.

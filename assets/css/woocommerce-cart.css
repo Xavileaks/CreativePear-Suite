@@ -1,5 +1,16 @@
 /* WooCommerce cart and mini-cart layout. Loaded only when the feature is enabled. */
 
+/* Preserve the configured width; override intrinsic/theme heights for a square frame. */
+body.woocommerce-cart .woocommerce-cart-form .product-thumbnail img,
+.woocommerce-mini-cart .woocommerce-mini-cart-item img,
+.elementor-menu-cart__product-image img {
+    aspect-ratio: 1 / 1 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    object-fit: contain !important;
+}
+
 /*
  * Product-title typography is intentionally not declared here. Elementor remains
  * the only authority for family, size, weight, line height, spacing and color.
