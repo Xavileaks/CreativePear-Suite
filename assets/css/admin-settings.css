@@ -1309,6 +1309,23 @@
     color: #646970;
 }
 
+.xw-save-bar .button-primary {
+    min-height: 44px;
+}
+
+.xw-save-bar .button-primary:disabled {
+    background: #e2e4e7 !important;
+    border-color: #c3c4c7 !important;
+    color: #50575e !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+    cursor: default;
+}
+
+.xw-save-bar p.is-error {
+    color: #b32d2e;
+}
+
 @media (max-width: 1024px) {
     .xw-feature-grid {
         grid-template-columns: 1fr;

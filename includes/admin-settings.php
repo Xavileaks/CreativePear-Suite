@@ -702,6 +702,26 @@ function xw_register_settings() {
     );
 }
 
+/** Same option/sanitizer as options.php, without a redirect or loss of editor position. */
+add_action( 'wp_ajax_xw_save_settings', 'xw_ajax_save_settings' );
+function xw_ajax_save_settings() {
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( array( 'message' => xw_t( 'No tienes permisos para guardar estos ajustes.', 'You do not have permission to save these settings.' ) ), 403 );
+    }
+    if ( ! check_ajax_referer( 'xw_settings_group-options', '_wpnonce', false ) ) {
+        wp_send_json_error( array( 'message' => xw_t( 'La verificación ha caducado; se ha renovado. Vuelve a pulsar Guardar cambios.', 'Verification expired and has been refreshed. Press Save changes again.' ), 'nonce' => wp_create_nonce( 'xw_settings_group-options' ) ), 403 );
+    }
+    if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) || empty( $_POST['xw_settings_complete'] ) || ! isset( $_POST['xw_settings'] ) || ! is_array( $_POST['xw_settings'] ) ) {
+        wp_send_json_error( array( 'message' => xw_t( 'La petición está incompleta. No se modificaron los ajustes.', 'The request is incomplete. Settings were not changed.' ) ), 400 );
+    }
+    $settings = xw_sanitize_settings( wp_unslash( $_POST['xw_settings'] ) );
+    update_option( 'xw_settings', $settings );
+    if ( get_option( 'xw_settings' ) !== $settings ) {
+        wp_send_json_error( array( 'message' => xw_t( 'No se pudo confirmar el guardado. Reinténtalo.', 'Saving could not be confirmed. Please try again.' ) ), 500 );
+    }
+    wp_send_json_success( array( 'settings' => $settings, 'nonce' => wp_create_nonce( 'xw_settings_group-options' ) ) );
+}
+
 add_action( 'admin_menu', 'xw_add_settings_page' );
 function xw_add_settings_page() {
     add_options_page(
@@ -740,11 +760,26 @@ function xw_settings_assets( $hook_suffix ) {
         filemtime( plugin_dir_path( XW_FUNCTIONS_FILE ) . 'assets/js/admin-settings.js' ),
         true
     );
+    wp_enqueue_script(
+        'xw-admin-settings-save',
+        plugin_dir_url( XW_FUNCTIONS_FILE ) . 'assets/js/admin-settings-save.js',
+        array( 'xw-admin-settings' ),
+        filemtime( plugin_dir_path( XW_FUNCTIONS_FILE ) . 'assets/js/admin-settings-save.js' ),
+        true
+    );
     wp_localize_script(
         'xw-admin-settings',
         'xwAdminSettings',
         array(
             'phone' => xw_get_settings()['phone'],
+            'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+            'save' => array(
+                'idle' => xw_t( 'Sin cambios pendientes.', 'No unsaved changes.' ),
+                'pending' => xw_t( 'Hay cambios pendientes de guardar.', 'You have unsaved changes.' ),
+                'saving' => xw_t( 'Guardando…', 'Saving…' ),
+                'saved' => xw_t( 'Cambios guardados.', 'Changes saved.' ),
+                'error' => xw_t( 'No se pudo confirmar el guardado. Conservamos tus cambios; reinténtalo.', 'Saving could not be confirmed. Your edits are still here; please try again.' ),
+            ),
             'i18n'  => array(
                 'chooseLogo' => xw_t( 'Elegir logotipo', 'Choose logo' ),
                 'useLogo'    => xw_t( 'Usar este logotipo', 'Use this logo' ),
@@ -771,7 +806,7 @@ function xw_render_settings_page() {
 
         <?php settings_errors(); ?>
 
-        <form action="options.php" method="post">
+        <form action="options.php" method="post" data-xw-settings-form>
             <?php settings_fields( 'xw_settings_group' ); ?>
 
             <?php $feature_definitions = xw_get_feature_definitions(); ?>
@@ -1393,7 +1428,7 @@ function xw_render_settings_page() {
             </div>
 
             <div class="xw-save-bar">
-                <p><?php echo esc_html( xw_t( 'Los cambios se aplican al guardar.', 'Changes are applied when saved.' ) ); ?></p>
+                <p data-xw-save-status role="status" aria-live="polite" aria-atomic="true"><?php echo esc_html( xw_t( 'Los cambios se aplican al guardar.', 'Changes are applied when saved.' ) ); ?></p>
                 <?php submit_button( xw_t( 'Guardar cambios', 'Save changes' ), 'primary', 'submit', false ); ?>
             </div>
         </form>

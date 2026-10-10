@@ -491,7 +491,7 @@
 
         $('[data-xw-media-remove]').on('click', function (event) {
             var control = $(event.currentTarget).closest('.xw-logo-field');
-            control.find('input[type="url"]').val('');
+            control.find('input[type="url"]').val('').trigger('change');
             control.find('[data-xw-logo-preview]').attr('hidden', true).find('img').attr('src', '');
         });
     });

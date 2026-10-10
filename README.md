@@ -4,6 +4,12 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.46
+
+- Ajustes: Guardar cambios queda gris y desactivado sin cambios pendientes; vuelve a azul al editar y a gris al guardar o deshacer la edición.
+- Guardado AJAX sin recarga ni salto de posición, con estados accesibles de guardando, guardado y error. Conserva las ediciones durante fallos y las realizadas mientras se guarda.
+- Mantiene permisos, nonce y sanitización de WordPress; rechaza peticiones incompletas para evitar que límites del servidor borren ajustes.
+
 ## Versión 1.0.45
 
 - WooCommerce Cart CSS: imágenes cuadradas `1:1` con `object-fit: contain` en carrito y mini carrito, incluido Menu Cart de Elementor. Conserva el ancho configurado.
