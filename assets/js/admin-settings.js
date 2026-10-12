@@ -413,6 +413,16 @@
     }
 
     $(function () {
+        $('[data-xw-comments-card]').each(function () {
+            var card = $(this);
+            function updateComments() {
+                var scopes = card.find('[data-xw-comment-scope]');
+                card.toggleClass('is-enabled', scopes.filter(':checked').length > 0);
+                card.find('[data-xw-comments-priority]').prop('hidden', !scopes.filter('[data-xw-comment-scope="global"]').prop('checked'));
+            }
+            card.on('change', '[data-xw-comment-scope]', updateComments);
+            updateComments();
+        });
         buildPhoneCountrySettings();
         buildExtraFeeSettings();
         buildVariationSwatchesTabs();

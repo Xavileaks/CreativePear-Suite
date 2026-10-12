@@ -4,6 +4,13 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.50
+
+- Nueva caja **WordPress > Comentarios**, con exactamente cuatro interruptores apagados por defecto: desactivar globalmente, en entradas, en productos y en páginas. Productos incluye las reseñas de WooCommerce.
+- Global tiene prioridad, pero conserva las selecciones individuales para cuando se desactive. Cierra comentarios/pingbacks nuevos y oculta la discusión en las plantillas y bloques públicos nativos.
+- No borra comentarios existentes ni cambia los estados originales de las publicaciones o el ajuste guardado de reseñas de WooCommerce. Conserva la moderación administrativa y las notas internas de pedidos; al apagar las opciones vuelve a respetar la configuración original.
+- Guardado AJAX y controles accesibles, con dos cajas por fila en escritorio y una en tablet/móvil.
+
 ## Versión 1.0.49
 
 - **Compact admin bar style** adapta también la barra móvil: iconos y avatar centrados en controles de 46 px, títulos ocultos con las reglas nativas de WordPress y desplegables debajo de la barra sin desbordar.

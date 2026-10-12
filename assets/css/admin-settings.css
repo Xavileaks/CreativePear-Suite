@@ -4,6 +4,25 @@
     margin: 26px 24px 40px 4px;
 }
 
+.xw-comments-options {
+    display: grid;
+    gap: 14px;
+    padding: 20px;
+    border-top: 1px solid #e5e5e5;
+    background: #f9f9fa;
+}
+.xw-comments-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+.xw-comments-option strong { color: #1d2327; }
+.xw-comments-option p { margin: 4px 0 0; color: #50575e; line-height: 1.5; }
+.xw-comments-option .xw-switch { min-height: 44px; align-items: center; }
+.xw-comments-priority { margin: 0; padding-top: 10px; border-top: 1px solid #dcdcde; color: #50575e; }
+.xw-comments-priority[hidden] { display: none; }
+
 .xw-settings-header {
     display: flex;
     align-items: flex-start;

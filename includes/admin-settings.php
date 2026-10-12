@@ -40,6 +40,10 @@ function xw_get_feature_definitions() {
             'title'       => xw_t( 'Editor clásico', 'Classic editor' ),
             'description' => xw_t( 'Desactiva el editor de bloques para entradas, páginas y widgets.', 'Disables the block editor for posts, pages, and widgets.' ),
         ),
+        'comments_control' => array(
+            'title'       => xw_t( 'Comentarios', 'Comments' ),
+            'standalone'  => true,
+        ),
         'hide_wp_version' => array(
             'title'       => xw_t( 'Ocultar versión de WordPress', 'Hide WordPress version' ),
             'description' => xw_t( 'Elimina la etiqueta generator del código fuente público.', 'Removes the generator tag from the public source code.' ),
@@ -180,6 +184,7 @@ function xw_get_feature_groups() {
             'features'    => array(
                 'assets_styles',
                 'classic_editor',
+                'comments_control',
                 'hide_wp_version',
                 'webp_compress',
                 'login_customization',
@@ -229,11 +234,13 @@ function xw_get_default_settings() {
     $features = array();
 
     foreach ( xw_get_feature_definitions() as $key => $definition ) {
+        if ( ! empty( $definition['standalone'] ) ) { continue; }
         $features[ $key ] = 0;
     }
 
     return array(
         'features' => $features,
+        'comments' => array( 'global' => 0, 'posts' => 0, 'products' => 0, 'pages' => 0 ),
         'wishlist' => array( 'page_id' => 0 ),
         'quantity_buttons' => xw_quantity_defaults(),
         'login'    => array(
@@ -452,7 +459,12 @@ function xw_sanitize_settings( $input ) {
     $variation_swatches = isset( $input['variation_swatches'] ) && is_array( $input['variation_swatches'] ) ? $input['variation_swatches'] : array();
 
     foreach ( xw_get_feature_definitions() as $key => $definition ) {
+        if ( ! empty( $definition['standalone'] ) ) { continue; }
         $sanitized['features'][ $key ] = empty( $features[ $key ] ) ? 0 : 1;
+    }
+    $comments = isset( $input['comments'] ) && is_array( $input['comments'] ) ? $input['comments'] : array();
+    foreach ( array( 'global', 'posts', 'products', 'pages' ) as $scope ) {
+        $sanitized['comments'][ $scope ] = isset( $comments[ $scope ] ) && is_scalar( $comments[ $scope ] ) && ! empty( $comments[ $scope ] ) ? 1 : 0;
     }
 
     $sanitized['quantity_buttons'] = xw_quantity_sanitize( $input['quantity_buttons'] ?? array() );
@@ -839,6 +851,10 @@ function xw_render_settings_page() {
                                     }
 
                                     $feature = $feature_definitions[ $key ];
+                                    if ( 'comments_control' === $key ) {
+                                        xw_render_comments_card( $settings['comments'] );
+                                        continue;
+                                    }
                                     ?>
                     <?php $enabled = ! empty( $settings['features'][ $key ] ); ?>
                     <section class="xw-feature-card<?php echo $enabled ? ' is-enabled' : ''; ?>" data-xw-feature>
