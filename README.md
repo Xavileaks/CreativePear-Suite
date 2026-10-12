@@ -4,6 +4,11 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.55
+
+- **Compact admin bar style** corrige el icono de Rank Math: anula los 6 px de desplazamiento de su contenedor propio, que no usa `.ab-icon`, y centra el SVG en escritorio. Conserva separación del texto, hover y menús; no aplica la corrección al móvil.
+- Verificado con el marcado y estilo inline observados en el sitio, incluso cargados después del CSS de la suite. Barra de 32 px en escritorio, 46 px en móvil y menús con Enter/Escape. Fixture local en `tests/admin-bar-icons-fixture.php`, excluido del ZIP.
+
 ## Versión 1.0.54
 
 - Cantidades: forma Normal/Circular, **Input border radius** y **Gap between controls** de 0–40 px. Circular fija ancho y alto iguales y radio de 50 %, sin cambiar la altura independiente del campo; Normal conserva alto y radio configurados. El radio anterior de 100 px migra a Circular, salvo selección explícita Normal. Gap inicial de 4 px, configurable a 0.

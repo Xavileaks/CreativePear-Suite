@@ -28,6 +28,15 @@
         line-height: 32px;
     }
     #wpadminbar #wp-toolbar .ab-top-menu > li > .ab-item svg { display: block; width: 16px; height: 16px; }
+    /* Rank Math uses its own wrapper with a 6px baseline offset, not .ab-icon. */
+    #wpadminbar #wp-admin-bar-rank-math > .ab-item > .rank-math-icon {
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
+        top: 0;
+        height: 16px;
+        line-height: 16px;
+    }
     #wpadminbar #adminbarsearch::before { top: 8px; font-size: 16px !important; line-height: 16px !important; }
     #wpadminbar #wp-admin-bar-my-account > .ab-item img.avatar { margin-top: 0; }
 }
