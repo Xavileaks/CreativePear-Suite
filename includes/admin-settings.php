@@ -99,6 +99,11 @@ function xw_get_feature_definitions() {
             'title'       => xw_t( 'Form Elementor: validación de mensajes', 'Form Elementor: message validation' ),
             'description' => xw_t( 'Limita los caracteres admitidos en áreas de texto de Elementor.', 'Limits the characters allowed in Elementor text areas.' ),
         ),
+        'woocommerce_quantity_buttons' => array(
+            'title'       => 'Quantity Plus Minus Button',
+            'description' => xw_t( 'Añade botones + y − a los campos de cantidad de WooCommerce, con colores y dimensiones configurables.', 'Adds + and − buttons to WooCommerce quantity inputs, with configurable colors and dimensions.' ),
+            'settings'    => true,
+        ),
         'woocommerce_auto_cart' => array(
             'title'       => xw_t( 'WooCommerce: actualizar carrito automáticamente', 'WooCommerce: update cart automatically' ),
             'description' => xw_t( 'Actualiza el importe del carrito después de cambiar la cantidad de un producto.', 'Updates the cart total after changing a product quantity.' ),
@@ -203,6 +208,7 @@ function xw_get_feature_groups() {
             'title'       => 'WooCommerce',
             'description' => xw_t( 'Funciones específicas para tiendas WooCommerce.', 'Features specifically for WooCommerce stores.' ),
             'features'    => array(
+                'woocommerce_quantity_buttons',
                 'woocommerce_auto_cart',
                 'woocommerce_checkout_product_images',
                 'woocommerce_cart_css',
@@ -229,6 +235,7 @@ function xw_get_default_settings() {
     return array(
         'features' => $features,
         'wishlist' => array( 'page_id' => 0 ),
+        'quantity_buttons' => xw_quantity_defaults(),
         'login'    => array(
             'primary_color'     => '',
             'button_text_color' => '',
@@ -448,6 +455,7 @@ function xw_sanitize_settings( $input ) {
         $sanitized['features'][ $key ] = empty( $features[ $key ] ) ? 0 : 1;
     }
 
+    $sanitized['quantity_buttons'] = xw_quantity_sanitize( $input['quantity_buttons'] ?? array() );
     $wishlist_page = absint( $input['wishlist']['page_id'] ?? 0 );
     $sanitized['wishlist']['page_id'] = $wishlist_page && 'page' === get_post_type( $wishlist_page ) && 'publish' === get_post_status( $wishlist_page ) ? $wishlist_page : 0;
 
@@ -1204,6 +1212,8 @@ function xw_render_settings_page() {
                                         </div>
                                         <div class="xw-country-code-grid" data-xw-country-grid></div>
                                     </div>
+                                <?php elseif ( 'woocommerce_quantity_buttons' === $key ) : ?>
+                                    <?php xw_render_quantity_settings( $settings['quantity_buttons'] ); ?>
                                 <?php elseif ( 'woocommerce_auto_cart' === $key ) : ?>
                                     <div class="xw-field-row xw-field-full">
                                         <label for="xw-cart-update-delay"><?php echo esc_html( xw_t( 'Espera antes de actualizar', 'Delay before updating' ) ); ?></label>

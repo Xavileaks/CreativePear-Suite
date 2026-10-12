@@ -1,0 +1,81 @@
+/* Scoped to suite controls and WooCommerce's native block quantity selector. */
+body .quantity.xw-quantity {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0;
+    width: auto;
+    max-width: 100%;
+    float: none;
+}
+body .quantity.xw-quantity .xw-quantity-button,
+body .wc-block-components-quantity-selector .wc-block-components-quantity-selector__button {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 1 var(--xw-qty-button-width, 44px);
+    width: var(--xw-qty-button-width, 44px) !important;
+    min-width: 44px;
+    height: var(--xw-qty-input-height, 44px) !important;
+    min-height: 44px;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    font-size: 20px;
+    line-height: 1;
+    color: var(--xw-qty-button-color, #1d2327) !important;
+    background: var(--xw-qty-button-background, #fff) !important;
+    border: var(--xw-qty-border-width, 1px) solid var(--xw-qty-button-border, #dcdcde) !important;
+    border-radius: var(--xw-qty-border-radius, 4px) !important;
+    box-shadow: none;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background-color .15s, color .15s, border-color .15s;
+}
+body .quantity.xw-quantity .xw-quantity-button:hover:not(:disabled),
+body .wc-block-components-quantity-selector .wc-block-components-quantity-selector__button:hover:not(:disabled) {
+    background: var(--xw-qty-hover-background, #f0f0f1) !important;
+    border-color: var(--xw-qty-hover-border, #8c8f94) !important;
+    color: var(--xw-qty-hover-color, #1d2327) !important;
+}
+body .quantity.xw-quantity input.qty,
+body .wc-block-components-quantity-selector .wc-block-components-quantity-selector__input {
+    box-sizing: border-box;
+    flex: 0 1 var(--xw-qty-input-width, 60px);
+    width: var(--xw-qty-input-width, 60px) !important;
+    min-width: 40px;
+    max-width: none;
+    height: var(--xw-qty-input-height, 44px) !important;
+    min-height: 44px;
+    padding: 4px;
+    margin: 0 !important;
+    font: inherit;
+    text-align: center;
+    color: var(--xw-qty-input-color, #1d2327) !important;
+    background: var(--xw-qty-input-background, #fff) !important;
+    border: 1px solid var(--xw-qty-input-border, #dcdcde) !important;
+    border-radius: 0;
+    box-shadow: none;
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+body .quantity.xw-quantity input.qty::-webkit-inner-spin-button,
+body .quantity.xw-quantity input.qty::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+body .quantity.xw-quantity .xw-quantity-button:disabled,
+body .wc-block-components-quantity-selector .wc-block-components-quantity-selector__button:disabled { opacity: .45; cursor: not-allowed; }
+body .quantity.xw-quantity .xw-quantity-button:focus-visible,
+body .quantity.xw-quantity input.qty:focus-visible,
+body .wc-block-components-quantity-selector :focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+body .wc-block-components-quantity-selector {
+    display: inline-flex;
+    box-sizing: border-box;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    border: none;
+}
+body .wc-block-components-quantity-selector::after { display: none; }
+@media (prefers-reduced-motion: reduce) {
+    body .quantity.xw-quantity .xw-quantity-button,
+    body .wc-block-components-quantity-selector .wc-block-components-quantity-selector__button { transition: none; }
+}

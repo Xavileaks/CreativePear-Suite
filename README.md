@@ -4,6 +4,14 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.48
+
+- Nuevo módulo opcional **WooCommerce > Quantity Plus Minus Button**, apagado por defecto. Añade controles accesibles +/− a los campos de cantidad existentes sin reemplazar plantillas de WooCommerce.
+- Colores de fondo, borde y texto en estado normal y hover; ancho y radio del borde, ancho del botón, ancho/alto del campo y sus colores. Se guardan por AJAX desde la suite.
+- Respeta cantidades mínimas, máximas y pasos decimales; actualiza controles tras AJAX y cambios de variación. El cambio dispara los eventos normales del carrito y funciona con «Actualizar carrito automáticamente».
+- Mantiene los botones nativos de bloques y evita duplicar controles del tema. Si el plugin de referencia está activo, desactívalo antes de usar este módulo; la suite no lo desinstala ni cambia sus ajustes.
+- Cajas en dos columnas de escritorio y una en tablet/móvil; botones táctiles de al menos 44 px. No añade campos de cantidad donde WooCommerce no los tiene ni cambia el mini carrito de texto en un formulario editable.
+
 ## Versión 1.0.47
 
 - Corrige el aviso de cambios sin guardar después de un guardado AJAX confirmado: la reescritura HTML del editor visual al salir no cuenta como una edición nueva.
