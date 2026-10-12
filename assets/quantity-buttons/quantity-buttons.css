@@ -1,10 +1,10 @@
 /* Scoped to suite controls and WooCommerce's native block quantity selector. */
 body .quantity.xw-quantity {
     display: inline-flex !important;
-    align-items: center;
-    gap: 0 !important;
+    align-items: center !important;
+    gap: var(--xw-qty-gap, 0px) !important;
     flex: 0 0 auto !important;
-    width: calc(var(--xw-qty-input-width, 60px) + 2 * var(--xw-qty-button-width, 44px)) !important;
+    width: calc(var(--xw-qty-input-width, 60px) + 2 * var(--xw-qty-button-width, 44px) + 2 * var(--xw-qty-gap, 0px)) !important;
     min-width: 0 !important;
     max-width: none !important;
     padding: 0 !important;
@@ -20,7 +20,7 @@ body .wc-block-components-quantity-selector .wc-block-components-quantity-select
     width: var(--xw-qty-button-width, 44px) !important;
     min-width: var(--xw-qty-button-width, 44px) !important;
     max-width: var(--xw-qty-button-width, 44px) !important;
-    height: var(--xw-qty-input-height, 44px) !important;
+    height: var(--xw-qty-button-height, var(--xw-qty-input-height, 44px)) !important;
     min-height: 44px;
     padding: 0 !important;
     margin: 0 !important;
@@ -30,7 +30,7 @@ body .wc-block-components-quantity-selector .wc-block-components-quantity-select
     color: var(--xw-qty-button-color, #1d2327) !important;
     background: var(--xw-qty-button-background, #fff) !important;
     border: var(--xw-qty-border-width, 1px) solid var(--xw-qty-button-border, #dcdcde) !important;
-    border-radius: var(--xw-qty-border-radius, 4px) !important;
+    border-radius: var(--xw-qty-button-radius, var(--xw-qty-border-radius, 4px)) !important;
     box-shadow: none;
     cursor: pointer;
     touch-action: manipulation;
@@ -59,7 +59,7 @@ body .wc-block-components-quantity-selector .wc-block-components-quantity-select
     color: var(--xw-qty-input-color, #1d2327) !important;
     background: var(--xw-qty-input-background, #fff) !important;
     border: 1px solid var(--xw-qty-input-border, #dcdcde) !important;
-    border-radius: 0;
+    border-radius: var(--xw-qty-input-border-radius, 4px) !important;
     box-shadow: none;
     appearance: textfield;
     -moz-appearance: textfield;
@@ -88,9 +88,10 @@ body .wc-block-components-quantity-selector {
     display: inline-flex;
     box-sizing: border-box;
     flex: 0 0 auto !important;
-    width: calc(var(--xw-qty-input-width, 60px) + 2 * var(--xw-qty-button-width, 44px)) !important;
+    width: calc(var(--xw-qty-input-width, 60px) + 2 * var(--xw-qty-button-width, 44px) + 2 * var(--xw-qty-gap, 0px)) !important;
     max-width: none !important;
-    gap: 0 !important;
+    gap: var(--xw-qty-gap, 0px) !important;
+    align-items: center !important;
     height: auto;
     border: none;
 }

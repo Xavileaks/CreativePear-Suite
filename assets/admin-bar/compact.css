@@ -3,12 +3,32 @@
     #wpadminbar .ab-item,
     #wpadminbar .ab-label,
     #wpadminbar .ab-sub-wrapper a { font-size: 11px; }
-    #wpadminbar .ab-top-menu > li > .ab-item {
+    #wpadminbar #wp-toolbar .ab-top-menu > li > .ab-item {
         display: flex;
         align-items: center;
+        height: 32px;
+        line-height: 32px;
     }
-    #wpadminbar .ab-top-menu > li > .ab-item > .ab-icon::before,
-    #wpadminbar .ab-top-menu > li > .ab-item::before { font-size: 16px; }
+    #wpadminbar #wp-toolbar .ab-top-menu > li > .ab-item > .ab-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        float: none;
+        height: 32px;
+        padding: 0 !important;
+        line-height: 32px;
+    }
+    #wpadminbar #wp-toolbar .ab-top-menu > li > .ab-item > .ab-icon::before,
+    #wpadminbar #wp-toolbar .ab-top-menu > li > .ab-item::before {
+        display: block;
+        top: 0;
+        padding: 0;
+        height: 32px;
+        font-size: 16px;
+        line-height: 32px;
+    }
+    #wpadminbar #wp-toolbar .ab-top-menu > li > .ab-item svg { display: block; width: 16px; height: 16px; }
+    #wpadminbar #adminbarsearch::before { top: 8px; font-size: 16px !important; line-height: 16px !important; }
     #wpadminbar #wp-admin-bar-my-account > .ab-item img.avatar { margin-top: 0; }
 }
 

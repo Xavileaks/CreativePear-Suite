@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.53
+Version: 1.0.54
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.53' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.54' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -64,76 +64,6 @@ function xleon_suite_add_settings_link($links) {
 }
 
 
-// EXPORTAR PLUGIN
-
-if ( xw_feature_enabled( 'plugin_export' ) ) {
-    add_action('admin_post_xw_download_plugin','xw_download_plugin_zip');
-    add_action('admin_footer','xw_place_export_button');
-}
-
-function xw_download_plugin_zip(){
-    if(!current_user_can('manage_options')){wp_die(esc_html(xw_t('No tiene permiso para realizar esta acción.','You are not allowed to perform this action.')));}
-    check_admin_referer('xw_download_plugin');
-    $dir=plugin_dir_path(__FILE__);
-    $zip_path=$dir.'xw-temp.zip';
-    $zip=new ZipArchive();
-    if($zip->open($zip_path,ZipArchive::CREATE|ZipArchive::OVERWRITE)!==true){wp_die(esc_html(xw_t('No se pudo crear el archivo ZIP.','The ZIP file could not be created.')));}
-    $files=new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)
-    );
-    foreach($files as $f){
-        if(!$f->isDir()){
-            $path=$f->getRealPath();
-            $rel=str_replace($dir,'',$path);
-            if($path===$zip_path){continue;}
-            $rel_normalized=str_replace('\\','/',$rel);
-            if(
-                0 === strpos($rel_normalized,'.git/') ||
-                0 === strpos($rel_normalized,'.github/') ||
-                0 === strpos($rel_normalized,'build/')
-            ){
-                continue;
-            }
-            $zip->addFile($path,$rel);
-        }
-    }
-    $zip->close();
-    header('Content-Type: application/zip');
-    header('Content-Disposition: attachment; filename="creativepear-suite.zip"');
-    header('Content-Length: '.filesize($zip_path));
-    readfile($zip_path);
-    unlink($zip_path);
-    exit;
-}
-
-function xw_place_export_button(){
-    $screen=get_current_screen();
-    if(!$screen||$screen->id!=='plugin-editor'){return;}
-    $url=add_query_arg(
-        array(
-            'action'   => 'xw_download_plugin',
-            '_wpnonce' => wp_create_nonce('xw_download_plugin'),
-        ),
-        admin_url('admin-post.php')
-    );
-    $url=esc_js($url);
-    echo "<script>
-    document.addEventListener('DOMContentLoaded',function(){
-        var row=document.querySelector('.fileedit-sub .alignleft');
-        if(!row)return;
-        if(row.textContent.indexOf('creativepear-suite/')===-1)return;
-        var br=document.createElement('br');
-        br.style.display='block';
-        br.style.marginTop='6px';
-        row.appendChild(br);
-        var btn=document.createElement('a');
-        btn.href='".$url."';
-        btn.className='button button-primary';
-        btn.textContent='" . esc_js( xw_t( 'Exportar plugin', 'Export plugin' ) ) . "';
-        row.appendChild(btn);
-    });
-    </script>";
-}
 
 
 // LLAMADO A CSS
@@ -1803,23 +1733,6 @@ function xw_delete_product_images( $post_id, $post = null ) {
 }
 
 
-// PRELOADER
-
-add_action('wp_head', function () {
-    if ( ! xw_feature_enabled( 'preloader' ) ) return;
-    if (is_admin()) return;
-    echo "<script>document.documentElement.classList.add('js');</script>";
-}, 0);
-add_action('wp_head', function () {
-    if ( ! xw_feature_enabled( 'preloader' ) ) return;
-    if (is_admin()) return;
-    echo "<style>body{opacity:1}html.js body{opacity:0;transition:opacity .35s ease-in}html.js body.loaded{opacity:1}</style>";
-}, 1);
-add_action('wp_footer', function () {
-    if ( ! xw_feature_enabled( 'preloader' ) ) return;
-    if (is_admin()) return;
-    echo "<script>window.addEventListener('load',function(){document.body.classList.add('loaded');});</script>";
-}, 100);
 
 
 // OCULTAR ANUNCIOS 1.0, MOSTRAR SOLO EN ESCRITORIO

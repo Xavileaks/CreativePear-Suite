@@ -4,6 +4,13 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.54
+
+- Cantidades: forma Normal/Circular, **Input border radius** y **Gap between controls** de 0–40 px. Circular fija ancho y alto iguales y radio de 50 %, sin cambiar la altura independiente del campo; Normal conserva alto y radio configurados. El radio anterior de 100 px migra a Circular, salvo selección explícita Normal. Gap inicial de 4 px, configurable a 0.
+- Barra de escritorio: elimina padding nativo y desplazamientos de los iconos superiores; centra los glifos en 32 px y los SVG. Conserva las reglas móviles separadas de 46 px y los menús nativos.
+- Eliminados **Loading transition** y **Export plugin**, incluyendo cajas, activación por ajustes antiguos, código de fade, botón del editor, generador ZIP y endpoint de descarga. El código anterior puede recuperarse desde Git. No modifica archivos de exportación ajenos ni instala actualizaciones en sitios.
+- Ajustes por AJAX, cantidad centrada, foco de teclado conservado y dos cajas por fila en escritorio, una en tablet/móvil.
+
 ## Versión 1.0.53
 
 - **WordPress > Comentarios** usa el interruptor principal y desplegable habitual de la suite. Primero se enciende la caja y luego se abre la flecha para configurar las cuatro opciones.

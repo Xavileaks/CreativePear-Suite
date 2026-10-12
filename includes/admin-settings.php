@@ -162,17 +162,9 @@ function xw_get_feature_definitions() {
             'title'       => xw_t( 'WooCommerce: eliminar imágenes con el producto', 'WooCommerce: delete images with product' ),
             'description' => xw_t( 'Elimina permanentemente sus imágenes al borrar un producto y conserva las usadas por otro producto.', 'Permanently deletes its images with the product while preserving images used by another product.' ),
         ),
-        'preloader' => array(
-            'title'       => xw_t( 'Transición de carga', 'Loading transition' ),
-            'description' => xw_t( 'Añade una aparición suave del contenido cuando termina de cargar la página.', 'Adds a smooth content fade-in when the page finishes loading.' ),
-        ),
         'admin_notices' => array(
             'title'       => xw_t( 'Organizar anuncios del escritorio', 'Organize dashboard notices' ),
             'description' => xw_t( 'Oculta avisos fuera del escritorio y los agrupa allí en un acordeón.', 'Hides notices outside the dashboard and groups them there in an accordion.' ),
-        ),
-        'plugin_export' => array(
-            'title'       => xw_t( 'Exportar plugin', 'Export plugin' ),
-            'description' => xw_t( 'Añade un botón para descargar este plugin desde el editor de archivos.', 'Adds a button to download this plugin from the file editor.' ),
         ),
     );
 }
@@ -200,9 +192,7 @@ function xw_get_feature_groups() {
                 'admin_branding',
                 'back_to_top',
                 'whatsapp_button',
-                'preloader',
                 'admin_notices',
-                'plugin_export',
             ),
         ),
         'elementor' => array(
@@ -423,6 +413,10 @@ function xw_get_settings() {
     }
 
     $settings = array_replace_recursive( xw_get_default_settings(), $saved );
+    if ( is_array( $settings['features'] ) ) { unset( $settings['features']['preloader'], $settings['features']['plugin_export'] ); }
+    if ( isset( $saved['quantity_buttons'] ) && is_array( $saved['quantity_buttons'] ) && ! array_key_exists( 'button_shape', $saved['quantity_buttons'] ) ) {
+        $settings['quantity_buttons']['button_shape'] = xw_quantity_sanitize( $saved['quantity_buttons'] )['button_shape'];
+    }
 
     // Older versions had only four scope switches: preserve their active policy.
     if ( is_array( $settings['features'] ) && ( ! isset( $saved['features'] ) || ! is_array( $saved['features'] ) || ! array_key_exists( 'comments_control', $saved['features'] ) ) ) {
