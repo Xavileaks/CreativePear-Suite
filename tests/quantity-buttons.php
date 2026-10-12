@@ -29,6 +29,10 @@ try {
     quantity_check( wp_script_is( 'xw-quantity-buttons', 'enqueued' ) && wp_style_is( 'xw-quantity-buttons', 'enqueued' ), 'enabled module loads scoped frontend assets' );
     $inline = implode( '', wp_styles()->get_data( 'xw-quantity-buttons', 'after' ) );
     quantity_check( strpos( $inline, '</style>' ) === false && strpos( $inline, '--xw-qty-input-height:44px' ) !== false, 'frontend CSS uses sanitized tokens' );
+    $input['quantity_buttons']['input_width'] = 100; $input['quantity_buttons']['button_width'] = 50;
+    update_option( 'xw_settings', $input ); xw_quantity_assets();
+    $inline = implode( '', wp_styles()->get_data( 'xw-quantity-buttons', 'after' ) );
+    quantity_check( strpos( $inline, '--xw-qty-input-width:100px' ) !== false && strpos( $inline, '--xw-qty-button-width:50px' ) !== false, 'input and button widths are emitted as separate settings' );
     ob_start(); xw_render_quantity_settings( $defaults['quantity_buttons'] ); $html = ob_get_clean();
     quantity_check( 14 === substr_count( $html, 'name="xw_settings[quantity_buttons][' ), 'all requested colors and dimensions are editable' );
     define( 'WQPMB_VERSION', 'qa' );

@@ -2,24 +2,28 @@
 body .quantity.xw-quantity {
     display: inline-flex !important;
     align-items: center;
-    gap: 0;
-    width: auto;
-    max-width: 100%;
+    gap: 0 !important;
+    flex: 0 0 auto !important;
+    width: calc(var(--xw-qty-input-width, 60px) + 2 * var(--xw-qty-button-width, 44px)) !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    padding: 0 !important;
     float: none;
 }
 body .quantity.xw-quantity .xw-quantity-button,
 body .wc-block-components-quantity-selector .wc-block-components-quantity-selector__button {
-    box-sizing: border-box;
+    box-sizing: border-box !important;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex: 0 1 var(--xw-qty-button-width, 44px);
+    flex: 0 0 var(--xw-qty-button-width, 44px) !important;
     width: var(--xw-qty-button-width, 44px) !important;
-    min-width: 44px;
+    min-width: var(--xw-qty-button-width, 44px) !important;
+    max-width: var(--xw-qty-button-width, 44px) !important;
     height: var(--xw-qty-input-height, 44px) !important;
     min-height: 44px;
-    padding: 0;
-    margin: 0;
+    padding: 0 !important;
+    margin: 0 !important;
     font: inherit;
     font-size: 20px;
     line-height: 1;
@@ -40,17 +44,18 @@ body .wc-block-components-quantity-selector .wc-block-components-quantity-select
 }
 body .quantity.xw-quantity input.qty,
 body .wc-block-components-quantity-selector .wc-block-components-quantity-selector__input {
-    box-sizing: border-box;
-    flex: 0 1 var(--xw-qty-input-width, 60px);
+    box-sizing: border-box !important;
+    flex: 0 0 var(--xw-qty-input-width, 60px) !important;
     width: var(--xw-qty-input-width, 60px) !important;
-    min-width: 40px;
-    max-width: none;
+    min-width: var(--xw-qty-input-width, 60px) !important;
+    max-width: var(--xw-qty-input-width, 60px) !important;
     height: var(--xw-qty-input-height, 44px) !important;
     min-height: 44px;
-    padding: 4px;
+    padding: 4px !important;
     margin: 0 !important;
     font: inherit;
-    text-align: center;
+    text-align: center !important;
+    text-indent: 0 !important;
     color: var(--xw-qty-input-color, #1d2327) !important;
     background: var(--xw-qty-input-background, #fff) !important;
     border: 1px solid var(--xw-qty-input-border, #dcdcde) !important;
@@ -63,14 +68,29 @@ body .quantity.xw-quantity input.qty::-webkit-inner-spin-button,
 body .quantity.xw-quantity input.qty::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 body .quantity.xw-quantity .xw-quantity-button:disabled,
 body .wc-block-components-quantity-selector .wc-block-components-quantity-selector__button:disabled { opacity: .45; cursor: not-allowed; }
-body .quantity.xw-quantity .xw-quantity-button:focus-visible,
-body .quantity.xw-quantity input.qty:focus-visible,
-body .wc-block-components-quantity-selector :focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+/* Number inputs match :focus-visible even on click in some browsers.
+   Suppress theme/browser black rings; show a keyboard-only accessible indicator. */
+body .quantity.xw-quantity .xw-quantity-button:focus,
+body .quantity.xw-quantity input.qty:focus,
+body .wc-block-components-quantity-selector .wc-block-components-quantity-selector__button:focus,
+body .wc-block-components-quantity-selector .wc-block-components-quantity-selector__input:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+body.xw-quantity-keyboard .quantity.xw-quantity .xw-quantity-button:focus,
+body.xw-quantity-keyboard .quantity.xw-quantity input.qty:focus,
+body.xw-quantity-keyboard .wc-block-components-quantity-selector .wc-block-components-quantity-selector__button:focus,
+body.xw-quantity-keyboard .wc-block-components-quantity-selector .wc-block-components-quantity-selector__input:focus {
+    outline: 2px solid var(--xw-qty-focus-color, Highlight) !important;
+    outline-offset: 2px !important;
+}
 body .wc-block-components-quantity-selector {
     display: inline-flex;
     box-sizing: border-box;
-    width: auto;
-    max-width: 100%;
+    flex: 0 0 auto !important;
+    width: calc(var(--xw-qty-input-width, 60px) + 2 * var(--xw-qty-button-width, 44px)) !important;
+    max-width: none !important;
+    gap: 0 !important;
     height: auto;
     border: none;
 }

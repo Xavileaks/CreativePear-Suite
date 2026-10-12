@@ -72,6 +72,14 @@
 
     $(function () {
         scan();
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Tab' || event.key.indexOf('Arrow') === 0) {
+                document.body.classList.add('xw-quantity-keyboard');
+            }
+        });
+        document.addEventListener('pointerdown', function () {
+            document.body.classList.remove('xw-quantity-keyboard');
+        });
         document.addEventListener('click', function (event) {
             var button = event.target.closest('[data-xw-quantity]');
             if (!button || button.disabled) return;

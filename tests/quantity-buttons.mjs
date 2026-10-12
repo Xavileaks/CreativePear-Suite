@@ -8,7 +8,7 @@ const bodyEvents = {};
 let observed;
 const nodes = [];
 const document = {
-    body: {},
+    body: { classList: { active: false, add() { this.active = true; }, remove() { this.active = false; } } },
     querySelectorAll() { return nodes; },
     createElement() { return { dataset: {}, attributes: {}, setAttribute(k, v) { this.attributes[k] = v; } }; },
     addEventListener(name, fn) { events[name] = fn; },
@@ -80,3 +80,7 @@ for (const attrs of [{ type: 'hidden' }, { readOnly: true }, { disabled: true },
     const skipped = input('1', attrs); nodes.push(skipped.field); observed(); assert.equal(skipped.buttons.length, 0);
 }
 console.log('PASS: hidden, fixed quantities, readonly, native blocks and existing theme/plugin controls are preserved');
+events.keydown({ key: 'Tab' }); assert.equal(document.body.classList.active, true);
+events.pointerdown(); assert.equal(document.body.classList.active, false);
+events.keydown({ key: 'ArrowUp' }); assert.equal(document.body.classList.active, true);
+console.log('PASS: keyboard navigation keeps a focus indicator; pointer interaction removes the black ring');

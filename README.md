@@ -4,6 +4,13 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.52
+
+- **Quantity Plus Minus Button** respeta por separado `Input width` y `Button width`, aunque el tema o Elementor fije el ancho/flex del contenedor. El campo ya no reparte ni pierde su ancho con los botones.
+- Cantidad centrada en producto, carrito y selectores nativos de bloques, con padding simétrico y sin sangría heredada del tema.
+- Clic/tap sin contorno ni sombra negra de foco; conserva un indicador accesible para Tab/flechas con color del sistema o `--xw-qty-focus-color`. No cambia mínimos/máximos/pasos ni eventos del carrito.
+- Verificado con campo de 100/140 px y botones de 50 px, reglas conflictivas de Elementor/tema y móvil de 320/390 px. La distribución de cajas de la suite no cambia.
+
 ## Versión 1.0.51
 
 - Nueva caja **WordPress > Duplicate page**, apagada por defecto. Duplica páginas, entradas, tipos públicos compatibles y plantillas Elementor desde sus listados, editor clásico o menú Opciones de Gutenberg, usando la versión guardada.
