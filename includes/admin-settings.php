@@ -40,6 +40,11 @@ function xw_get_feature_definitions() {
             'title'       => xw_t( 'Editor clásico', 'Classic editor' ),
             'description' => xw_t( 'Desactiva el editor de bloques para entradas, páginas y widgets.', 'Disables the block editor for posts, pages, and widgets.' ),
         ),
+        'duplicate_page' => array(
+            'title'       => 'Duplicate page',
+            'description' => xw_t( 'Duplica páginas, entradas y contenido compatible conservando el diseño y sus campos.', 'Duplicates pages, posts and supported content while preserving their layout and fields.' ),
+            'settings'    => true,
+        ),
         'comments_control' => array(
             'title'       => xw_t( 'Comentarios', 'Comments' ),
             'standalone'  => true,
@@ -184,6 +189,7 @@ function xw_get_feature_groups() {
             'features'    => array(
                 'assets_styles',
                 'classic_editor',
+                'duplicate_page',
                 'comments_control',
                 'hide_wp_version',
                 'webp_compress',
@@ -241,6 +247,7 @@ function xw_get_default_settings() {
     return array(
         'features' => $features,
         'comments' => array( 'global' => 0, 'posts' => 0, 'products' => 0, 'pages' => 0 ),
+        'duplicate_page' => xw_duplicate_defaults(),
         'wishlist' => array( 'page_id' => 0 ),
         'quantity_buttons' => xw_quantity_defaults(),
         'login'    => array(
@@ -467,6 +474,7 @@ function xw_sanitize_settings( $input ) {
         $sanitized['comments'][ $scope ] = isset( $comments[ $scope ] ) && is_scalar( $comments[ $scope ] ) && ! empty( $comments[ $scope ] ) ? 1 : 0;
     }
 
+    $sanitized['duplicate_page'] = xw_duplicate_sanitize( $input['duplicate_page'] ?? array() );
     $sanitized['quantity_buttons'] = xw_quantity_sanitize( $input['quantity_buttons'] ?? array() );
     $wishlist_page = absint( $input['wishlist']['page_id'] ?? 0 );
     $sanitized['wishlist']['page_id'] = $wishlist_page && 'page' === get_post_type( $wishlist_page ) && 'publish' === get_post_status( $wishlist_page ) ? $wishlist_page : 0;
@@ -935,6 +943,8 @@ function xw_render_settings_page() {
                                             <span>px</span>
                                         </div>
                                     </div>
+                                <?php elseif ( 'duplicate_page' === $key ) : ?>
+                                    <?php xw_render_duplicate_settings( $settings['duplicate_page'] ); ?>
                                 <?php elseif ( 'elementor_wishlist' === $key ) : ?>
                                     <div class="xw-field-row">
                                         <label for="xw-wishlist-page"><?php echo esc_html( xw_t( 'Página de Wishlist', 'Wishlist page' ) ); ?></label>

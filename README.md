@@ -4,6 +4,13 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.51
+
+- Nueva caja **WordPress > Duplicate page**, apagada por defecto. Duplica páginas, entradas, tipos públicos compatibles y plantillas Elementor desde sus listados, editor clásico o menú Opciones de Gutenberg, usando la versión guardada.
+- Configura editor, estado de la copia (borrador por defecto), destino (listado/editor) y sufijo del título. Guarda por AJAX y mantiene dos cajas por fila en escritorio, una en tablet/móvil.
+- Conserva contenido, extracto, orden, taxonomías, campos repetidos, referencias a imágenes y datos/ajustes de Elementor. No modifica el original ni duplica archivos, comentarios, bloqueos, cachés o condiciones globales de plantillas.
+- Valida nonce y permisos de lectura/edición/creación; privado/publicado requiere permiso de publicación. WooCommerce conserva su duplicación nativa de productos. Si el plugin Duplicate Page original está activo, no añade acciones duplicadas ni modifica sus ajustes; desactívalo para usar el módulo de la suite.
+
 ## Versión 1.0.50
 
 - Nueva caja **WordPress > Comentarios**, con exactamente cuatro interruptores apagados por defecto: desactivar globalmente, en entradas, en productos y en páginas. Productos incluye las reseñas de WooCommerce.

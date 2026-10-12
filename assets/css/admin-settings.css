@@ -4,6 +4,9 @@
     margin: 26px 24px 40px 4px;
 }
 
+#xw-options-duplicate_page select,
+#xw-options-duplicate_page input[type="text"] { min-height: 44px; }
+
 .xw-comments-options {
     display: grid;
     gap: 14px;
