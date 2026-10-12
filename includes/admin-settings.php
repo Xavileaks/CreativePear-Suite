@@ -60,7 +60,7 @@ function xw_get_feature_definitions() {
         ),
         'admin_bar_style' => array(
             'title'       => xw_t( 'Estilo compacto de la barra superior', 'Compact admin bar style' ),
-            'description' => xw_t( 'Reduce el texto y alinea los elementos de la barra de administración.', 'Shortens text and aligns items in the admin bar.' ),
+            'description' => xw_t( 'Compacta la barra de administración en escritorio y alinea iconos, avatar y menús en móvil.', 'Compacts the desktop admin bar and aligns icons, avatar and menus on mobile.' ),
         ),
         'admin_branding' => array(
             'title'       => xw_t( 'Marca del administrador', 'Admin branding' ),

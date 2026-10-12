@@ -4,6 +4,12 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.49
+
+- **Compact admin bar style** adapta también la barra móvil: iconos y avatar centrados en controles de 46 px, títulos ocultos con las reglas nativas de WordPress y desplegables debajo de la barra sin desbordar.
+- Sustituye los cambios globales de posición/flex por reglas separadas para escritorio y móvil. Mantiene la altura nativa (32/46 px), las etiquetas accesibles, el teclado y los menús del sitio y de la cuenta, tanto en administración como en frontend.
+- Solo carga sus estilos si la opción está activa, hay un usuario conectado y la barra está visible. No cambia la distribución de las cajas de la suite.
+
 ## Versión 1.0.48
 
 - Nuevo módulo opcional **WooCommerce > Quantity Plus Minus Button**, apagado por defecto. Añade controles accesibles +/− a los campos de cantidad existentes sin reemplazar plantillas de WooCommerce.
