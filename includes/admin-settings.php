@@ -114,6 +114,10 @@ function xw_get_feature_definitions() {
             'description' => xw_t( 'Añade botones + y − a los campos de cantidad de WooCommerce, con colores y dimensiones configurables.', 'Adds + and − buttons to WooCommerce quantity inputs, with configurable colors and dimensions.' ),
             'settings'    => true,
         ),
+        'woocommerce_orders_menu' => array(
+            'title'       => xw_t( 'WooCommerce: Pedidos en el menú principal', 'WooCommerce: Orders in the main menu' ),
+            'description' => xw_t( 'Mueve Pedidos fuera del submenú y lo coloca justo debajo de WooCommerce, conservando su contador y permisos.', 'Moves Orders out of the submenu and places it directly below WooCommerce, preserving its count and permissions.' ),
+        ),
         'woocommerce_auto_cart' => array(
             'title'       => xw_t( 'WooCommerce: actualizar carrito automáticamente', 'WooCommerce: update cart automatically' ),
             'description' => xw_t( 'Actualiza el importe del carrito después de cambiar la cantidad de un producto.', 'Updates the cart total after changing a product quantity.' ),
@@ -211,6 +215,7 @@ function xw_get_feature_groups() {
             'description' => xw_t( 'Funciones específicas para tiendas WooCommerce.', 'Features specifically for WooCommerce stores.' ),
             'features'    => array(
                 'woocommerce_quantity_buttons',
+                'woocommerce_orders_menu',
                 'woocommerce_auto_cart',
                 'woocommerce_checkout_product_images',
                 'woocommerce_cart_css',

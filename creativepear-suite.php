@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.55
+Version: 1.0.56
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.55' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.56' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -27,6 +27,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/wishlist.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/quantity-buttons.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/comments-control.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/duplicate-page.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/orders-menu.php';
 
 register_activation_hook( XW_FUNCTIONS_FILE, 'xw_activate_plugin' );
 

@@ -4,6 +4,12 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.56
+
+- Nueva caja **WooCommerce > Pedidos en el menú principal**, apagada por defecto. Mueve el acceso nativo justo debajo de WooCommerce y antes de Productos, fuera del submenú, conservando su idioma, contador y permisos. No modifica pedidos ni crea una pantalla diferente.
+- Compatible con HPOS y almacenamiento clásico, listado y editor. La entrada original se retira visualmente al renderizar el encabezado, después de la autorización y resolución de los hooks de HPOS. Sin WooCommerce, menú nativo o permisos no cambia nada; respeta accesos independientes de terceros.
+- Al apagar y guardar vuelve al submenú. Ajustes por AJAX; el menú refleja el cambio al navegar o recargar. Mantiene dos cajas por fila en escritorio y una en tablet/móvil. Pruebas locales en `tests/orders-menu.php`, excluidas del ZIP.
+
 ## Versión 1.0.55
 
 - **Compact admin bar style** corrige el icono de Rank Math: anula los 6 px de desplazamiento de su contenedor propio, que no usa `.ab-icon`, y centra el SVG en escritorio. Conserva separación del texto, hover y menús; no aplica la corrección al móvil.
