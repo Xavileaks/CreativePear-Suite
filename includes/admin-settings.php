@@ -47,7 +47,8 @@ function xw_get_feature_definitions() {
         ),
         'comments_control' => array(
             'title'       => xw_t( 'Comentarios', 'Comments' ),
-            'standalone'  => true,
+            'description' => xw_t( 'Controla dónde se permiten comentarios y reseñas, sin borrar los existentes.', 'Control where comments and reviews are allowed without deleting existing ones.' ),
+            'settings'    => true,
         ),
         'hide_wp_version' => array(
             'title'       => xw_t( 'Ocultar versión de WordPress', 'Hide WordPress version' ),
@@ -422,6 +423,13 @@ function xw_get_settings() {
     }
 
     $settings = array_replace_recursive( xw_get_default_settings(), $saved );
+
+    // Older versions had only four scope switches: preserve their active policy.
+    if ( is_array( $settings['features'] ) && ( ! isset( $saved['features'] ) || ! is_array( $saved['features'] ) || ! array_key_exists( 'comments_control', $saved['features'] ) ) ) {
+        foreach ( array( 'global', 'posts', 'products', 'pages' ) as $scope ) {
+            if ( ! empty( $settings['comments'][ $scope ] ) ) { $settings['features']['comments_control'] = 1; break; }
+        }
+    }
 
     // Las listas dinámicas deben poder guardarse vacías sin recuperar las filas predeterminadas.
     if ( isset( $saved['woocommerce'] ) && is_array( $saved['woocommerce'] ) && array_key_exists( 'extra_fee_rules', $saved['woocommerce'] ) ) {
@@ -859,10 +867,6 @@ function xw_render_settings_page() {
                                     }
 
                                     $feature = $feature_definitions[ $key ];
-                                    if ( 'comments_control' === $key ) {
-                                        xw_render_comments_card( $settings['comments'] );
-                                        continue;
-                                    }
                                     ?>
                     <?php $enabled = ! empty( $settings['features'][ $key ] ); ?>
                     <section class="xw-feature-card<?php echo $enabled ? ' is-enabled' : ''; ?>" data-xw-feature>
@@ -943,6 +947,8 @@ function xw_render_settings_page() {
                                             <span>px</span>
                                         </div>
                                     </div>
+                                <?php elseif ( 'comments_control' === $key ) : ?>
+                                    <?php xw_render_comments_settings( $settings['comments'] ); ?>
                                 <?php elseif ( 'duplicate_page' === $key ) : ?>
                                     <?php xw_render_duplicate_settings( $settings['duplicate_page'] ); ?>
                                 <?php elseif ( 'elementor_wishlist' === $key ) : ?>

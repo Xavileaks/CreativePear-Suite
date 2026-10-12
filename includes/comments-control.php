@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 function xw_comments_settings() {
     $settings = xw_get_settings();
-    return $settings['comments'];
+    return ! empty( $settings['features']['comments_control'] ) ? $settings['comments'] : array( 'global' => 0, 'posts' => 0, 'products' => 0, 'pages' => 0 );
 }
 
 function xw_comments_disabled( $post_id = 0 ) {
@@ -67,7 +67,7 @@ add_filter( 'woocommerce_product_tabs', static function ( $tabs ) {
     return $tabs;
 }, PHP_INT_MAX );
 
-function xw_render_comments_card( $settings ) {
+function xw_render_comments_settings( $settings ) {
     $fields = array(
         'global' => array( xw_t( 'Desactivar comentarios globalmente', 'Disable comments globally' ), xw_t( 'Tiene prioridad sobre las opciones por tipo de contenido.', 'Overrides the options for individual content types.' ) ),
         'posts' => array( xw_t( 'Desactivar comentarios en entradas', 'Disable comments on posts' ), xw_t( 'Solo afecta a las entradas del blog.', 'Only affects blog posts.' ) ),
@@ -75,12 +75,7 @@ function xw_render_comments_card( $settings ) {
         'pages' => array( xw_t( 'Desactivar comentarios en páginas', 'Disable comments on pages' ), xw_t( 'Solo afecta a las páginas.', 'Only affects pages.' ) ),
     );
     ?>
-    <section class="xw-feature-card xw-comments-card<?php echo array_filter( $settings ) ? ' is-enabled' : ''; ?>" data-xw-comments-card>
-        <div class="xw-feature-summary"><div class="xw-feature-copy">
-            <h3><?php echo esc_html( xw_t( 'Comentarios', 'Comments' ) ); ?></h3>
-            <p><?php echo esc_html( xw_t( 'Controla dónde se permiten comentarios y reseñas, sin borrar los existentes.', 'Control where comments and reviews are allowed without deleting existing ones.' ) ); ?></p>
-        </div></div>
-        <div class="xw-comments-options">
+        <div class="xw-comments-options xw-field-full" data-xw-comments-options>
             <?php foreach ( $fields as $key => $field ) : ?>
                 <div class="xw-comments-option">
                     <div><strong><?php echo esc_html( $field[0] ); ?></strong><p><?php echo esc_html( $field[1] ); ?></p></div>
@@ -93,6 +88,5 @@ function xw_render_comments_card( $settings ) {
             <?php endforeach; ?>
             <p class="xw-comments-priority" role="status" data-xw-comments-priority<?php echo empty( $settings['global'] ) ? ' hidden' : ''; ?>><?php echo esc_html( xw_t( 'Global está activo. Se conservan tus selecciones por tipo para cuando lo desactives.', 'Global is active. Your selections by content type are kept for when you turn it off.' ) ); ?></p>
         </div>
-    </section>
     <?php
 }

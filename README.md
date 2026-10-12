@@ -4,6 +4,12 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.53
+
+- **WordPress > Comentarios** usa el interruptor principal y desplegable habitual de la suite. Primero se enciende la caja y luego se abre la flecha para configurar las cuatro opciones.
+- Opciones interiores en dos columnas en escritorio (>1024 px) y una en tablet/móvil. La caja mantiene su mitad de fila en escritorio, sin excepciones de ancho completo.
+- Apagar el módulo suspende sus efectos y cierra el panel, conservando todas las selecciones. Actualizar no desactiva restricciones que ya estaban activas; las configuraciones inactivas permanecen apagadas. Mantiene el guardado AJAX y no borra comentarios.
+
 ## Versión 1.0.52
 
 - **Quantity Plus Minus Button** respeta por separado `Input width` y `Button width`, aunque el tema o Elementor fije el ancho/flex del contenedor. El campo ya no reparte ni pierde su ancho con los botones.

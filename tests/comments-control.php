@@ -14,7 +14,13 @@ try {
     $settings = xw_get_settings();
     $off = array( 'global' => 0, 'posts' => 0, 'products' => 0, 'pages' => 0 );
     $settings['comments'] = $off; update_option( 'xw_settings', $settings );
-    comments_check( xw_get_default_settings()['comments'] === $off && ! isset( xw_get_default_settings()['features']['comments_control'] ), 'four flags default off, with no fifth master switch' );
+    comments_check( xw_get_default_settings()['comments'] === $off && xw_get_default_settings()['features']['comments_control'] === 0, 'master and four scope flags default off' );
+    $legacy = $settings; unset( $legacy['features']['comments_control'] ); $legacy['comments']['posts'] = 1;
+    update_option( 'xw_settings', $legacy );
+    comments_check( xw_get_settings()['features']['comments_control'] === 1, 'upgrade preserves a previously active scope' );
+    $legacy['comments'] = $off; update_option( 'xw_settings', $legacy );
+    comments_check( xw_get_settings()['features']['comments_control'] === 0, 'upgrade leaves an inactive module off' );
+    $settings['features']['comments_control'] = 1; update_option( 'xw_settings', $settings );
     $dirty = $settings; $dirty['comments'] = array( 'global' => '1', 'posts' => 1, 'products' => array( 'evil' ), 'pages' => '0' );
     comments_check( xw_sanitize_settings( $dirty )['comments'] === array( 'global' => 1, 'posts' => 1, 'products' => 0, 'pages' => 0 ), 'known flags normalize safely, including nested/malformed values' );
     foreach ( array( 'post', 'page', 'product', 'xw_comments_qa' ) as $type ) {
@@ -55,8 +61,12 @@ try {
     foreach ( $ids as $id ) { comments_check( comments_open( $id ) && (int) get_comments_number( $id ) === 1, 'turning options off restores original comments and counts' ); }
     wp_update_post( array( 'ID' => $ids['post'], 'comment_status' => 'closed' ) );
     comments_check( ! comments_open( $ids['post'] ), 'does not reopen content already closed in WordPress' );
-    ob_start(); xw_render_comments_card( $off ); $html = ob_get_clean();
-    comments_check( substr_count( $html, 'type="checkbox"' ) === 4 && strpos( $html, 'xw_settings[features][comments_control]' ) === false, 'one card exposes exactly four accessible controls' );
+    $settings['comments']['global'] = 1; $settings['comments']['products'] = 1; $settings['features']['comments_control'] = 0; update_option( 'xw_settings', $settings );
+    comments_check( comments_open( $ids['page'] ) && ! xw_comments_product_reviews_disabled() && xw_get_settings()['comments']['global'] === 1, 'master off suspends all scopes while preserving selections' );
+    $settings['features']['comments_control'] = 1; update_option( 'xw_settings', $settings );
+    comments_check( ! comments_open( $ids['page'] ) && xw_comments_product_reviews_disabled(), 'master on restores saved selections' );
+    ob_start(); xw_render_comments_settings( $off ); $html = ob_get_clean();
+    comments_check( substr_count( $html, 'type="checkbox"' ) === 4 && strpos( $html, 'data-xw-comments-options' ) !== false && xw_get_feature_definitions()['comments_control']['settings'] === true, 'four scope controls render inside the standard expandable card' );
 } finally {
     update_option( 'xw_settings', $original );
     foreach ( $ids as $id ) { if ( ! is_wp_error( $id ) ) { wp_delete_post( $id, true ); } }
