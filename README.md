@@ -4,6 +4,10 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.57
+
+- El acceso independiente de **Pedidos** muestra el carrito de compras nativo de WordPress (`dashicons-cart`) en lugar del portapapeles. No cambia ubicación, contador, permisos ni navegación de HPOS y pedidos clásicos.
+
 ## Versión 1.0.56
 
 - Nueva caja **WooCommerce > Pedidos en el menú principal**, apagada por defecto. Mueve el acceso nativo justo debajo de WooCommerce y antes de Productos, fuera del submenú, conservando su idioma, contador y permisos. No modifica pedidos ni crea una pantalla diferente.

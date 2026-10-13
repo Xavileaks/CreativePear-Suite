@@ -45,6 +45,7 @@ try {
         }
         xw_orders_menu_hide_submenu();
         $entry = array_values( array_filter( $menu, function ( $item ) use ( $target ) { return $target === $item[2]; } ) );
+        orders_check( count( $entry ) === 1 && $entry[0][6] === 'dashicons-cart', 'Orders uses the native shopping cart icon for both storage modes' );
         orders_check( count( $entry ) === 1 && $entry[0][0] === $count_title && $entry[0][1] === 'edit_shop_orders' && count( $submenu['woocommerce'] ) === 2, "$route moves without losing count or native capability; unrelated submenus remain" );
         $order = xw_orders_menu_order( array( 'woocommerce', 'edit.php?post_type=product', $target, 'users.php' ) );
         orders_check( $order === array( 'woocommerce', $target, 'edit.php?post_type=product', 'users.php' ) && xw_orders_menu_order( $order ) === $order, 'placed directly below WooCommerce after native ordering, without duplicates' );

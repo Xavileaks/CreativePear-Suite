@@ -28,7 +28,7 @@ function xw_orders_menu_move() {
         }
 
         // Keep the native registration/callback and the count markup WooCommerce already produced.
-        add_menu_page( isset( $item[3] ) ? $item[3] : wp_strip_all_tags( $item[0] ), $item[0], $item[1], $target, '', 'dashicons-clipboard', $wc_position + 0.01 );
+        add_menu_page( isset( $item[3] ) ? $item[3] : wp_strip_all_tags( $item[0] ), $item[0], $item[1], $target, '', 'dashicons-cart', $wc_position + 0.01 );
         // Core resolves HPOS page authorization and load hooks through this submenu.
         // Remove it only when rendering the header, after those checks have run.
         $xw_orders_menu_source = $item[2];
