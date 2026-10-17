@@ -9,11 +9,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 define( 'XW_GITHUB_REPOSITORY', 'Xavileaks/CreativePear-Suite' );
 define( 'XW_GITHUB_RELEASE_ASSET', 'creativepear-suite.zip' );
-define( 'XW_GITHUB_UPDATE_INTERVAL', 10 * MINUTE_IN_SECONDS );
-define( 'XW_GITHUB_UPDATE_CRON_HOOK', 'xw_github_ten_minute_update_check' );
+define( 'XW_GITHUB_UPDATE_INTERVAL', 5 * MINUTE_IN_SECONDS );
+define( 'XW_GITHUB_UPDATE_CRON_HOOK', 'xw_github_five_minute_update_check' );
 
 /**
- * Obtiene la última publicación estable y la conserva durante diez minutos.
+ * Obtiene la última publicación estable y la conserva durante cinco minutos.
  *
  * @param bool $force_refresh Ignorar la caché guardada.
  * @return array|WP_Error
@@ -125,20 +125,20 @@ function xw_github_check_for_update( $transient ) {
 add_filter( 'pre_set_site_transient_update_plugins', 'xw_github_check_for_update' );
 
 /**
- * Añade una frecuencia de diez minutos sin modificar el cron de otros plugins.
+ * Añade una frecuencia de cinco minutos sin modificar el cron de otros plugins.
  *
  * @param array $schedules Frecuencias registradas.
  * @return array
  */
-function xw_github_add_ten_minute_schedule( $schedules ) {
-    $schedules['xw_ten_minutes'] = array(
+function xw_github_add_five_minute_schedule( $schedules ) {
+    $schedules['xw_five_minutes'] = array(
         'interval' => XW_GITHUB_UPDATE_INTERVAL,
-        'display'  => xw_t( 'Cada diez minutos', 'Every ten minutes' ),
+        'display'  => xw_t( 'Cada cinco minutos', 'Every five minutes' ),
     );
 
     return $schedules;
 }
-add_filter( 'cron_schedules', 'xw_github_add_ten_minute_schedule' );
+add_filter( 'cron_schedules', 'xw_github_add_five_minute_schedule' );
 
 /**
  * Programa la comprobación. También se ejecuta en init para instalaciones
@@ -147,10 +147,23 @@ add_filter( 'cron_schedules', 'xw_github_add_ten_minute_schedule' );
  * @return void
  */
 function xw_github_schedule_update_checks() {
-    if ( ! wp_next_scheduled( XW_GITHUB_UPDATE_CRON_HOOK ) ) {
+    // Existing installations still have the former ten-minute event after updating.
+    if ( false !== wp_next_scheduled( 'xw_github_ten_minute_update_check' ) ) {
+        wp_clear_scheduled_hook( 'xw_github_ten_minute_update_check' );
+        delete_site_transient( 'xw_github_latest_release' );
+        delete_site_transient( 'xw_github_ten_minute_update_lock' );
+    }
+
+    $event = wp_get_scheduled_event( XW_GITHUB_UPDATE_CRON_HOOK );
+    if ( $event && ( 'xw_five_minutes' !== $event->schedule || XW_GITHUB_UPDATE_INTERVAL !== (int) $event->interval ) ) {
+        wp_clear_scheduled_hook( XW_GITHUB_UPDATE_CRON_HOOK );
+        $event = false;
+    }
+
+    if ( ! $event ) {
         wp_schedule_event(
             time() + XW_GITHUB_UPDATE_INTERVAL,
-            'xw_ten_minutes',
+            'xw_five_minutes',
             XW_GITHUB_UPDATE_CRON_HOOK
         );
     }
@@ -165,6 +178,7 @@ register_activation_hook( XW_FUNCTIONS_FILE, 'xw_github_schedule_update_checks' 
  */
 function xw_github_unschedule_update_checks() {
     wp_clear_scheduled_hook( XW_GITHUB_UPDATE_CRON_HOOK );
+    wp_clear_scheduled_hook( 'xw_github_ten_minute_update_check' );
 }
 register_deactivation_hook( XW_FUNCTIONS_FILE, 'xw_github_unschedule_update_checks' );
 
@@ -174,7 +188,7 @@ register_deactivation_hook( XW_FUNCTIONS_FILE, 'xw_github_unschedule_update_chec
  * @return void
  */
 function xw_github_refresh_update_transient() {
-    $lock_key = 'xw_github_ten_minute_update_lock';
+    $lock_key = 'xw_github_five_minute_update_lock';
 
     if ( false !== get_site_transient( $lock_key ) ) {
         return;
@@ -231,7 +245,7 @@ add_action( XW_GITHUB_UPDATE_CRON_HOOK, 'xw_github_refresh_update_transient' );
 
 /**
  * Permite que el aviso ya esté preparado al entrar en la administración.
- * El bloqueo interno impide más de una consulta cada diez minutos.
+ * El bloqueo interno impide más de una consulta cada cinco minutos.
  *
  * @return void
  */
@@ -344,6 +358,7 @@ function xw_github_clear_release_cache( $upgrader, $options ) {
     }
 
     delete_site_transient( 'xw_github_latest_release' );
+    delete_site_transient( 'xw_github_five_minute_update_lock' );
     delete_site_transient( 'xw_github_ten_minute_update_lock' );
 }
 add_action( 'upgrader_process_complete', 'xw_github_clear_release_cache', 10, 2 );

@@ -254,7 +254,7 @@ function xw_get_default_settings() {
         ),
         'styles'   => array(
             'primary_color'         => '',
-            'scrollbar_width'       => 10,
+            'scrollbar_width'       => 5,
             'scrollbar_track_color' => '',
             'scrollbar_thumb_color' => '',
             'scrollbar_radius'      => 0,

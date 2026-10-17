@@ -4,6 +4,12 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.58
+
+- Ancho predeterminado de scrollbar de **5 px** para configuraciones nuevas o sin ancho definido; conserva los anchos ya guardados, incluido 0.
+- Comprobación de actualizaciones, caché de GitHub y bloqueo de consultas cada **5 minutos**. Migra el cron anterior de 10 minutos en instalaciones existentes, sin duplicados ni cambios en eventos ajenos, e invalida caché/bloqueo antiguos. Al desactivar limpia ambos eventos de la suite.
+- WP-Cron sigue dependiendo de las visitas; el intervalo no garantiza una instalación automática ni una ejecución en un minuto exacto.
+
 ## Versión 1.0.57
 
 - El acceso independiente de **Pedidos** muestra el carrito de compras nativo de WordPress (`dashicons-cart`) en lugar del portapapeles. No cambia ubicación, contador, permisos ni navegación de HPOS y pedidos clásicos.
@@ -147,7 +153,7 @@ Usa los IDs que devuelve la primera prueba, en el mismo orden. Cubre registro/co
 
 ## Actualizaciones desde GitHub
 
-El plugin consulta cada diez minutos la última publicación estable de este repositorio mediante WP-Cron. Si la versión publicada es mayor que la instalada, la actualización aparece en **Plugins > Plugins instalados** y puede aplicarse con **Actualizar ahora** o mediante las actualizaciones automáticas de WordPress. Como WP-Cron depende de la actividad del sitio, la comprobación se ejecuta durante la primera visita recibida después de cumplirse el intervalo.
+El plugin consulta cada cinco minutos la última publicación estable de este repositorio mediante WP-Cron. Si la versión publicada es mayor que la instalada, la actualización aparece en **Plugins > Plugins instalados** y puede aplicarse con **Actualizar ahora** o mediante las actualizaciones automáticas de WordPress. Como WP-Cron depende de la actividad del sitio, la comprobación se ejecuta durante la primera visita recibida después de cumplirse el intervalo.
 
 La instalación inicial del plugin sigue haciéndose una sola vez con el ZIP. A partir de ese momento, las versiones nuevas llegan desde GitHub Releases.
 
