@@ -4,6 +4,11 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.59
+
+- **Global CSS styles** elimina el `box-shadow` de foco de los campos de Elementor Form, sin crear otra opción. Solo afecta a inputs, selects y textarea con `.elementor-field` dentro del formulario y widget nativos.
+- Conserva bordes, colores y outline configurados; no cambia campos ajenos a Elementor. La regla depende del check existente. Prueba local sin envíos en `tests/elementor-form-focus.php`, excluida de la publicación.
+
 ## Versión 1.0.58
 
 - Ancho predeterminado de scrollbar de **5 px** para configuraciones nuevas o sin ancho definido; conserva los anchos ya guardados, incluido 0.

@@ -23,6 +23,11 @@ a {
     outline: -webkit-focus-ring-color auto 0px;
 }
 
+/* Elementor Form: remove only the field's focus shadow; keep its border/outline. */
+.elementor-widget-form .elementor-form .elementor-field:focus {
+    box-shadow: none !important;
+}
+
 * {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
