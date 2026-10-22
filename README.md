@@ -4,6 +4,13 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.60
+
+- Nueva caja **Elementor > Form Elementor: fecha**, apagada por defecto y sin controles adicionales. General para todos los formularios Elementor, sin dominio/página/ID fijo. Escritura `dd/mm/aaaa`, separadores automáticos e `inputmode="numeric"`; mantiene el input date, el icono y el selector nativo original.
+- Conserva una única fecha ISO enviada (`aaaa-mm-dd`), también en el modo nativo móvil de Flatpickr. No convierte Flatpickr de escritorio ni otros calendarios personalizados, hora/datetime o campos de otros formularios. Respeta obligatoriedad, límites, paso, desactivados y solo lectura; rechaza fechas parciales/imposibles.
+- Sincroniza calendario/reset, campos dinámicos y reinicios sin duplicar controles. Calendario accesible, subrayado de foco sin añadir sombra, independiente de Global CSS y guardado AJAX habitual. Dos cajas por fila en escritorio y una en tablet/móvil. Apagar vuelve al comportamiento original tras cargar de nuevo la página.
+- Pruebas locales sin envíos con Flatpickr 4.6.13 y serialización verificada; confirmar el teclado del sistema en un teléfono real. No instala actualizaciones en sitios.
+
 ## Versión 1.0.59
 
 - **Global CSS styles** elimina el `box-shadow` de foco de los campos de Elementor Form, sin crear otra opción. Solo afecta a inputs, selects y textarea con `.elementor-field` dentro del formulario y widget nativos.

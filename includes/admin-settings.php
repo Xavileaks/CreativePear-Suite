@@ -101,6 +101,10 @@ function xw_get_feature_definitions() {
             'description' => xw_t( 'Formatea y valida números telefónicos en formularios de Elementor.', 'Formats and validates phone numbers in Elementor forms.' ),
             'settings'    => true,
         ),
+        'elementor_date_input' => array(
+            'title'       => xw_t( 'Form Elementor: fecha', 'Form Elementor: date' ),
+            'description' => xw_t( 'Permite escribir dd/mm/aaaa con teclado numérico en campos de fecha nativos y conserva su calendario e icono.', 'Allows typing dd/mm/yyyy with a numeric keyboard in native date fields while preserving their calendar and icon.' ),
+        ),
         'elementor_email_mask' => array(
             'title'       => xw_t( 'Form Elementor: limpieza de correo', 'Form Elementor: email cleanup' ),
             'description' => xw_t( 'Evita espacios y caracteres no válidos en campos de correo de Elementor.', 'Prevents spaces and invalid characters in Elementor email fields.' ),
@@ -206,6 +210,7 @@ function xw_get_feature_groups() {
                 'elementor_wishlist',
                 'elementor_messages',
                 'elementor_phone_mask',
+                'elementor_date_input',
                 'elementor_email_mask',
                 'elementor_message_mask',
             ),
