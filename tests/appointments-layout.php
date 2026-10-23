@@ -15,7 +15,7 @@ $intro = strpos( $markup, 'class="xw-appt-intro"' ); $bookings = strpos( $markup
 $guide = strpos( $markup, 'class="xw-appt-guide"' ); $schedule = strpos( $markup, 'id="xw-appt-schedule"' );
 appt_layout_check( false !== $intro && $intro < $bookings && $bookings < $guide && $guide < $schedule, 'bookings follow the introduction and precede the guide and settings' );
 appt_layout_check( 1 === substr_count( $markup, 'id="xw-appt-bookings"' ), 'the booking list is rendered exactly once' );
-appt_layout_check( strpos( $markup, 'class="xw-appt-filters"' ) < $guide && strpos( $markup, 'xw-appt-table-wrap' ) < $guide, 'filters and table move together with the booking heading' );
+appt_layout_check( strpos( $markup, 'class="xw-appt-filters"' ) < $guide && strpos( $markup, 'class="xw-appt-bookings"' ) < $guide && ! str_contains( $markup, '<table' ), 'filters and booking cards precede the guide, without a table' );
 $dom = new DOMDocument(); libxml_use_internal_errors( true ); $dom->loadHTML( '<?xml encoding="UTF-8">' . $markup ); libxml_clear_errors();
 $xpath = new DOMXPath( $dom );
 appt_layout_check( 3 === $xpath->query( '//div[@class="xw-appt-rules"]/div[@class="xw-appt-rule"]' )->length, 'the three booking rules share one responsive grid' );
@@ -25,7 +25,7 @@ if ( ! empty( $argv[3] ) ) {
     xw_appt_admin_assets( 'toplevel_page_xw-appointments' );
     wp_enqueue_style( 'common' ); wp_enqueue_style( 'forms' ); wp_enqueue_style( 'buttons' );
     ob_start();
-    ?><!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Citas · revisión de distribución</title><?php wp_print_styles(); ?><style>body{font:13px/1.5 system-ui;background:#f0f0f1;margin:0;padding:24px;color:#1d2327}.screen-reader-text{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}@media(max-width:600px){body{padding:12px}}</style></head><body><?php echo $markup; wp_print_footer_scripts(); ?></body></html><?php
+    ?><!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Citas · revisión de distribución</title><?php wp_print_styles(); ?><style>body{font:13px/1.5 system-ui;background:#f0f0f1;margin:0;padding:24px;color:#1d2327}.screen-reader-text{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}@media(max-width:600px){body{padding:12px}}</style></head><body class="wp-core-ui"><?php echo $markup; wp_print_footer_scripts(); ?></body></html><?php
     file_put_contents( $argv[3], ob_get_clean() );
     echo "Rendered read-only local fixture\n";
 }

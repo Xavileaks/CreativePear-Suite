@@ -2,6 +2,7 @@
 /** CLI integration tests; isolated local WordPress, restores options and deletes only its own synthetic bookings. */
 if ( PHP_SAPI !== 'cli' || empty( $argv[1] ) ) { exit( "Supply isolated WordPress directory.\n" ); }
 define( 'DOING_AJAX', true );
+define( 'WP_DISABLE_FATAL_ERROR_HANDLER', true );
 require rtrim( $argv[1], '/\\' ) . '/wp-load.php';
 if ( 'local' !== wp_get_environment_type() ) { exit( "Local environment required.\n" ); }
 function appt_check( $ok, $label ) { if ( ! $ok ) { throw new RuntimeException( $label ); } echo "PASS: $label\n"; }
@@ -18,8 +19,8 @@ class ApptHandler {
     public function add_response_data( $key, $value ) { $this->data[ $key ] = $value; }
 }
 add_filter( 'wp_die_ajax_handler', static function() { return static function() { throw new RuntimeException( 'appt-json-end' ); }; } );
-function appt_request( $callback, $post = array(), $get = array() ) {
-    $_SERVER['REQUEST_METHOD'] = 'POST'; $_POST = $post; $_GET = $get; $_REQUEST = array_merge( $get, $post );
+function appt_request( $callback, $post = array(), $get = array(), $method = 'POST' ) {
+    $_SERVER['REQUEST_METHOD'] = $method; $_POST = $post; $_GET = $get; $_REQUEST = array_merge( $get, $post );
     ob_start(); try { $callback(); } catch ( RuntimeException $e ) { if ( 'appt-json-end' !== $e->getMessage() ) { ob_end_clean(); throw $e; } }
     return json_decode( ob_get_clean(), true );
 }
@@ -54,6 +55,12 @@ try {
     $truncated = $structured; unset( $truncated['closed'] ); appt_check( is_wp_error( xw_appt_sanitize_schedule( $truncated ) ), 'missing blocked-date field cannot silently clear exceptions' );
     $overlapping = $structured; $overlapping['shifts'][1][1]['start'] = '11:00'; appt_check( is_wp_error( xw_appt_sanitize_schedule( $overlapping ) ), 'overlapping dropdown shifts rejected' );
     $badcolor = $structured; $badcolor['colors']['border'] = 'url(javascript:bad)'; appt_check( is_wp_error( xw_appt_sanitize_schedule( $badcolor ) ), 'calendar colors cannot inject CSS' );
+    $country = $structured; $country['whatsapp_country_code'] = '58'; appt_check( '58' === xw_appt_sanitize_schedule( $country )['whatsapp_country_code'], 'site country code is configurable, not inferred' );
+    foreach ( array( '+58', '0', '1234', array(), '<script>' ) as $invalid_country ) { $country['whatsapp_country_code'] = $invalid_country; appt_check( is_wp_error( xw_appt_sanitize_schedule( $country ) ), 'invalid country code rejected without partial save' ); }
+    appt_check( '' === xw_appt_whatsapp_url( '0412 555 1234' ) && 'https://wa.me/584125551234' === xw_appt_whatsapp_url( '0412 555 1234', '58' ), 'local WhatsApp numbers require the configured country and keep stored data unchanged' );
+    appt_check( 'https://wa.me/12025550123' === xw_appt_whatsapp_url( '+1 (202) 555-0123' ) && 'https://wa.me/442079460123' === xw_appt_whatsapp_url( '0044 20 7946 0123' ), 'explicit international numbers work without a site default' );
+    appt_check( '' === xw_appt_whatsapp_url( '04125551234 ext 9', '58' ) && '' === xw_appt_whatsapp_url( 'javascript:alert(1)', '58' ) && '' === xw_appt_whatsapp_url( '123', '58' ), 'invalid or ambiguous phone values do not create a contact link' );
+    appt_check( 'https://wa.me/390212345678' === xw_appt_whatsapp_url( '02 12345678', '39' ), 'Italian geographic leading zero is retained' );
     foreach ( array( 'weekly', 'shifts', 'colors' ) as $key ) { $malformed = $structured; $malformed[ $key ] = 'not-an-array'; appt_check( is_wp_error( xw_appt_sanitize_schedule( $malformed ) ), 'malformed ' . $key . ' cannot produce a partial save' ); }
     $legacy = $structured; $legacy['shifts'][1] = array( array( 'start' => '09:10', 'end' => '11:55' ) ); appt_check( '09:10-11:55' === xw_appt_sanitize_schedule( $legacy )['weekly'][1], 'valid existing non-quarter-hour endpoints are not silently changed' );
     $owner = xw_appt_lock(); appt_check( $owner && ! xw_appt_lock(), 'two simultaneous booking writers cannot acquire the same mutex' ); xw_appt_unlock( 'not-owner' ); appt_check( ! xw_appt_lock(), 'another request cannot release the lock' ); xw_appt_unlock( $owner );
@@ -84,6 +91,9 @@ try {
     $ordinary = new ApptRecord( '' ); unset( $ordinary->fields['date'] ); $ordinary_handler = new ApptHandler(); xw_appt_process( $ordinary, $ordinary_handler ); appt_check( $ordinary_handler->is_success && ! isset( $GLOBALS['xw_appt_holds'][ spl_object_id( $ordinary ) ] ), 'ordinary Elementor forms are not connected automatically' );
     $mapped = new ApptRecord( $value ); $mapped->fields['preferred'] = array( 'type' => 'text', 'title' => 'Preferred', 'value' => 'Mapped patient' );
     appt_check( xw_appt_customer( $mapped, array( 'xw_appt_name' => 'preferred' ) )['customer_name'] === 'Mapped patient', 'custom form field IDs override automatic contact detection' );
+    $mapped->fields['office'] = array( 'type' => 'select', 'title' => 'Custom label', 'value' => 'QA clinic' );
+    appt_check( 'QA clinic' === xw_appt_office( xw_appt_customer( $mapped, array( 'xw_appt_office' => 'office' ) )['fields'] ), 'explicit office field mapping survives submission storage' );
+    appt_check( 'Legacy clinic' === xw_appt_office( array( array( 'label' => 'Consultorio preferido', 'value' => 'Legacy clinic' ) ) ) && '' === xw_appt_office( array( array( 'label' => 'Servicio', 'value' => 'Not an office' ) ) ), 'legacy office labels are detected without guessing an unrelated service' );
     $month = substr( $tomorrow, 0, 7 ); $response = appt_request( 'xw_appt_availability', array(), array( 'month' => $month ) ); appt_check( $response['success'] && ! str_contains( wp_json_encode( $response ), 'appointment-qa@' ) && ! str_contains( wp_json_encode( $response ), 'customer_name' ), 'public availability exposes only days, times and timezone' );
     $admins = get_users( array( 'role' => 'administrator', 'number' => 1, 'fields' => 'ID' ) ); wp_set_current_user( (int) $admins[0] );
     $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'schedule', 'nonce' => 'invalid', 'schedule' => $schedule ) ); appt_check( ! $response['success'], 'admin writes reject invalid nonce' );
@@ -106,9 +116,33 @@ try {
     $busy = xw_appt_busy( $boundary, gmdate( 'Y-m-d H:i:s', strtotime( $boundary . ' UTC' ) + 3600 ) );
     appt_check( (bool) array_filter( $busy, static function( $slot ) use ( $month_end, $boundary ) { return $slot['starts_at'] === $month_end . ' 23:30:00' && $slot['ends_at'] > $boundary; } ), 'duration extension across midnight and month boundaries remains blocked' );
     update_option( 'xw_appointment_settings', $schedule );
+    $private = array( 'month' => $month, 'booking' => $ids[0], 'nonce' => $nonce );
+    $response = appt_request( 'xw_appt_admin_availability', array(), $private, 'GET' );
+    appt_check( $response['success'] && in_array( $value, array_column( $response['data']['days'][ $tomorrow ], 'value' ), true ), 'private reschedule availability excludes only its own booking' );
+    $private['nonce'] = 'invalid'; $response = appt_request( 'xw_appt_admin_availability', array(), $private, 'GET' ); appt_check( ! $response['success'], 'private reschedule availability requires a valid nonce' );
+    $private['nonce'] = $nonce;
+    $response = appt_request( 'xw_appt_availability', array(), $private, 'GET' );
+    appt_check( $response['success'] && ! in_array( $value, array_column( $response['data']['days'][ $tomorrow ], 'value' ), true ), 'public availability ignores booking IDs and never excludes an occupied reservation' );
+    $before = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $ids[0] ), ARRAY_A );
+    $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'reschedule', 'booking' => $ids[0], 'appointment' => $tomorrow . 'T09:45', 'nonce' => $nonce ) );
+    appt_check( ! $response['success'] && $before['starts_at'] === $wpdb->get_var( $wpdb->prepare( "SELECT starts_at FROM $table WHERE id = %d", $ids[0] ) ), 'rescheduling to overlap another booking fails without changing the original date' );
+    $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'reschedule', 'booking' => $ids[0], 'appointment' => $tomorrow . 'T09:15', 'nonce' => $nonce ) );
+    $after = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $ids[0] ), ARRAY_A );
+    appt_check( $response['success'] && $after['starts_at'] !== $before['starts_at'] && $after['status'] === $before['status'] && $after['fields'] === $before['fields'] && $after['email'] === $before['email'], 'reschedule updates only date, duration and timezone while preserving status and submitted data' );
+    $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'reschedule', 'booking' => $ids[0], 'appointment' => $tomorrow . 'T13:00', 'nonce' => $nonce ) ); appt_check( ! $response['success'], 'reschedule respects breaks and server availability' );
+    $owner = xw_appt_lock(); $locked = xw_appt_reschedule( $ids[0], $tomorrow . 'T09:30' ); xw_appt_unlock( $owner ); appt_check( is_wp_error( $locked ), 'rescheduling shares the booking mutex to prevent concurrent collisions' );
+    // Restore the synthetic start for the existing cancellation regression below.
+    appt_check( ! is_wp_error( xw_appt_reschedule( $ids[0], $value ) ), 'unchanged original slot can be selected again without self-conflict' );
+    ob_start(); xw_appt_admin_list( $nonce ); $cards = ob_get_clean();
+    appt_check( str_contains( $cards, 'class="xw-appt-bookings"' ) && str_contains( $cards, 'class="xw-appt-booking"' ) && ! str_contains( $cards, '<table' ) && str_contains( $cards, 'xw-appt-reschedule' ) && str_contains( $cards, 'mailto:appointment-qa@example.invalid' ), 'booking cards preserve status, contact links, reschedule and details without a table' );
+    preg_match_all( '/class="xw-appt-booking" data-status="([a-z]+)"/', $cards, $matches ); $priority = array( 'pending' => 0, 'confirmed' => 1, 'cancelled' => 2, 'completed' => 3 );
+    $ordering = array_map( static function( $status ) use ( $priority ) { return $priority[ $status ]; }, $matches[1] ); $sorted = $ordering; sort( $sorted );
+    appt_check( $ordering === $sorted && ! $wpdb->last_error, 'cards are ordered pending, confirmed, cancelled, completed without SQL errors' );
     $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'status', 'booking' => $ids[0], 'status' => 'cancelled', 'nonce' => $nonce ) ); appt_check( $response['success'] && isset( xw_appt_available( $tomorrow )[ $value ] ), 'admin cancellation releases the occupied slot' );
+    appt_check( is_wp_error( xw_appt_reschedule( $ids[0], $value ) ), 'cancelled bookings cannot be rescheduled' );
     $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'status', 'booking' => $ids[0], 'status' => 'confirmed', 'nonce' => $nonce ) ); appt_check( ! $response['success'], 'cancelled booking cannot bypass availability by reactivation' );
     wp_set_current_user( 0 ); $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'status', 'booking' => $ids[0], 'status' => 'pending', 'nonce' => $nonce ) ); appt_check( ! $response['success'], 'unauthenticated users cannot read or manage bookings' );
+    $response = appt_request( 'xw_appt_admin_availability', array(), $private, 'GET' ); appt_check( ! $response['success'] && is_wp_error( xw_appt_reschedule( $ten_id, $value ) ), 'anonymous users cannot use private availability or reschedule helpers' );
     $export = xw_appt_privacy_export( 'appointment-qa@example.invalid' ); appt_check( count( $export['data'] ) > 0, 'WordPress personal data exporter includes appointments' );
     $erasure = xw_appt_privacy_erase( 'appointment-qa@example.invalid' ); appt_check( $erasure['items_removed'] && ! xw_appt_privacy_export( 'appointment-qa@example.invalid' )['data'], 'WordPress erasure anonymizes customer data' );
     $settings['features']['elementor_appointments'] = 0; update_option( 'xw_settings', $settings ); $response = appt_request( 'xw_appt_availability', array(), array( 'month' => $month ) ); appt_check( ! $response['success'] && ! xw_appt_available( $tomorrow ), 'disabled utility fails closed, without altering ordinary forms' );

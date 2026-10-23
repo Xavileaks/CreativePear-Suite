@@ -48,7 +48,7 @@ function xw_appt_install() {
 add_action( 'init', 'xw_appt_install', 20 );
 
 function xw_appt_defaults() {
-    return array( 'weekly' => array_fill( 0, 7, '' ), 'closed' => array(), 'duration' => 30, 'notice' => 120, 'horizon' => 90, 'colors' => array() );
+    return array( 'weekly' => array_fill( 0, 7, '' ), 'closed' => array(), 'duration' => 30, 'notice' => 120, 'horizon' => 90, 'colors' => array(), 'whatsapp_country_code' => '' );
 }
 function xw_appt_settings() { return array_merge( xw_appt_defaults(), (array) get_option( 'xw_appointment_settings', array() ) ); }
 
@@ -115,6 +115,9 @@ function xw_appt_sanitize_schedule( $raw ) {
         $out['closed'][] = $day;
     }
     $out['closed'] = array_values( array_unique( $out['closed'] ) );
+    $country = $raw['whatsapp_country_code'] ?? ( xw_appt_settings()['whatsapp_country_code'] ?? '' );
+    if ( ! is_string( $country ) || ( '' !== $country && ! preg_match( '/^[1-9]\d{0,2}$/D', $country ) ) ) { return new WP_Error( 'schedule', xw_t( 'Código de país de WhatsApp no válido. Usa de uno a tres dígitos sin +.', 'Invalid WhatsApp country code. Use one to three digits without +.' ) ); }
+    $out['whatsapp_country_code'] = $country;
     foreach ( array( 'border', 'background', 'text', 'calendar_background' ) as $key ) {
         $color = $raw['colors'][ $key ] ?? ( xw_appt_settings()['colors'][ $key ] ?? '' );
         if ( ! is_string( $color ) || ( '' !== $color && ! preg_match( '/^#[a-fA-F0-9]{6}$/D', $color ) ) ) { return new WP_Error( 'schedule', xw_t( 'Usa colores hexadecimales de seis dígitos o deja el color automático.', 'Use six-digit hex colors or leave the color automatic.' ) ); }
@@ -147,13 +150,13 @@ function xw_appt_candidates( $day, $settings = null, $now = null ) {
     return $slots;
 }
 
-function xw_appt_busy( $start, $end ) {
+function xw_appt_busy( $start, $end, $exclude_id = 0 ) {
     global $wpdb;
     $table = xw_appt_table();
     $duration = max( 5, min( 240, (int) xw_appt_settings()['duration'] ) ) * MINUTE_IN_SECONDS;
     // A longer current duration can extend a reservation from before the query window.
     $lookback = gmdate( 'Y-m-d H:i:s', strtotime( $start . ' UTC' ) - $duration );
-    $rows = $wpdb->get_results( $wpdb->prepare( "SELECT starts_at,ends_at,status FROM $table WHERE status <> 'cancelled' AND (status <> 'holding' OR hold_expires > %d) AND starts_at < %s AND (ends_at > %s OR (status IN ('pending','confirmed','holding') AND starts_at > %s))", time(), $end, $start, $lookback ), ARRAY_A );
+    $rows = $wpdb->get_results( $wpdb->prepare( "SELECT starts_at,ends_at,status FROM $table WHERE id <> %d AND status <> 'cancelled' AND (status <> 'holding' OR hold_expires > %d) AND starts_at < %s AND (ends_at > %s OR (status IN ('pending','confirmed','holding') AND starts_at > %s))", absint( $exclude_id ), time(), $end, $start, $lookback ), ARRAY_A );
     if ( $wpdb->last_error || ! is_array( $rows ) ) { return null; }
     $busy = array();
     foreach ( $rows as $row ) {
@@ -166,12 +169,12 @@ function xw_appt_busy( $start, $end ) {
     }
     return $busy;
 }
-function xw_appt_available( $day, $busy = null ) {
+function xw_appt_available( $day, $busy = null, $exclude_id = 0 ) {
     if ( ! xw_feature_enabled( 'elementor_appointments' ) || ! xw_appt_ready() ) { return array(); }
     $slots = xw_appt_candidates( $day );
     if ( ! $slots ) { return array(); }
     $first = reset( $slots ); $last = end( $slots );
-    $busy = $busy ?? xw_appt_busy( $first['start'], $last['end'] );
+    $busy = $busy ?? xw_appt_busy( $first['start'], $last['end'], $exclude_id );
     // Database failure must never make a slot appear free.
     if ( ! is_array( $busy ) ) { return array(); }
     return array_filter( $slots, static function( $slot ) use ( $busy ) {
@@ -181,7 +184,7 @@ function xw_appt_available( $day, $busy = null ) {
 }
 
 /** Read-only, bounded calendar data. No patient names, email, IDs or booking counts. */
-function xw_appt_availability() {
+function xw_appt_availability( $exclude_id = 0 ) {
     nocache_headers();
     if ( ! xw_feature_enabled( 'elementor_appointments' ) || ! xw_appt_ready() ) { wp_send_json_error( array( 'message' => xw_t( 'La agenda no está disponible.', 'The calendar is unavailable.' ) ), 503 ); }
     $month = isset( $_GET['month'] ) && is_string( $_GET['month'] ) ? wp_unslash( $_GET['month'] ) : '';
@@ -189,7 +192,7 @@ function xw_appt_availability() {
     $today = current_datetime()->setTime( 0, 0 ); $settings = xw_appt_settings();
     if ( ! $first || $first->format( 'Y-m' ) < $today->format( 'Y-m' ) || $first > $today->modify( '+' . $settings['horizon'] . ' days' ) ) { wp_send_json_error( array( 'message' => xw_t( 'Mes no válido.', 'Invalid month.' ) ), 400 ); }
     $next = $first->modify( 'first day of next month' );
-    $busy = xw_appt_busy( $first->setTimezone( new DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' ), $next->setTimezone( new DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' ) );
+    $busy = xw_appt_busy( $first->setTimezone( new DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' ), $next->setTimezone( new DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' ), $exclude_id );
     if ( ! is_array( $busy ) ) { wp_send_json_error( array( 'message' => xw_t( 'No se pudo consultar la agenda.', 'Could not load the calendar.' ) ), 503 ); }
     $days = array();
     for ( $day = $first; $day < $next; $day = $day->modify( '+1 day' ) ) {
@@ -223,7 +226,9 @@ function xw_appt_customer( $record, $item ) {
     foreach ( array_slice( (array) $record->get( 'fields' ), 0, 50, true ) as $id => $field ) {
         if ( ! in_array( $field['type'] ?? '', $types, true ) || ! is_scalar( $field['value'] ?? null ) ) { continue; }
         $value = mb_substr( sanitize_textarea_field( (string) $field['value'] ), 0, 2000 );
-        $out['fields'][] = array( 'label' => mb_substr( sanitize_text_field( $field['title'] ?? $id ), 0, 150 ), 'value' => $value );
+        $entry = array( 'label' => mb_substr( sanitize_text_field( $field['title'] ?? $id ), 0, 150 ), 'value' => $value );
+        if ( ! empty( $item['xw_appt_office'] ) && $id === $item['xw_appt_office'] ) { $entry['role'] = 'office'; }
+        $out['fields'][] = $entry;
         foreach ( array( 'customer_name' => array( 'xw_appt_name', 'text', 200 ), 'email' => array( 'xw_appt_email', 'email', 200 ), 'phone' => array( 'xw_appt_phone', 'tel', 100 ) ) as $target => $rule ) {
             $mapped = $item[ $rule[0] ] ?? '';
             if ( ( $mapped && $id === $mapped ) || ( ! $mapped && ! $out[ $target ] && $field['type'] === $rule[1] ) ) { $out[ $target ] = mb_substr( $target === 'email' ? sanitize_email( $value ) : sanitize_text_field( $value ), 0, $rule[2] ); }

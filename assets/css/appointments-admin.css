@@ -16,8 +16,8 @@
 #xw-appt-closed-summary { font-size: 12px; color: var(--xw-appt-muted); overflow-wrap: anywhere; }
 .xw-appt-days-off.flatpickr-calendar { width: 100%; max-width: none; max-height: none; box-sizing: border-box; box-shadow: none; border: 1px solid var(--xw-appt-border); margin: 12px 0; }
 .xw-appt-days-off .flatpickr-rContainer, .xw-appt-days-off .flatpickr-days { width: 100%; }
-.xw-appt-days-off .dayContainer { width: 100%; min-width: 0; max-width: none; }
-.xw-appt-days-off .flatpickr-day { width: calc(100% / 7 - 4px); max-width: calc(100% / 7 - 4px); flex-basis: calc(100% / 7 - 4px); height: auto; aspect-ratio: 1; margin: 2px; line-height: normal; display: grid; place-items: center; }
+.xw-appt-days-off .dayContainer { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); width: 100%; min-width: 0; max-width: none; }
+.xw-appt-days-off .flatpickr-day { width: min(44px, calc(100% - 4px)); max-width: 44px; height: auto; aspect-ratio: 1; margin: 2px auto; line-height: normal; display: grid; place-items: center; }
 .xw-appt-days-off .flatpickr-day.selected { background: #b32d2e; border-color: #b32d2e; color: #fff; }
 .xw-appt-days-off .flatpickr-day.flatpickr-disabled { background: #f0f0f1; color: #9a9da3; cursor: not-allowed; }
 .xw-appt-days-off [role="button"]:focus-visible { outline: 2px solid var(--xw-appt-primary); outline-offset: 1px; }
@@ -33,7 +33,7 @@
 .xw-appt-rules { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
 .xw-appt-rule { min-width: 0; }
 .xw-appt-rule label { display: block; font-weight: 600; margin-bottom: 6px; }
-.xw-appt-rule > div { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.xw-appt-rule > div { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .xw-appt-rule input { width: 90px; max-width: 100%; min-width: 0; box-sizing: border-box; }
 .xw-appt-panel textarea { display: block; width: 100%; margin-top: 8px; }
 .xw-appt-save { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 0 24px; }
@@ -45,18 +45,49 @@
 .xw-appointments-admin .xw-appt-add-shift { height: var(--xw-appt-control-height); min-height: var(--xw-appt-control-height); max-height: var(--xw-appt-control-height); box-sizing: border-box; margin: 0; align-self: start; }
 .xw-appointments-admin .xw-appt-remove-shift,
 .xw-appointments-admin .xw-appt-add-shift { display: inline-flex; align-items: center; justify-content: center; line-height: 1.2; }
+.xw-appointments-admin .xw-appt-color input[type="color"],
+.xw-appointments-admin .xw-appt-color input[type="text"],
+.xw-appointments-admin .xw-appt-color-reset { height: var(--xw-appt-control-height); min-height: var(--xw-appt-control-height); max-height: var(--xw-appt-control-height); box-sizing: border-box; margin: 0; }
+.xw-appointments-admin .xw-appt-color-reset { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
 .xw-appointments-admin .button-primary:disabled { background: var(--xw-appt-border); border-color: var(--xw-appt-border); color: var(--xw-appt-muted); cursor: default; }
 .xw-appointments-admin input:focus-visible, .xw-appointments-admin select:focus-visible, .xw-appointments-admin button:focus-visible, .xw-appointments-admin summary:focus-visible { outline: 2px solid var(--xw-appt-primary); outline-offset: 2px; }
 .xw-appt-count { font-weight: 400; color: var(--xw-appt-muted); }
 .xw-appt-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
-.xw-appt-table-wrap { width: 100%; overflow-x: auto; position: relative; }
-.xw-appt-table { min-width: 660px; }
-.xw-appt-table th, .xw-appt-table td { padding: 16px; vertical-align: top; }
-.xw-appt-table td { overflow-wrap: anywhere; }
-.xw-appt-table details { margin-top: 8px; max-width: 340px; }
-.xw-appt-table summary { cursor: pointer; color: var(--xw-appt-primary); }
-.xw-appt-table dt { font-weight: 600; margin-top: 10px; }
-.xw-appt-table dd { margin: 2px 0; }
-.xw-appt-booking-status select { display: block; max-width: 180px; margin-bottom: 8px; }
+.xw-appt-bookings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-bottom: 20px; align-items: start; }
+.xw-appt-booking { background: var(--xw-appt-surface); border: 1px solid var(--xw-appt-border); border-radius: 12px; padding: 20px; min-width: 0; overflow-wrap: anywhere; }
+.xw-appt-booking-header { display: flex; justify-content: space-between; align-items: start; gap: 12px; margin-bottom: 16px; }
+.xw-appt-booking-header h3 { font-size: 16px; line-height: 1.4; margin: 0; }
+.xw-appt-badge { border-radius: 20px; padding: 3px 9px; font-size: 12px; line-height: 1.5; background: #f0f0f1; color: #50575e; flex-shrink: 0; }
+.xw-appt-booking[data-status="pending"] .xw-appt-badge { background: #fff3d6; color: #805000; }
+.xw-appt-booking[data-status="confirmed"] .xw-appt-badge { background: #def5e9; color: #11633d; }
+.xw-appt-booking[data-status="cancelled"] .xw-appt-badge { background: #fbeaea; color: #8a2424; }
+.xw-appt-booking-meta { margin: 0; }
+.xw-appt-booking-meta > div { display: flex; gap: 6px; margin: 6px 0; }
+.xw-appt-booking-meta dt { font-weight: 600; flex-shrink: 0; }
+.xw-appt-booking-meta dt::after { content: ':'; }
+.xw-appt-booking-meta dd { margin: 0; }
+.xw-appt-booking-zone { color: var(--xw-appt-muted); font-size: 12px; margin: 8px 0 16px; }
+.xw-appt-booking-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.xw-appointments-admin .xw-appt-booking-actions .button { display: inline-flex; align-items: center; justify-content: center; height: 44px; min-height: 44px; box-sizing: border-box; margin: 0; padding: 4px 6px; font-size: 12px; line-height: 1.3; text-align: center; white-space: normal; }
+.xw-appt-booking-status { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 16px; }
+.xw-appt-booking-status select { width: 100%; min-width: 0; max-width: none; margin: 0; }
+.xw-appointments-admin .xw-appt-booking-status select, .xw-appointments-admin .xw-appt-booking-status button { height: 44px; min-height: 44px; margin: 0; box-sizing: border-box; }
+.xw-appt-booking-status [role="status"] { grid-column: 1 / -1; margin: 0; }
+.xw-appt-booking-status [role="status"]:empty { display: none; }
+.xw-appt-booking-details { border-top: 1px solid var(--xw-appt-border); padding-top: 12px; margin-top: 16px; color: var(--xw-appt-muted); font-size: 12px; }
+.xw-appt-booking-details summary { cursor: pointer; color: var(--xw-appt-primary); min-height: 28px; }
+.xw-appt-booking-details dt { font-weight: 600; margin-top: 8px; }
+.xw-appt-booking-details dd { margin: 2px 0; }
+.xw-appt-empty { grid-column: 1 / -1; padding: 20px; border: 1px solid var(--xw-appt-border); background: #fff; border-radius: 12px; }
+.xw-appt-reschedule:not([hidden]) { display: block; border: 1px solid var(--xw-appt-border); border-radius: 8px; margin-top: 16px; padding: 12px; }
+.xw-appt-reschedule[hidden] { display: none; }
+.xw-appt-reschedule label { display: block; font-weight: 600; margin-bottom: 8px; }
+.xw-appointments-admin .xw-appt-reschedule .xw-appointment-date-input { width: 100%; padding-inline-end: 40px; min-height: 44px; margin: 0; }
+.xw-appt-contact-settings { margin-top: 24px; border-top: 1px solid var(--xw-appt-border); padding-top: 8px; }
+.xw-appt-contact-settings label { display: block; margin-bottom: 8px; }
+.xw-appt-contact-settings input { width: 90px; }
+.xw-appointments-admin a:focus-visible { outline: 2px solid var(--xw-appt-primary); outline-offset: 2px; }
 @media (max-width: 1024px) { .xw-appt-settings-grid { grid-template-columns: minmax(0, 1fr); } .xw-appt-panel { padding: 20px; } .xw-appointments-admin input, .xw-appointments-admin select, .xw-appointments-admin .button { min-height: 44px; } }
+@media (max-width: 1024px) and (min-width: 601px) { .xw-appt-bookings { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .xw-appt-bookings { grid-template-columns: minmax(0, 1fr); } .xw-appt-booking { padding: 16px; } .xw-appt-booking-header { flex-wrap: wrap; } }
 @media (max-width: 600px) { .xw-appt-rules, .xw-appt-colors { grid-template-columns: minmax(0, 1fr); } .xw-appt-day { grid-template-columns: minmax(0, 1fr); } .xw-appt-add-shift { justify-self: start; } .xw-appt-filters > * { max-width: 100%; } }

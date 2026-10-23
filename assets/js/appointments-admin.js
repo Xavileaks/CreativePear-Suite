@@ -76,29 +76,60 @@
         });
         previewColors();
     }
-    document.querySelectorAll('#xw-appt-schedule, .xw-appt-booking-status').forEach(form => {
+    function reorderCards() {
+        const grid = document.querySelector('.xw-appt-bookings');
+        if (!grid) return;
+        const priority = { pending: 0, confirmed: 1, cancelled: 2, completed: 3 }, focused = document.activeElement;
+        [...grid.querySelectorAll('.xw-appt-booking')].sort((a, b) => (priority[a.dataset.status] ?? 3) - (priority[b.dataset.status] ?? 3) || a.dataset.start.localeCompare(b.dataset.start)).forEach(card => grid.append(card));
+        if (focused?.isConnected) focused.focus({ preventScroll: true });
+    }
+    document.querySelectorAll('.xw-appt-reschedule-toggle').forEach(toggle => {
+        const form = document.getElementById(toggle.getAttribute('aria-controls'));
+        toggle.addEventListener('click', () => {
+            form.hidden = !form.hidden; toggle.setAttribute('aria-expanded', String(!form.hidden));
+            if (!form.hidden) form.querySelector('input[type="text"]').focus();
+        });
+    });
+    const savingCards = new WeakSet();
+    document.querySelectorAll('#xw-appt-schedule, .xw-appt-booking-status, .xw-appt-reschedule').forEach(form => {
+        const isSchedule = form.id === 'xw-appt-schedule', isMove = form.classList.contains('xw-appt-reschedule');
+        const card = form.closest('.xw-appt-booking');
         const button = form.querySelector('button[type="submit"]') || form.querySelector('button');
-        const status = form.id === 'xw-appt-schedule' ? form.querySelector('#xw-appt-save-status') : form.querySelector('[role="status"]');
+        const status = isSchedule ? form.querySelector('#xw-appt-save-status') : form.querySelector('[role="status"]');
         const snapshot = () => JSON.stringify(Array.from(new FormData(form)));
         let baseline = snapshot(), busy = false;
-        function update() { button.disabled = busy || baseline === snapshot(); if (!busy) status.textContent = button.disabled ? cfg.saved : cfg.dirty; }
+        function update() { button.disabled = busy || baseline === snapshot() || (isMove && !form.elements.appointment.value); if (!busy) status.textContent = button.disabled ? '' : cfg.dirty; }
         form.addEventListener('input', update); form.addEventListener('change', update);
         form.addEventListener('submit', async event => {
             event.preventDefault(); if (busy || baseline === snapshot()) return;
-            const isSchedule = form.id === 'xw-appt-schedule';
-            if (!isSchedule && form.elements.status.value === 'cancelled' && !window.confirm(cfg.cancel)) return;
+            if (card && savingCards.has(card)) { status.textContent = cfg.saving; return; }
+            if (!isSchedule && !isMove && form.elements.status.value === 'cancelled' && !window.confirm(cfg.cancel)) return;
             const sent = snapshot(); const data = new FormData(form);
             data.set('action', 'xw_appt_admin_save'); data.set('nonce', form.dataset.nonce);
-            data.set('operation', isSchedule ? 'schedule' : 'status');
+            data.set('operation', isSchedule ? 'schedule' : isMove ? 'reschedule' : 'status');
             if (!isSchedule) data.set('booking', form.dataset.booking);
             busy = true; button.disabled = true; status.textContent = cfg.saving;
+            if (card) savingCards.add(card);
             try {
                 const response = await fetch(cfg.url, { method: 'POST', body: data, credentials: 'same-origin' });
                 const result = await response.json();
                 if (!response.ok || !result.success) throw new Error(result.data?.message || cfg.error);
                 baseline = sent; busy = false; update();
-                if (!isSchedule && result.data.status === 'cancelled') { form.querySelector('select').value = 'cancelled'; form.querySelector('select').disabled = true; baseline = snapshot(); update(); }
+                status.textContent = baseline === snapshot() ? (isMove ? cfg.rescheduled : cfg.saved) : cfg.dirty;
+                if (!isSchedule) {
+                    card.dataset.status = result.data.status; card.querySelector('.xw-appt-badge').textContent = cfg.statuses[result.data.status];
+                    const toggle = card.querySelector('.xw-appt-reschedule-toggle');
+                    toggle.disabled = !['pending', 'confirmed'].includes(result.data.status);
+                    if (toggle.disabled) { card.querySelector('.xw-appt-reschedule').hidden = true; toggle.setAttribute('aria-expanded', 'false'); }
+                    if (isMove) {
+                        card.querySelector('.xw-appt-booking-date').textContent = result.data.date;
+                        card.querySelector('.xw-appt-booking-zone span').textContent = result.data.timezone;
+                        card.dataset.start = result.data.start;
+                    } else if (result.data.status === 'cancelled') { form.querySelector('select').value = 'cancelled'; form.querySelector('select').disabled = true; baseline = snapshot(); button.disabled = true; }
+                    reorderCards();
+                }
             } catch (error) { busy = false; button.disabled = baseline === snapshot(); status.textContent = error.message || cfg.error; }
+            finally { if (card) savingCards.delete(card); }
         });
         window.addEventListener('beforeunload', event => { if (busy || baseline !== snapshot()) { event.preventDefault(); event.returnValue = ''; } });
     });

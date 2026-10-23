@@ -24,10 +24,10 @@ class XW_Appointment_Field extends \ElementorPro\Modules\Forms\Fields\Field_Base
         $data = \ElementorPro\Plugin::elementor()->controls_manager->get_control_from_stack( $widget->get_unique_name(), 'form_fields' );
         if ( is_wp_error( $data ) ) { return; }
         $controls = array();
-        foreach ( array( 'name' => xw_t( 'ID del campo de nombre', 'Name field ID' ), 'email' => xw_t( 'ID del campo de correo', 'Email field ID' ), 'phone' => xw_t( 'ID del campo de teléfono', 'Phone field ID' ) ) as $key => $label ) {
+        foreach ( array( 'name' => xw_t( 'ID del campo de nombre', 'Name field ID' ), 'email' => xw_t( 'ID del campo de correo', 'Email field ID' ), 'phone' => xw_t( 'ID del campo de teléfono', 'Phone field ID' ), 'office' => xw_t( 'ID del campo de consultorio', 'Office field ID' ) ) as $key => $label ) {
             $name = 'xw_appt_' . $key;
             $controls[ $name ] = array( 'name' => $name, 'label' => $label, 'type' => \Elementor\Controls_Manager::TEXT,
-                'description' => xw_t( 'Opcional. Vacío: detecta el primer campo del tipo correspondiente. Usa el ID sin #.', 'Optional. Empty: detects the first matching field type. Enter the ID without #.' ),
+                'description' => 'office' === $key ? xw_t( 'Opcional. Indica el ID del campo de consultorio sin #. Vacío: se identifica por su etiqueta en los datos del formulario.', 'Optional. Enter the office field ID without #. Empty: detected from its label in form data.' ) : xw_t( 'Opcional. Vacío: detecta el primer campo del tipo correspondiente. Usa el ID sin #.', 'Optional. Empty: detects the first matching field type. Enter the ID without #.' ),
                 'condition' => array( 'field_type' => $this->get_type() ), 'tab' => 'content', 'inner_tab' => 'form_fields_content_tab', 'tabs_wrapper' => 'form_fields_tabs' );
         }
         $data['fields'] = $this->inject_field_controls( $data['fields'], $controls );

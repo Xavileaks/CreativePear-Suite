@@ -1,7 +1,11 @@
 <?php
 /** Prepare / restore an isolated, disposable WP for actual Elementor integration QA. */
 if ( PHP_SAPI !== 'cli' || empty( $argv[1] ) || empty( $argv[2] ) ) { exit( "Usage: php tests/appointments-setup.php <local-wp> prepare|restore\n" ); }
+$qa_suite = 'creativepear' === ( $argv[3] ?? '' ) ? 'creativepear-suite/creativepear-suite.php' : 'xleon-suite/xleon-suite.php';
+$qa_plugins = static function() use ( $qa_suite ) { return array( 'elementor/elementor.php', 'proelements/pro-elements.php', $qa_suite ); };
+$GLOBALS['wp_filter']['option_active_plugins'][10][] = array( 'function' => $qa_plugins, 'accepted_args' => 1 );
 require rtrim( $argv[1], '/\\' ) . '/wp-load.php';
+remove_filter( 'option_active_plugins', $qa_plugins, 10 );
 if ( 'local' !== wp_get_environment_type() ) { exit( "Local environment required\n" ); }
 if ( 'restore' === $argv[2] ) {
     $backup = get_option( 'xw_appt_qa_backup' );
@@ -30,4 +34,12 @@ $fields = array(
 );
 $widget = array( 'id' => 'a170001', 'elType' => 'widget', 'widgetType' => 'form', 'settings' => array( 'form_name' => 'Appointment local QA', 'form_fields' => $fields, 'submit_actions' => array(), 'button_text' => 'Solicitar cita', 'show_labels' => 'true', 'form_id' => 'appointment-local-qa' ), 'elements' => array() );
 update_post_meta( $post_id, '_elementor_edit_mode', 'builder' ); update_post_meta( $post_id, '_elementor_data', wp_slash( wp_json_encode( array( $widget ) ) ) );
+if ( 'cards' === ( $argv[4] ?? '' ) ) {
+    xw_appt_install(); global $wpdb;
+    $schedule['whatsapp_country_code'] = '58'; $schedule['notice'] = 0; $schedule['weekly'] = array_fill( 0, 7, '09:00-12:00, 14:00-18:00' ); update_option( 'xw_appointment_settings', $schedule );
+    foreach ( array( 'pending', 'pending', 'pending', 'confirmed', 'confirmed', 'cancelled', 'completed' ) as $index => $status ) {
+        $start = current_datetime()->modify( ( 'completed' === $status ? '-1' : '+' . ( $index + 1 ) ) . ' day' )->setTime( 10, 0 );
+        $wpdb->insert( xw_appt_table(), array( 'starts_at' => gmdate( 'Y-m-d H:i:s', $start->getTimestamp() ), 'ends_at' => gmdate( 'Y-m-d H:i:s', $start->getTimestamp() + 1800 ), 'timezone' => wp_timezone_string(), 'status' => $status, 'customer_name' => array( 'Ana Prueba', 'Luis Prueba', 'Elena Prueba' )[ $index % 3 ], 'email' => $index === 2 ? '' : 'appointment-qa@example.invalid', 'phone' => $index === 1 ? '' : '0412 555 1234', 'form_name' => 'Formulario de ejemplo — QA local', 'form_id' => 'a170001', 'fields' => wp_json_encode( array( array( 'label' => 'Consultorio preferido', 'value' => array( 'Central', 'Norte', 'Sur' )[ $index % 3 ] ), array( 'label' => 'Nombre', 'value' => 'Datos sintéticos, no una persona real' ) ) ), 'created_at' => gmdate( 'Y-m-d H:i:s' ) ) );
+    }
+}
 echo "Prepared local synthetic form post $post_id; no mail actions enabled\n";

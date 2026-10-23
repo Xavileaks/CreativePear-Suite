@@ -111,7 +111,10 @@
             root.setAttribute('aria-busy', 'true'); calendar.setAttribute('aria-busy', 'true'); retry.hidden = true; status.textContent = cfg.loading;
             hours.replaceChildren(); days = {}; picker.set('enable', []); display();
             try {
-                const url = new URL(cfg.url, location.href); url.searchParams.set('action', 'xw_appt_availability'); url.searchParams.set('month', requestedMonth);
+                const url = new URL(cfg.url, location.href);
+                const admin = root.dataset.xwAppointmentAction === 'xw_appt_admin_availability';
+                url.searchParams.set('action', admin ? 'xw_appt_admin_availability' : 'xw_appt_availability'); url.searchParams.set('month', requestedMonth);
+                if (admin) { url.searchParams.set('booking', root.dataset.booking); url.searchParams.set('nonce', root.dataset.nonce); }
                 const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store', signal: request.signal });
                 const data = await response.json();
                 if (!response.ok || !data.success || !data.data?.days) throw new Error('availability');
