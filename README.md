@@ -4,6 +4,18 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.61 — Form Elementor: citas
+
+- Nueva caja **Form Elementor: citas / appointments**, apagada por defecto. Menú **Citas / Appointments** debajo de Comentarios, solo para administradores. Una agenda por sitio, sin dominio, página ni ID fijo.
+- En **Citas** define horarios por día (`09:00-13:00, 15:00-18:00`; vacío = cerrado), duración de 5–240 min, antelación de 0–10080 min, hasta 1–180 días de reserva y excepciones `AAAA-MM-DD`, una por línea. Inicialmente todos los días están cerrados. Se usa la zona horaria de WordPress, no la del navegador.
+- En el widget Formulario añade **un** campo **Cita / Appointment**. Requiere Elementor Pro Forms o una implementación compatible. Solo esos formularios registran reservas; los Date normales y la opción de fecha numérica no cambian. Marca los campos de contacto como obligatorios en el formulario. Detecta nombre, email y teléfono automáticamente o mediante IDs opcionales del campo Cita.
+- Reutiliza el Flatpickr incluido en Elementor en escritorio y móvil: tocar campo o icono abre el calendario, sin escritura manual ni sustitución HTML5 nativa. Días con huecos rodeados por círculos, pasados/bloqueados/sin huecos en gris, y selección de hora disponible. Compatible con contenido dinámico y limpieza de controles retirados.
+- El envío AJAX correcto crea una solicitud **pendiente**. Tabla privada con datos ordinarios del formulario (no contraseñas, uploads, ocultos ni CAPTCHA), búsqueda, filtros, páginas y estados pendiente/confirmada/completada/cancelada. Cancelar libera el horario; no permite reactivar una cancelada sin comprobar una nueva reserva. Cambiar horarios no cancela citas existentes.
+- Validación de fecha/hora en servidor, antelación, descansos, UTC/zona original y DST; mutex atómico para evitar dobles reservas y solapamientos incluso al cambiar duración. Reserva temporal durante las acciones de Elementor, que se libera si fallan o se interrumpe la petición y caduca a los 10 min. Límite complementario de 30 intentos por IP anonimizada cada 10 min; configura CAPTCHA/honeypot y consentimiento en Elementor.
+- El endpoint público solo muestra disponibilidad, nunca datos de personas. Gestión con `manage_options`, nonce, consultas preparadas y salida escapada. Exportación y anonimización por email mediante privacidad de WordPress, también apagado. No cifra la base de datos ni sustituye políticas de conservación/copias/seguridad; conserva horarios anónimos y no cancela citas al borrar datos personales.
+- Guardado AJAX sin recargar ni perder posición; gris sin cambios y azul con cambios. Dos cajas por fila >1024 px y una en tablet/móvil. No introduce notificaciones al cambiar estados, pagos, calendarios externos ni múltiples profesionales: los correos son las acciones que configures en Elementor.
+- Pruebas aisladas en `tests/appointments.php`, concurrencia real con dos procesos y fixtures con Elementor Forms real; excluidos del ZIP. Publicar no instala ni configura producción automáticamente.
+
 ## Versión 1.0.60
 
 - Nueva caja **Elementor > Form Elementor: fecha**, apagada por defecto y sin controles adicionales. General para todos los formularios Elementor, sin dominio/página/ID fijo. Escritura `dd/mm/aaaa`, separadores automáticos e `inputmode="numeric"`; mantiene el input date, el icono y el selector nativo original.

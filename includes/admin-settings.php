@@ -105,6 +105,11 @@ function xw_get_feature_definitions() {
             'title'       => xw_t( 'Form Elementor: fecha', 'Form Elementor: date' ),
             'description' => xw_t( 'Permite escribir dd/mm/aaaa con teclado numérico en campos de fecha nativos y conserva su calendario e icono.', 'Allows typing dd/mm/yyyy with a numeric keyboard in native date fields while preserving their calendar and icon.' ),
         ),
+        'elementor_appointments' => array(
+            'title'       => xw_t( 'Form Elementor: citas', 'Form Elementor: appointments' ),
+            'description' => xw_t( 'Añade el campo Cita a los formularios y una agenda privada con horarios, días bloqueados y reservas.', 'Adds an Appointment form field and a private schedule with working hours, blocked dates and bookings.' ),
+            'settings'    => true,
+        ),
         'elementor_email_mask' => array(
             'title'       => xw_t( 'Form Elementor: limpieza de correo', 'Form Elementor: email cleanup' ),
             'description' => xw_t( 'Evita espacios y caracteres no válidos en campos de correo de Elementor.', 'Prevents spaces and invalid characters in Elementor email fields.' ),
@@ -211,6 +216,7 @@ function xw_get_feature_groups() {
                 'elementor_messages',
                 'elementor_phone_mask',
                 'elementor_date_input',
+                'elementor_appointments',
                 'elementor_email_mask',
                 'elementor_message_mask',
             ),
@@ -1196,6 +1202,11 @@ function xw_render_settings_page() {
                                         );
                                         ?>
                                         <p><?php echo esc_html( xw_t( 'Escriba el mensaje, seleccione una palabra o frase y pulse el botón de enlace.', 'Write the message, select a word or phrase, and press the link button.' ) ); ?></p>
+                                    </div>
+                                <?php elseif ( 'elementor_appointments' === $key ) : ?>
+                                    <div class="xw-field-row xw-field-full">
+                                        <p><?php echo esc_html( xw_t( 'Guarda los cambios y abre la agenda para configurar horarios, días libres y reservas. Añade después un campo Cita al formulario de Elementor.', 'Save changes and open the calendar to configure working hours, days off and bookings. Then add an Appointment field to your Elementor form.' ) ); ?></p>
+                                        <a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=xw-appointments' ) ); ?>"><?php echo esc_html( xw_t( 'Abrir agenda de citas', 'Open appointment calendar' ) ); ?></a>
                                     </div>
                                 <?php elseif ( 'elementor_phone_mask' === $key ) : ?>
                                     <div class="xw-field-row xw-field-full">
