@@ -2,9 +2,8 @@
 /** Read-only local CSS fixture. No submissions, remote assets or WordPress settings writes. */
 $root = dirname( __DIR__ );
 $css = file_get_contents( $root . '/assets/css/elementor extra.css' );
-$selector = '.elementor-widget-form .elementor-form .elementor-field:focus';
 if ( PHP_SAPI === 'cli' ) {
-    if ( ! preg_match( '/\\.elementor-widget-form \\.elementor-form \\.elementor-field:focus\\s*\\{([^}]+)\\}/', $css, $matches ) || trim( $matches[1] ) !== 'box-shadow: none !important;' ) {
+    if ( ! preg_match( '/\\.elementor-widget-form \\.elementor-form \\.elementor-field:focus,\s*\\.elementor-widget-form \\.elementor-form \\.elementor-select-wrapper select:focus\\s*\\{([^}]+)\\}/', $css, $matches ) || trim( $matches[1] ) !== 'box-shadow: none !important;' ) {
         throw new RuntimeException( 'Form focus rule must remove only box-shadow.' );
     }
     $main = is_file( $root . '/creativepear-suite.php' ) ? 'creativepear-suite.php' : 'xleon-suite.php';
@@ -36,9 +35,9 @@ input:focus,select:focus,textarea:focus{box-shadow:inset 0 0 0 1px #ddd;border-b
 <label>Nombre<input id="qa-name" class="elementor-field elementor-field-textual" type="text" autocomplete="off" placeholder="Tu nombre completo"></label>
 <label>Correo<input id="qa-email" class="elementor-field elementor-field-textual" type="email" autocomplete="off" placeholder="correo@example.test"></label>
 <label>Teléfono<input id="qa-phone" class="elementor-field elementor-field-textual" type="tel" autocomplete="off" placeholder="Tu número de contacto"></label>
-<label>Motivo<select id="qa-select" class="elementor-field elementor-field-textual"><option>Selecciona una opción</option><option>Consulta</option></select></label>
+<label>Motivo<div class="elementor-field elementor-select-wrapper"><select id="qa-select" class="elementor-field-textual elementor-size-md"><option>Selecciona una opción</option><option>Consulta</option></select></div></label>
 <label>Fecha<input id="qa-date" class="elementor-field elementor-field-textual" type="date"></label>
 <label>Mensaje<textarea id="qa-message" class="elementor-field elementor-field-textual" rows="2"></textarea></label>
 </div></form></div>
-<div class="comparison"><label>Campo ajeno a Elementor (sin cambios)<input id="qa-outside" type="text" autocomplete="off"></label></div>
+<div class="comparison"><label>Campo ajeno a Elementor (sin cambios)<input id="qa-outside" type="text" autocomplete="off"></label><label>Select ajeno a Elementor (sin cambios)<select id="qa-outside-select"><option>Selecciona una opción</option><option>Otra</option></select></label></div>
 </main></body></html>

@@ -4,6 +4,13 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.65 — Fecha con formato persistente y foco de select
+
+- Global CSS styles elimina también la sombra de foco del `select` dentro de `.elementor-select-wrapper`: Elementor sitúa la clase `.elementor-field` en el contenedor, no en el select. Solo cambia `box-shadow`, sin quitar bordes ni añadir opciones.
+- Form Elementor: fecha cubre ahora tanto fechas nativas/móviles como el campo Date de Flatpickr en escritorio. Mientras escribes conserva la guía restante (`01/mm/aaaa`), inserta las barras y limita a ocho dígitos. Solo entrega al calendario fechas completas y válidas: ya no interpreta texto parcial como un año. Mantiene validación, límites, campos dinámicos, restablecimiento y un único valor original enviado.
+- Impide insertar dígitos inválidos: día 01–31 (primero 0–3), mes 01–12 (primero 0–1) y año 1000–3999 (primero 1–3). Rechaza también días imposibles para el mes y años no bisiestos; conserva el texto anterior, marca el campo y muestra el aviso del navegador. Borrar y corregir sigue siendo posible. Los límites configurados del calendario se mantienen.
+- Icono de calendario siempre visible, igual al del campo Cita, con botón accesible de 44 px. Abre el calendario nativo o Flatpickr existente; no lo sustituye. Escritura numérica al tocar el texto y calendario al pulsar el icono. No modifica los campos Cita ni formularios ajenos a Elementor. Depende del interruptor Form Elementor: fecha, independiente de Global CSS styles.
+
 ## Versión 1.0.64 — Tarjetas de citas, contacto y cambio de fecha
 
 - Reservas en tarjetas revisadas con 12ui: tres por fila en escritorio, dos en tablet y una en móvil. Nombre, consultorio, fecha/hora, zona, estado y datos originales. Pendientes primero, confirmadas después, luego canceladas y completadas al final. Conserva filtros, paginación y guardado de estados.

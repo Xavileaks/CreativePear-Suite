@@ -24,7 +24,8 @@ a {
 }
 
 /* Elementor Form: remove only the field's focus shadow; keep its border/outline. */
-.elementor-widget-form .elementor-form .elementor-field:focus {
+.elementor-widget-form .elementor-form .elementor-field:focus,
+.elementor-widget-form .elementor-form .elementor-select-wrapper select:focus {
     box-shadow: none !important;
 }
 

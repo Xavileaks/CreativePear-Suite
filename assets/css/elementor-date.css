@@ -1,4 +1,4 @@
-/* The original date input retains its native picker/indicator and layout. */
+/* Preserve the original native/Flatpickr control and its layout behind the editor. */
 .elementor-widget-form .elementor-form .xw-date-wrap {
     position: relative;
     display: block;
@@ -13,9 +13,9 @@
     visibility: hidden;
 }
 .elementor-widget-form .elementor-form .xw-date-native::-webkit-calendar-picker-indicator {
-    opacity: 1;
-    color: var(--xw-date-color);
+    opacity: 0;
 }
+.elementor-widget-form .elementor-form .xw-date-native::placeholder { color: transparent !important; }
 .elementor-widget-form .elementor-form .xw-date-editor {
     position: absolute !important;
     inset-block: 0;
@@ -35,3 +35,42 @@
     outline: 0;
     border-bottom: 2px solid currentColor !important;
 }
+.elementor-widget-form .elementor-form .xw-date-editor[aria-invalid="true"] { border-bottom: 2px solid #b32d2e !important; }
+.elementor-widget-form .elementor-form .xw-date-format {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: calc(100% - 44px);
+    display: flex;
+    align-items: center;
+    white-space: pre;
+    overflow: hidden;
+    pointer-events: none;
+    border-color: transparent !important;
+    color: var(--xw-date-placeholder-color, #646970);
+    background: transparent;
+}
+.elementor-widget-form .elementor-form .xw-date-format[hidden] { display: none !important; }
+.elementor-widget-form .elementor-form .xw-date-format-prefix { visibility: hidden; }
+.elementor-widget-form .elementor-form .xw-date-open {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--xw-date-color);
+    box-shadow: none;
+    cursor: pointer;
+    opacity: 1;
+    visibility: visible;
+}
+.elementor-widget-form .elementor-form .xw-date-open svg { display: block; width: 20px; height: 20px; }
+.elementor-widget-form .elementor-form .xw-date-open:focus-visible { outline: 2px solid currentColor; outline-offset: -4px; }
+.elementor-widget-form .elementor-form .xw-date-open:disabled { opacity: .5; cursor: default; }

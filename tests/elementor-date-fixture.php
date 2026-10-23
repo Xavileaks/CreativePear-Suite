@@ -12,6 +12,7 @@ $enabled = ! isset( $_GET['enabled'] ) || '0' !== $_GET['enabled'];
 <div class="elementor-field-type-date elementor-field-group"><label for="optional-date">Fecha opcional</label><input id="optional-date" name="form_fields[opcional]" type="date" class="elementor-field elementor-field-textual elementor-date-field elementor-use-native"></div>
 <button type="reset">Restablecer</button><button type="submit">Comprobar valor enviado</button><output id="qa-result"></output></form><button type="button" id="add-date">Añadir campo dinámico</button></section>
 <section class="elementor-widget-form"><h2>Formulario B — Flatpickr móvil</h2><p class="help">Mismo camino de inicialización móvil de Flatpickr; simulado localmente para esta prueba de escritorio.</p><form id="fp-form" class="elementor-form"><div class="elementor-field-type-date elementor-field-group"><label for="fp-date">Fecha Flatpickr</label><input type="date" id="fp-date" name="form_fields[otra_fecha]" placeholder="dd/mm/aaaa" class="elementor-field elementor-field-textual elementor-date-field" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"></div><button type="submit">Comprobar Flatpickr</button><button type="reset">Restablecer Flatpickr</button></form><button type="button" id="rebuild-picker">Reiniciar Flatpickr</button></section>
+<section class="elementor-widget-form"><h2>Formulario C — Flatpickr escritorio</h2><form id="desktop-form" class="elementor-form"><div class="elementor-field-type-date elementor-field-group"><label for="fp-desktop">Fecha de escritorio</label><input type="date" id="fp-desktop" name="form_fields[escritorio]" placeholder="dd/mm/aaaa" class="elementor-field elementor-field-textual elementor-date-field" required min="2020-01-01" max="2030-12-31" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"></div><button type="submit">Comprobar escritorio</button><button type="reset">Restablecer escritorio</button></form><button type="button" id="rebuild-desktop">Reiniciar escritorio</button><button type="button" id="set-desktop">Fecha programática</button></section>
 <section><h2>Fuera de Elementor (sin cambios)</h2><label for="outside-date">Otra fecha</label><input type="date" id="outside-date"></section>
 <script src="../build/date-qa/flatpickr.min.js"></script><script>
 var mobilePicker;
@@ -21,8 +22,13 @@ function createMobilePicker(){
  try {mobilePicker=flatpickr('#fp-date',{allowInput:true,minDate:'2020-01-01',maxDate:'2030-12-31',defaultDate:'2026-11-05'});} finally {if(previous)Object.defineProperty(navigator,'userAgent',previous);else delete navigator.userAgent;}
 }
 createMobilePicker();
+var desktopPicker;
+function createDesktopPicker(){desktopPicker=flatpickr('#fp-desktop',{allowInput:true,disableMobile:true,minDate:'2020-01-01',maxDate:'2030-12-31',disable:['2026-10-26']});}
+createDesktopPicker();
 document.querySelector('#rebuild-picker').onclick=function(){mobilePicker.destroy();createMobilePicker();};
+document.querySelector('#rebuild-desktop').onclick=function(){desktopPicker.destroy();createDesktopPicker();};
+document.querySelector('#set-desktop').onclick=function(){desktopPicker.setDate('2026-11-05',true,'Y-m-d');};
 document.querySelector('#add-date').onclick=function(){if(document.querySelector('#dynamic-date'))return;var group=document.createElement('div');group.className='elementor-field-type-date';group.innerHTML='<label for="dynamic-date">Fecha dinámica</label><input type="date" id="dynamic-date" name="form_fields[dinamica]" class="elementor-field elementor-field-textual elementor-date-field elementor-use-native">';document.querySelector('#native-form').append(group);};
 document.querySelectorAll('form').forEach(form=>form.addEventListener('submit',event=>{event.preventDefault();document.querySelector('#qa-result').textContent=JSON.stringify(Array.from(new FormData(form)));}));
-window.xwDateSettings={placeholder:'dd/mm/aaaa',invalid:'Escribe una fecha válida en formato dd/mm/aaaa.',calendar:'Calendario'};
+window.xwDateSettings={placeholder:'dd/mm/aaaa',invalid:'Escribe una fecha válida en formato dd/mm/aaaa.',day:'El día debe estar entre 01 y 31.',month:'El mes debe estar entre 01 y 12.',year:'El año debe estar entre 1000 y 3999: empieza por 1, 2 o 3.',calendar:'Calendario'};
 </script><?php if ( $enabled ) : ?><script src="../assets/js/elementor-date.js"></script><?php endif; ?></main></body></html>
