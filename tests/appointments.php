@@ -33,7 +33,7 @@ try {
     update_option( 'xw_appointment_settings', $schedule );
     $tomorrow = current_datetime()->modify( '+1 day' )->format( 'Y-m-d' );
     $day = xw_appt_candidates( $tomorrow );
-    appt_check( 10 === count( $day ), '30-minute appointments honor split shifts and breaks' );
+    appt_check( 18 === count( $day ) && isset( $day[ $tomorrow . 'T09:15' ] ), '15-minute start choices honor appointment duration, split shifts and breaks' );
     appt_check( ! xw_appt_candidates( current_datetime()->modify( '-1 day' )->format( 'Y-m-d' ) ) && ! xw_appt_candidates( current_datetime()->modify( '+181 days' )->format( 'Y-m-d' ) ), 'past dates and horizon are rejected server-side' );
     $closed = $schedule; $closed['closed'] = array( $tomorrow ); appt_check( ! xw_appt_candidates( $tomorrow, $closed ), 'exception day disabled' );
     $closed['closed'] = array(); $closed['weekly'] = array_fill( 0, 7, '' ); appt_check( ! xw_appt_candidates( $tomorrow, $closed ), 'unconfigured and non-working days are closed' );
@@ -44,11 +44,24 @@ try {
     $notice = $schedule; $notice['notice'] = 120; $notice_slots = xw_appt_candidates( $tomorrow, $notice, strtotime( $tomorrow . ' 08:00:00 Europe/Madrid' ) );
     appt_check( ! isset( $notice_slots[ $tomorrow . 'T09:00' ] ) && isset( $notice_slots[ $tomorrow . 'T10:00' ] ), 'minimum notice enforced independently of browser time' );
     $raw = $schedule; $raw['closed'] = "2026-12-25\n2027-01-01"; appt_check( ! is_wp_error( xw_appt_sanitize_schedule( $raw ) ), 'valid settings accepted' ); $raw['closed'] = '2026-02-31'; appt_check( is_wp_error( xw_appt_sanitize_schedule( $raw ) ), 'invalid exceptions cannot silently erase existing configuration' );
+    $structured = $schedule; unset( $structured['weekly'] ); $structured['closed'] = ''; $structured['shifts'] = array_fill( 0, 7, array( array( 'start' => '', 'end' => '' ) ) );
+    $structured['shifts'][1] = array( array( 'start' => '09:00', 'end' => '12:00' ), array( 'start' => '14:15', 'end' => '16:00' ), array( 'start' => '17:00', 'end' => '18:00' ), array( 'start' => '19:00', 'end' => '20:00' ) );
+    $structured['colors'] = array( 'border' => '#123456', 'background' => '#abcdef', 'text' => '#222222', 'calendar_background' => '#ffffff' );
+    $clean = xw_appt_sanitize_schedule( $structured ); appt_check( ! is_wp_error( $clean ) && '' === $clean['weekly'][0] && str_contains( $clean['weekly'][1], '14:15-16:00' ) && '#123456' === $clean['colors']['border'], 'four dropdown shifts, blank closed day and calendar colors accepted' );
+    $five = $structured; $five['shifts'][1][] = array( 'start' => '21:00', 'end' => '22:00' ); appt_check( is_wp_error( xw_appt_sanitize_schedule( $five ) ), 'fifth shift rejected server-side' );
+    $partial = $structured; $partial['shifts'][0][0]['start'] = '09:00'; appt_check( is_wp_error( xw_appt_sanitize_schedule( $partial ) ), 'half-empty shift rejected without erasing saved settings' );
+    $truncated = $structured; unset( $truncated['shifts'][6] ); appt_check( is_wp_error( xw_appt_sanitize_schedule( $truncated ) ), 'truncated weekly dropdown request cannot erase missing days' );
+    $truncated = $structured; unset( $truncated['closed'] ); appt_check( is_wp_error( xw_appt_sanitize_schedule( $truncated ) ), 'missing blocked-date field cannot silently clear exceptions' );
+    $overlapping = $structured; $overlapping['shifts'][1][1]['start'] = '11:00'; appt_check( is_wp_error( xw_appt_sanitize_schedule( $overlapping ) ), 'overlapping dropdown shifts rejected' );
+    $badcolor = $structured; $badcolor['colors']['border'] = 'url(javascript:bad)'; appt_check( is_wp_error( xw_appt_sanitize_schedule( $badcolor ) ), 'calendar colors cannot inject CSS' );
+    foreach ( array( 'weekly', 'shifts', 'colors' ) as $key ) { $malformed = $structured; $malformed[ $key ] = 'not-an-array'; appt_check( is_wp_error( xw_appt_sanitize_schedule( $malformed ) ), 'malformed ' . $key . ' cannot produce a partial save' ); }
+    $legacy = $structured; $legacy['shifts'][1] = array( array( 'start' => '09:10', 'end' => '11:55' ) ); appt_check( '09:10-11:55' === xw_appt_sanitize_schedule( $legacy )['weekly'][1], 'valid existing non-quarter-hour endpoints are not silently changed' );
     $owner = xw_appt_lock(); appt_check( $owner && ! xw_appt_lock(), 'two simultaneous booking writers cannot acquire the same mutex' ); xw_appt_unlock( 'not-owner' ); appt_check( ! xw_appt_lock(), 'another request cannot release the lock' ); xw_appt_unlock( $owner );
     $value = array_key_first( xw_appt_available( $tomorrow ) ); $record = new ApptRecord( $value ); $handler = new ApptHandler();
     xw_appt_process( $record, $handler ); appt_check( $handler->is_success && isset( $GLOBALS['xw_appt_holds'][ spl_object_id( $record ) ] ), 'valid form reserves a temporary hold before mail / submit actions' ); $ids[] = $GLOBALS['xw_appt_holds'][ spl_object_id( $record ) ]['id'];
     $second = new ApptRecord( $value ); $second_handler = new ApptHandler(); xw_appt_process( $second, $second_handler ); appt_check( ! $second_handler->is_success, 'same slot cannot be booked twice' );
     xw_appt_complete( $record, $handler );
+    appt_check( ! isset( xw_appt_available( $tomorrow )[ $tomorrow . 'T09:15' ] ) && isset( xw_appt_available( $tomorrow )[ $tomorrow . 'T09:30' ] ), 'pending 30-minute booking blocks overlapping 15-minute start, not adjacent start' );
     global $wpdb; $table = xw_appt_table(); $row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $ids[0] ), ARRAY_A );
     appt_check( 'pending' === $row['status'] && null === $row['hold_expires'] && ! str_contains( $row['fields'], 'DO-NOT-STORE' ), 'successful form becomes pending, sensitive field types excluded' );
     appt_check( $row['email'] === 'appointment-qa@example.invalid' && strtotime( $row['starts_at'] . ' UTC' ) === strtotime( $value . ':00 Europe/Madrid' ), 'contact auto-mapping and UTC storage are correct' );
@@ -63,6 +76,7 @@ try {
     $admins = get_users( array( 'role' => 'administrator', 'number' => 1, 'fields' => 'ID' ) ); wp_set_current_user( (int) $admins[0] );
     $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'schedule', 'nonce' => 'invalid', 'schedule' => $schedule ) ); appt_check( ! $response['success'], 'admin writes reject invalid nonce' );
     $nonce = wp_create_nonce( 'xw_appointment_admin' );
+    $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'status', 'booking' => $ids[0], 'status' => 'confirmed', 'nonce' => $nonce ) ); appt_check( $response['success'] && ! isset( xw_appt_available( $tomorrow )[ $tomorrow . 'T09:15' ] ), 'confirmed appointment still blocks overlapping quarter-hour choices' );
     $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'status', 'booking' => $ids[0], 'status' => 'cancelled', 'nonce' => $nonce ) ); appt_check( $response['success'] && isset( xw_appt_available( $tomorrow )[ $value ] ), 'admin cancellation releases the occupied slot' );
     $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'status', 'booking' => $ids[0], 'status' => 'confirmed', 'nonce' => $nonce ) ); appt_check( ! $response['success'], 'cancelled booking cannot bypass availability by reactivation' );
     wp_set_current_user( 0 ); $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'status', 'booking' => $ids[0], 'status' => 'pending', 'nonce' => $nonce ) ); appt_check( ! $response['success'], 'unauthenticated users cannot read or manage bookings' );

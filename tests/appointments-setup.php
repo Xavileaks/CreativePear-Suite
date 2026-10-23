@@ -14,7 +14,8 @@ if ( 'restore' === $argv[2] ) {
     delete_option( 'xw_appt_qa_post' ); delete_option( 'xw_appt_qa_backup' ); echo "Local QA state restored\n"; exit;
 }
 if ( ! get_option( 'xw_appt_qa_backup' ) ) { add_option( 'xw_appt_qa_backup', array( 'plugins' => get_option( 'active_plugins' ), 'settings' => get_option( 'xw_settings' ), 'schedule' => get_option( 'xw_appointment_settings', null ), 'timezone' => get_option( 'timezone_string' ) ), '', false ); }
-update_option( 'active_plugins', array( 'elementor/elementor.php', 'proelements/pro-elements.php', 'xleon-suite/xleon-suite.php' ) );
+$suite = 'creativepear' === ( $argv[3] ?? '' ) ? 'creativepear-suite/creativepear-suite.php' : 'xleon-suite/xleon-suite.php';
+update_option( 'active_plugins', array( 'elementor/elementor.php', 'proelements/pro-elements.php', $suite ) );
 $settings = xw_get_settings(); $settings['features']['elementor_appointments'] = 1; update_option( 'xw_settings', $settings );
 update_option( 'timezone_string', 'Europe/Madrid' );
 $schedule = xw_appt_defaults(); $schedule['weekly'] = array( '', '09:00-13:00, 15:00-18:00', '09:00-13:00', '09:00-13:00', '09:00-13:00', '09:00-13:00', '' ); $schedule['notice'] = 120;

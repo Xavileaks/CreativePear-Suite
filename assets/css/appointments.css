@@ -7,20 +7,37 @@
 .xw-appointment-date { position: relative; width: 100%; }
 .xw-appointment .xw-appointment-date-input { width: 100%; padding-inline-end: 48px; cursor: pointer; min-height: 44px; }
 .xw-appointment .xw-appointment-open { position: absolute; inset-inline-end: 0; top: 0; height: 100%; min-width: 44px; min-height: 44px; display: grid; place-items: center; background: transparent; border: 0; color: inherit; padding: 8px; cursor: pointer; }
-.xw-appointment .xw-appointment-time-label { display: block; margin-top: 12px; margin-bottom: 4px; font-size: .875em; }
-.xw-appointment .xw-appointment-time { width: 100%; min-height: 44px; font: inherit; }
-.xw-appointment .xw-appointment-status { font-size: .875em; line-height: 1.5; margin: 8px 0; }
-.xw-appointment .xw-appointment-zone { display: block; color: var(--xw-appt-muted); font-size: 12px; line-height: 1.5; }
 .xw-appointment [hidden] { display: none !important; }
 .xw-appointment :focus-visible { outline: 2px solid var(--xw-appt-accent); outline-offset: 2px; }
-.xw-appointment .xw-appointment-retry { min-height: 44px; padding: 8px 16px; cursor: pointer; }
-.flatpickr-calendar.xw-appointment-calendar { --xw-appt-accent: var(--e-global-color-primary, #3450d1); max-width: calc(100vw - 24px); z-index: 100010; }
+.flatpickr-calendar.xw-appointment-calendar { --xw-appt-accent: var(--e-global-color-primary, #3450d1); --xw-appt-ink: #283344; --xw-appt-muted: #626b77; background: var(--xw-appt-calendar-bg, #fff); color: var(--xw-appt-ink); max-width: calc(100vw - 24px); max-height: calc(100dvh - 32px); overflow-y: auto; z-index: 100010; border-radius: 12px; font-family: inherit; box-shadow: 0 8px 32px #18213326; }
 .flatpickr-calendar.xw-appointment-calendar { width: 336px; }
+.flatpickr-calendar.xw-appointment-calendar::before, .flatpickr-calendar.xw-appointment-calendar::after { display: none; }
+.xw-appointment-calendar > .flatpickr-months, .xw-appointment-calendar > .flatpickr-innerContainer { opacity: 1; transition: opacity .12s ease-out; }
+.xw-appointment-calendar.xw-appointment-fading > .flatpickr-months, .xw-appointment-calendar.xw-appointment-fading > .flatpickr-innerContainer { opacity: 0; pointer-events: none; }
+.xw-appointment-calendar [hidden] { display: none !important; }
+.xw-appointment-calendar .xw-appointment-toolbar { display: flex; align-items: center; min-height: 52px; padding: 4px 8px 4px 16px; gap: 8px; border-bottom: 1px solid #8792a333; }
+.xw-appointment-calendar .xw-appointment-step-title { flex: 1; font-size: 15px; color: var(--xw-appt-ink); }
+.xw-appointment-calendar .xw-appointment-toolbar button { border: 0; background: transparent; color: var(--xw-appt-ink); width: 44px; height: 44px; padding: 0; font: inherit; font-size: 24px; cursor: pointer; border-radius: 8px; }
+.xw-appointment-calendar .flatpickr-months { position: relative; padding-top: 4px; }
+.xw-appointment-calendar .flatpickr-month, .xw-appointment-calendar .flatpickr-current-month, .xw-appointment-calendar .flatpickr-weekday { color: var(--xw-appt-ink); fill: var(--xw-appt-ink); }
+.xw-appointment-calendar .flatpickr-prev-month svg, .xw-appointment-calendar .flatpickr-next-month svg { fill: var(--xw-appt-ink); }
+.xw-appointment-calendar .flatpickr-current-month select { color: inherit; background: var(--xw-appt-calendar-bg, #fff); }
 .xw-appointment-calendar .flatpickr-days, .xw-appointment-calendar .flatpickr-rContainer { width: 100%; }
 .xw-appointment-calendar .dayContainer { width: 100%; min-width: 0; max-width: none; }
 .xw-appointment-calendar .flatpickr-day { flex-basis: calc(100% / 7 - 4px); max-width: calc(100% / 7 - 4px); width: calc(100% / 7 - 4px); height: auto; aspect-ratio: 1; line-height: normal; margin: 2px; display: grid; place-items: center; }
-.xw-appointment-calendar .flatpickr-day.xw-appointment-available { border-color: var(--xw-appt-accent); border-radius: 50%; }
+.xw-appointment-calendar .flatpickr-day.xw-appointment-available { border-color: var(--xw-appt-accent); border-radius: 50%; color: var(--xw-appt-day-text, var(--xw-appt-ink)); background: var(--xw-appt-day-bg, transparent); }
 .xw-appointment-calendar .flatpickr-day.selected, .xw-appointment-calendar .flatpickr-day:hover:not(.flatpickr-disabled) { background: var(--xw-appt-accent); border-color: var(--xw-appt-accent); color: #fff; }
 .xw-appointment-calendar .flatpickr-day.flatpickr-disabled { color: #9298a1; background: #f4f5f6; cursor: not-allowed; border-color: transparent; }
 .xw-appointment-calendar .flatpickr-prev-month:focus-visible, .xw-appointment-calendar .flatpickr-next-month:focus-visible { outline: 2px solid var(--xw-appt-accent); }
-@media (prefers-reduced-motion: reduce) { .xw-appointment-calendar { animation: none !important; } }
+.xw-appointment-calendar .xw-appointment-footer { padding: 12px 16px 16px; border-top: 1px solid #8792a333; }
+.xw-appointment-calendar .xw-appointment-status { font-size: 13px; line-height: 1.5; margin: 0 0 6px; color: var(--xw-appt-ink); }
+.xw-appointment-calendar .xw-appointment-zone { display: block; font-size: 11px; line-height: 1.5; color: var(--xw-appt-muted); }
+.xw-appointment-calendar .xw-appointment-retry { min-height: 44px; border: 1px solid var(--xw-appt-accent); border-radius: 6px; background: transparent; color: var(--xw-appt-ink); padding: 8px 16px; margin-bottom: 8px; cursor: pointer; }
+.xw-appointment-calendar.xw-appointment-hours-view > .flatpickr-months, .xw-appointment-calendar.xw-appointment-hours-view > .flatpickr-innerContainer { display: none; }
+.xw-appointment-calendar .xw-appointment-hours { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 16px; max-height: 288px; overflow-y: auto; animation: xw-appt-step-in .16s ease-out; }
+.xw-appointment-calendar .xw-appointment-slot { min-height: 44px; padding: 8px 4px; border: 1px solid var(--xw-appt-accent); border-radius: 8px; font: inherit; font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--xw-appt-day-text, var(--xw-appt-ink)); background: var(--xw-appt-day-bg, transparent); cursor: pointer; }
+.xw-appointment-calendar .xw-appointment-slot:hover, .xw-appointment-calendar .xw-appointment-slot[aria-pressed="true"] { background: var(--xw-appt-accent); color: #fff; }
+.xw-appointment-calendar button:focus-visible { outline: 2px solid var(--xw-appt-accent); outline-offset: 2px; }
+.flatpickr-calendar.xw-appointment-dark { --xw-appt-ink: #f4f6fa; --xw-appt-muted: #c7ced8; }
+@keyframes xw-appt-step-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .xw-appointment-calendar, .xw-appointment-calendar .xw-appointment-hours { animation: none !important; } .xw-appointment-calendar > .flatpickr-months, .xw-appointment-calendar > .flatpickr-innerContainer { transition: none; } }

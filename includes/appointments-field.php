@@ -16,10 +16,8 @@ class XW_Appointment_Field extends \ElementorPro\Modules\Forms\Fields\Field_Base
         echo '<div class="xw-appointment" data-xw-appointment>';
         echo '<div class="xw-appointment-date"><input type="text" readonly autocomplete="off" inputmode="none" class="elementor-field elementor-size-' . esc_attr( $size ) . ' elementor-field-textual xw-appointment-date-input" id="' . esc_attr( $id ) . '" aria-label="' . esc_attr( $label ) . '" placeholder="' . esc_attr( $item['placeholder'] ?: xw_t( 'Selecciona fecha y hora', 'Select date and time' ) ) . '">';
         echo '<button type="button" class="xw-appointment-open" aria-label="' . esc_attr( xw_t( 'Abrir calendario de citas', 'Open appointment calendar' ) ) . '"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18M8 15h2M14 15h2"/></svg></button></div>';
-        echo '<label class="xw-appointment-time-label" for="' . esc_attr( $id . '-time' ) . '">' . esc_html( xw_t( 'Hora de la cita', 'Appointment time' ) ) . '</label><select id="' . esc_attr( $id . '-time' ) . '" class="elementor-field elementor-field-textual xw-appointment-time" disabled><option value="">' . esc_html( xw_t( 'Selecciona primero una fecha', 'Select a date first' ) ) . '</option></select>';
         echo '<input type="hidden" class="xw-appointment-value" name="' . esc_attr( $form->get_attribute_name( $item ) ) . '" value="">';
-        echo '<p class="xw-appointment-status" role="status" aria-live="polite"></p><button type="button" class="xw-appointment-retry" hidden>' . esc_html( xw_t( 'Reintentar', 'Retry' ) ) . '</button>';
-        echo '<small class="xw-appointment-zone">' . esc_html( sprintf( xw_t( 'Zona horaria: %s. Cita sujeta a confirmación.', 'Timezone: %s. Appointment subject to confirmation.' ), wp_timezone_string() ) ) . '</small></div>';
+        echo '</div>';
     }
 
     public function update_controls( $widget ) {

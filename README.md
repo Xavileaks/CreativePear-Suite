@@ -4,6 +4,14 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.62 — Calendario y hora en un solo desplegable
+
+- Cita muestra un solo campo y desplegable: calendario → horas disponibles, con desvanecimiento y botón para volver. Fecha y hora juntas en el campo; instrucciones y zona horaria dentro del desplegable, sin selector de hora externo.
+- Inicios cada **15 minutos**, respetando duración, descansos y reservas. Pendientes, confirmadas y reservas temporales activas bloquean los intervalos que ocupen y sus solapamientos; comprobación final en servidor.
+- Desplegables semanales cada 15 minutos, un turno inicial y hasta **cuatro turnos por día**. Días vacíos cerrados, validación de turnos incompletos/solapados y conservación de horarios anteriores sin redondearlos.
+- Calendario de días libres: desde hoy seleccionables en rojo, pasados desactivados; excepciones sobre la semana sin cancelar citas existentes. Colores configurables de círculo, background y número de fecha disponible, y background del calendario, con vista previa y restablecimiento.
+- Dos columnas en escritorio, una en tablet/móvil y guardado AJAX con botón gris sin cambios. No instala en sitios ni modifica formularios publicados; elimina el Date antiguo en Elementor si lo tienes además del campo Cita.
+
 ## Versión 1.0.61 — Form Elementor: citas
 
 - Nueva caja **Form Elementor: citas / appointments**, apagada por defecto. Menú **Citas / Appointments** debajo de Comentarios, solo para administradores. Una agenda por sitio, sin dominio, página ni ID fijo.

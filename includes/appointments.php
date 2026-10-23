@@ -48,7 +48,7 @@ function xw_appt_install() {
 add_action( 'init', 'xw_appt_install', 20 );
 
 function xw_appt_defaults() {
-    return array( 'weekly' => array_fill( 0, 7, '' ), 'closed' => array(), 'duration' => 30, 'notice' => 120, 'horizon' => 90 );
+    return array( 'weekly' => array_fill( 0, 7, '' ), 'closed' => array(), 'duration' => 30, 'notice' => 120, 'horizon' => 90, 'colors' => array() );
 }
 function xw_appt_settings() { return array_merge( xw_appt_defaults(), (array) get_option( 'xw_appointment_settings', array() ) ); }
 
@@ -76,6 +76,7 @@ function xw_appt_intervals( $text ) {
 
 function xw_appt_sanitize_schedule( $raw ) {
     if ( ! is_array( $raw ) ) { return new WP_Error( 'schedule', xw_t( 'Configuración no válida.', 'Invalid configuration.' ) ); }
+    foreach ( array( 'weekly', 'shifts', 'colors' ) as $key ) { if ( isset( $raw[ $key ] ) && ! is_array( $raw[ $key ] ) ) { return new WP_Error( 'schedule', xw_t( 'Configuración no válida.', 'Invalid configuration.' ) ); } }
     $out = xw_appt_defaults();
     foreach ( array( 'duration' => array( 5, 240 ), 'notice' => array( 0, 10080 ), 'horizon' => array( 1, 180 ) ) as $key => $limits ) {
         $value = $raw[ $key ] ?? null;
@@ -86,18 +87,39 @@ function xw_appt_sanitize_schedule( $raw ) {
     }
     for ( $day = 0; $day < 7; $day++ ) {
         $text = $raw['weekly'][ $day ] ?? '';
+        if ( isset( $raw['shifts'] ) ) {
+            if ( ! array_key_exists( $day, $raw['shifts'] ) ) { return new WP_Error( 'schedule', xw_t( 'Faltan días del horario. Recarga la página antes de guardar.', 'Some schedule days are missing. Reload the page before saving.' ) ); }
+            $shifts = $raw['shifts'][ $day ];
+            if ( ! is_array( $shifts ) || count( $shifts ) > 4 ) { return new WP_Error( 'schedule', xw_t( 'Puedes añadir hasta cuatro turnos por día.', 'You can add up to four shifts per day.' ) ); }
+            $parts = array();
+            foreach ( $shifts as $shift ) {
+                if ( ! is_array( $shift ) || ! is_string( $shift['start'] ?? '' ) || ! is_string( $shift['end'] ?? '' ) ) { return new WP_Error( 'schedule', xw_t( 'Turno no válido.', 'Invalid shift.' ) ); }
+                $start = $shift['start'] ?? ''; $end = $shift['end'] ?? '';
+                if ( '' === $start && '' === $end ) { continue; }
+                if ( ! preg_match( '/^([01]\d|2[0-3]):[0-5]\d$/D', $start ) || ! preg_match( '/^([01]\d|2[0-3]):[0-5]\d$/D', $end ) ) { return new WP_Error( 'schedule', xw_t( 'Elige el inicio y el final de cada turno, o deja ambos vacíos.', 'Choose the start and end of each shift, or leave both empty.' ) ); }
+                // Preserve valid legacy endpoints; new dropdown choices use quarter-hours.
+                $parts[] = $start . '-' . $end;
+            }
+            $text = implode( ', ', $parts );
+        }
         $ranges = xw_appt_intervals( $text );
-        if ( false === $ranges ) { return new WP_Error( 'schedule', xw_t( 'Horarios no válidos. Usa 09:00-13:00, 15:00-18:00, sin solapamientos.', 'Invalid hours. Use 09:00-13:00, 15:00-18:00, without overlaps.' ) ); }
+        if ( false === $ranges ) { return new WP_Error( 'schedule', xw_t( 'Revisa los turnos: el final debe ser posterior al inicio y no pueden solaparse.', 'Check shifts: the end must be after the start and shifts cannot overlap.' ) ); }
+        if ( count( $ranges ) > 4 ) { return new WP_Error( 'schedule', xw_t( 'Puedes añadir hasta cuatro turnos por día.', 'You can add up to four shifts per day.' ) ); }
         $out['weekly'][ $day ] = implode( ', ', array_map( static function( $range ) {
             return sprintf( '%02d:%02d-%02d:%02d', intdiv( $range[0], 60 ), $range[0] % 60, intdiv( $range[1], 60 ), $range[1] % 60 );
         }, $ranges ) );
     }
-    if ( ! is_string( $raw['closed'] ?? '' ) || strlen( $raw['closed'] ) > 10000 ) { return new WP_Error( 'schedule', xw_t( 'Demasiadas fechas bloqueadas.', 'Too many blocked dates.' ) ); }
+    if ( ! is_string( $raw['closed'] ?? null ) || strlen( $raw['closed'] ) > 10000 ) { return new WP_Error( 'schedule', xw_t( 'Fechas bloqueadas no válidas o incompletas. Recarga antes de guardar.', 'Invalid or incomplete blocked dates. Reload before saving.' ) ); }
     foreach ( preg_split( '/[\s,]+/', trim( $raw['closed'] ?? '' ), -1, PREG_SPLIT_NO_EMPTY ) as $day ) {
         if ( ! xw_appt_day( $day ) ) { return new WP_Error( 'schedule', xw_t( 'Fechas bloqueadas: usa AAAA-MM-DD, una por línea.', 'Blocked dates: use YYYY-MM-DD, one per line.' ) ); }
         $out['closed'][] = $day;
     }
     $out['closed'] = array_values( array_unique( $out['closed'] ) );
+    foreach ( array( 'border', 'background', 'text', 'calendar_background' ) as $key ) {
+        $color = $raw['colors'][ $key ] ?? ( xw_appt_settings()['colors'][ $key ] ?? '' );
+        if ( ! is_string( $color ) || ( '' !== $color && ! preg_match( '/^#[a-fA-F0-9]{6}$/D', $color ) ) ) { return new WP_Error( 'schedule', xw_t( 'Usa colores hexadecimales de seis dígitos o deja el color automático.', 'Use six-digit hex colors or leave the color automatic.' ) ); }
+        $out['colors'][ $key ] = $color;
+    }
     return $out;
 }
 
@@ -111,7 +133,7 @@ function xw_appt_candidates( $day, $settings = null, $now = null ) {
     if ( false === $ranges ) { return array(); }
     $slots = array(); $duration = max( 5, (int) $settings['duration'] );
     foreach ( $ranges as $range ) {
-        for ( $minute = $range[0]; $minute + $duration <= $range[1]; $minute += $duration ) {
+        for ( $minute = $range[0]; $minute + $duration <= $range[1]; $minute += 15 ) {
             $value = $day . ' ' . sprintf( '%02d:%02d', intdiv( $minute, 60 ), $minute % 60 );
             $start = DateTimeImmutable::createFromFormat( '!Y-m-d H:i', $value, wp_timezone() );
             if ( ! $start || $start->format( 'Y-m-d H:i' ) !== $value || $start->getTimestamp() < $now + $settings['notice'] * 60 ) { continue; }
@@ -277,6 +299,9 @@ function xw_appt_assets() {
     wp_localize_script( 'xw-appointments', 'xwAppointments', array(
         'url' => admin_url( 'admin-ajax.php' ), 'today' => current_datetime()->format( 'Y-m-d' ), 'max' => current_datetime()->modify( '+' . $settings['horizon'] . ' days' )->format( 'Y-m-d' ),
         'locale' => xw_interface_language(), 'timezone' => wp_timezone_string(),
+        'colors' => array_intersect_key( array_filter( (array) $settings['colors'], static function( $color ) { return is_string( $color ) && preg_match( '/^#[a-fA-F0-9]{6}$/D', $color ); } ), array_flip( array( 'border', 'background', 'text', 'calendar_background' ) ) ),
+        'back' => xw_t( 'Volver al calendario', 'Back to calendar' ), 'close' => xw_t( 'Cerrar', 'Close' ),
+        'zone' => xw_t( 'Zona horaria: %s. Cita sujeta a confirmación.', 'Timezone: %s. Appointment subject to confirmation.' ),
         'choose' => xw_t( 'Selecciona una hora', 'Select a time' ), 'loading' => xw_t( 'Consultando disponibilidad…', 'Checking availability…' ),
         'ready' => xw_t( 'Selecciona un día con círculo y después una hora. Días grises: no disponibles.', 'Select a circled day, then a time. Grey days are unavailable.' ),
         'empty' => xw_t( 'No hay citas disponibles para este día.', 'No appointments available for this day.' ),
