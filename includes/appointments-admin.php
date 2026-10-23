@@ -87,6 +87,8 @@ function xw_appt_admin_page() {
     <div class="wrap xw-appointments-admin">
         <h1><?php echo esc_html( xw_t( 'Citas', 'Appointments' ) ); ?></h1>
         <p class="xw-appt-intro"><?php echo esc_html( xw_t( 'Una agenda para este sitio. Define la disponibilidad y gestiona las solicitudes de tus formularios.', 'One calendar for this site. Set availability and manage requests from your forms.' ) ); ?></p>
+        <?php xw_appt_admin_list( $nonce ); ?>
+        <p class="description"><?php echo esc_html( xw_t( 'Las reservas quedan pendientes hasta que las confirmes. No se envían avisos adicionales al cambiar estados. Datos privados: acceso de administrador, exportación y borrado mediante Herramientas → Datos personales de WordPress. Configura consentimiento y antispam en tu formulario; no recopiles datos clínicos innecesarios.', 'Bookings remain pending until you confirm them. Status changes do not send additional notifications. Private data: administrator access, export and erasure through WordPress Tools → Personal Data. Configure consent and antispam in your form; do not collect unnecessary clinical data.' ) ); ?></p>
         <div class="xw-appt-guide"><strong><?php echo esc_html( xw_t( 'Conecta un formulario', 'Connect a form' ) ); ?></strong><p><?php echo esc_html( xw_t( 'En el widget Formulario de Elementor, añade un campo de tipo Cita. Solo los formularios con ese campo crean reservas. Nombre, correo y teléfono se detectan automáticamente; puedes indicar sus IDs dentro del campo Cita. Usa un solo campo Cita por formulario.', 'In the Elementor Form widget, add an Appointment field. Only forms with this field create bookings. Name, email and phone are detected automatically; you can map their IDs in the Appointment field. Use one Appointment field per form.' ) ); ?></p><small><?php echo esc_html( xw_t( 'Requiere el widget Formulario de Elementor Pro o una implementación compatible. Las acciones de correo y antispam se configuran en el formulario.', 'Requires the Elementor Pro Form widget or a compatible implementation. Email and antispam actions are configured in the form.' ) ); ?></small></div>
         <form id="xw-appt-schedule" data-nonce="<?php echo esc_attr( $nonce ); ?>">
             <div class="xw-appt-settings-grid">
@@ -101,9 +103,12 @@ function xw_appt_admin_page() {
                 <template id="xw-appt-shift-template"><?php xw_appt_shift_row( 0, 0 ); ?></template>
                 <p class="description"><?php echo esc_html( sprintf( xw_t( 'Todos los horarios usan la zona horaria de WordPress: %s.', 'All times use the WordPress timezone: %s.' ), wp_timezone_string() ) ); ?> <a href="<?php echo esc_url( admin_url( 'options-general.php' ) ); ?>"><?php echo esc_html( xw_t( 'Revisar zona horaria', 'Review timezone' ) ); ?></a></p></section>
                 <section class="xw-appt-panel"><h2><?php echo esc_html( xw_t( 'Reglas y fechas bloqueadas', 'Rules and blocked dates' ) ); ?></h2>
+                    <div class="xw-appt-rules">
                     <?php foreach ( array( 'duration' => array( xw_t( 'Duración de cada cita', 'Appointment duration' ), 5, 240, xw_t( 'minutos', 'minutes' ) ), 'notice' => array( xw_t( 'Antelación mínima', 'Minimum advance notice' ), 0, 10080, xw_t( 'minutos', 'minutes' ) ), 'horizon' => array( xw_t( 'Permitir reservar hasta', 'Allow booking up to' ), 1, 180, xw_t( 'días en adelante', 'days ahead' ) ) ) as $key => $control ) : ?>
                     <div class="xw-appt-rule"><label for="xw-appt-<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $control[0] ); ?></label><div><input id="xw-appt-<?php echo esc_attr( $key ); ?>" name="schedule[<?php echo esc_attr( $key ); ?>]" type="number" min="<?php echo (int) $control[1]; ?>" max="<?php echo (int) $control[2]; ?>" step="1" required value="<?php echo (int) $settings[ $key ]; ?>"> <span><?php echo esc_html( $control[3] ); ?></span></div></div>
                     <?php endforeach; ?>
+                    </div>
+                    <p class="description"><?php echo esc_html( xw_t( 'La duración vigente también se aplica a la disponibilidad de citas pendientes y confirmadas. No cambia su hora de inicio: revisa posibles solapamientos al ampliarla.', 'The current duration also applies to availability for pending and confirmed appointments. Their start time does not change: review possible overlaps when increasing it.' ) ); ?></p>
                     <h3><?php echo esc_html( xw_t( 'Días en los que no trabajarás', 'Days off' ) ); ?></h3>
                     <p class="description"><?php echo esc_html( xw_t( 'Marca en rojo los días libres. Pulsa de nuevo para desmarcarlos. Los días pasados están desactivados.', 'Mark days off in red. Press again to unmark them. Past days are disabled.' ) ); ?></p>
                     <input type="hidden" id="xw-appt-closed" name="schedule[closed]" value="<?php echo esc_attr( implode( ',', $settings['closed'] ) ); ?>">
@@ -117,8 +122,6 @@ function xw_appt_admin_page() {
             </div>
             <div class="xw-appt-save"><p role="status" aria-live="polite" id="xw-appt-save-status"><?php echo esc_html( xw_t( 'Sin cambios pendientes.', 'No unsaved changes.' ) ); ?></p><button type="submit" class="button button-primary" disabled><?php echo esc_html( xw_t( 'Guardar cambios', 'Save changes' ) ); ?></button></div>
         </form>
-        <?php xw_appt_admin_list( $nonce ); ?>
-        <p class="description"><?php echo esc_html( xw_t( 'Las reservas quedan pendientes hasta que las confirmes. No se envían avisos adicionales al cambiar estados. Datos privados: acceso de administrador, exportación y borrado mediante Herramientas → Datos personales de WordPress. Configura consentimiento y antispam en tu formulario; no recopiles datos clínicos innecesarios.', 'Bookings remain pending until you confirm them. Status changes do not send additional notifications. Private data: administrator access, export and erasure through WordPress Tools → Personal Data. Configure consent and antispam in your form; do not collect unnecessary clinical data.' ) ); ?></p>
     </div>
     <?php
 }

@@ -1,4 +1,4 @@
-.xw-appointments-admin { --xw-appt-primary: #3852eb; --xw-appt-border: #dcdcde; --xw-appt-text: #1d2327; --xw-appt-muted: #646970; --xw-appt-surface: #fff; max-width: 1200px; color: var(--xw-appt-text); padding-bottom: 32px; }
+.xw-appointments-admin { --xw-appt-primary: #3852eb; --xw-appt-border: #dcdcde; --xw-appt-text: #1d2327; --xw-appt-muted: #646970; --xw-appt-surface: #fff; --xw-appt-control-height: 44px; max-width: 1200px; color: var(--xw-appt-text); padding-bottom: 32px; }
 .xw-appt-intro { font-size: 15px; color: var(--xw-appt-muted); }
 .xw-appt-guide { background: var(--xw-appt-surface); border-inline-start: 3px solid var(--xw-appt-primary); padding: 16px 20px; margin: 24px 0; }
 .xw-appt-guide p { margin: 8px 0; }
@@ -7,14 +7,14 @@
 .xw-appt-panel h2 { margin-top: 0; }
 .xw-appt-day { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px; border: 0; border-top: 1px solid var(--xw-appt-border); padding: 12px 0 16px; margin: 12px 0; min-width: 0; }
 .xw-appt-day legend { font-weight: 600; padding-inline-end: 8px; }
-.xw-appt-shift { display: grid; grid-template-columns: minmax(0, 1fr) 10px minmax(0, 1fr) 40px; gap: 6px; align-items: center; margin-bottom: 8px; }
+.xw-appt-shift { display: grid; grid-template-columns: minmax(0, 1fr) 10px minmax(0, 1fr) var(--xw-appt-control-height); gap: 6px; align-items: center; margin-bottom: 8px; }
 .xw-appt-shift select { width: 100%; max-width: none; min-width: 0; min-height: 40px; }
 .xw-appointments-admin .xw-appt-remove-shift { padding: 0; font-size: 22px; }
 .xw-appointments-admin .xw-appt-add-shift { font-size: 12px; }
 .xw-appt-palette { border-top: 1px solid var(--xw-appt-border); margin-top: 24px; padding-top: 24px; }
 .xw-appt-calendar-anchor { display: none !important; }
 #xw-appt-closed-summary { font-size: 12px; color: var(--xw-appt-muted); overflow-wrap: anywhere; }
-.xw-appt-days-off.flatpickr-calendar { width: 100%; max-width: 336px; box-shadow: none; border: 1px solid var(--xw-appt-border); margin: 12px 0; }
+.xw-appt-days-off.flatpickr-calendar { width: 100%; max-width: none; max-height: none; box-sizing: border-box; box-shadow: none; border: 1px solid var(--xw-appt-border); margin: 12px 0; }
 .xw-appt-days-off .flatpickr-rContainer, .xw-appt-days-off .flatpickr-days { width: 100%; }
 .xw-appt-days-off .dayContainer { width: 100%; min-width: 0; max-width: none; }
 .xw-appt-days-off .flatpickr-day { width: calc(100% / 7 - 4px); max-width: calc(100% / 7 - 4px); flex-basis: calc(100% / 7 - 4px); height: auto; aspect-ratio: 1; margin: 2px; line-height: normal; display: grid; place-items: center; }
@@ -30,13 +30,21 @@
 .xw-appt-color-preview { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; border: 1px solid var(--xw-appt-border); padding: 16px; margin-top: 24px; border-radius: 8px; }
 .xw-appt-color-preview span { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid; border-radius: 50%; font-weight: 600; }
 .xw-appt-color-preview small { padding: 4px 8px; background: #fff; color: #1d2327; border-radius: 4px; }
-.xw-appt-rule { margin-bottom: 20px; }
+.xw-appt-rules { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+.xw-appt-rule { min-width: 0; }
 .xw-appt-rule label { display: block; font-weight: 600; margin-bottom: 6px; }
-.xw-appt-rule input { width: 90px; }
+.xw-appt-rule > div { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.xw-appt-rule input { width: 90px; max-width: 100%; min-width: 0; box-sizing: border-box; }
 .xw-appt-panel textarea { display: block; width: 100%; margin-top: 8px; }
 .xw-appt-save { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 0 24px; }
 .xw-appointments-admin .button-primary { background: var(--xw-appt-primary); border-color: var(--xw-appt-primary); }
 .xw-appointments-admin .button { min-height: 40px; padding: 6px 14px; }
+/* Explicit sizing wins over WordPress/theme font and line-height on .button. */
+.xw-appointments-admin .xw-appt-shift select,
+.xw-appointments-admin .xw-appt-remove-shift,
+.xw-appointments-admin .xw-appt-add-shift { height: var(--xw-appt-control-height); min-height: var(--xw-appt-control-height); max-height: var(--xw-appt-control-height); box-sizing: border-box; margin: 0; align-self: start; }
+.xw-appointments-admin .xw-appt-remove-shift,
+.xw-appointments-admin .xw-appt-add-shift { display: inline-flex; align-items: center; justify-content: center; line-height: 1.2; }
 .xw-appointments-admin .button-primary:disabled { background: var(--xw-appt-border); border-color: var(--xw-appt-border); color: var(--xw-appt-muted); cursor: default; }
 .xw-appointments-admin input:focus-visible, .xw-appointments-admin select:focus-visible, .xw-appointments-admin button:focus-visible, .xw-appointments-admin summary:focus-visible { outline: 2px solid var(--xw-appt-primary); outline-offset: 2px; }
 .xw-appt-count { font-weight: 400; color: var(--xw-appt-muted); }
@@ -51,4 +59,4 @@
 .xw-appt-table dd { margin: 2px 0; }
 .xw-appt-booking-status select { display: block; max-width: 180px; margin-bottom: 8px; }
 @media (max-width: 1024px) { .xw-appt-settings-grid { grid-template-columns: minmax(0, 1fr); } .xw-appt-panel { padding: 20px; } .xw-appointments-admin input, .xw-appointments-admin select, .xw-appointments-admin .button { min-height: 44px; } }
-@media (max-width: 600px) { .xw-appt-colors { grid-template-columns: minmax(0, 1fr); } .xw-appt-day { grid-template-columns: minmax(0, 1fr); } .xw-appt-add-shift { justify-self: start; } .xw-appt-filters > * { max-width: 100%; } }
+@media (max-width: 600px) { .xw-appt-rules, .xw-appt-colors { grid-template-columns: minmax(0, 1fr); } .xw-appt-day { grid-template-columns: minmax(0, 1fr); } .xw-appt-add-shift { justify-self: start; } .xw-appt-filters > * { max-width: 100%; } }

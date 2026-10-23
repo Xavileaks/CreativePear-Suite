@@ -65,6 +65,18 @@ try {
     global $wpdb; $table = xw_appt_table(); $row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $ids[0] ), ARRAY_A );
     appt_check( 'pending' === $row['status'] && null === $row['hold_expires'] && ! str_contains( $row['fields'], 'DO-NOT-STORE' ), 'successful form becomes pending, sensitive field types excluded' );
     appt_check( $row['email'] === 'appointment-qa@example.invalid' && strtotime( $row['starts_at'] . ' UTC' ) === strtotime( $value . ':00 Europe/Madrid' ), 'contact auto-mapping and UTC storage are correct' );
+    $longer = $schedule; $longer['duration'] = 60; update_option( 'xw_appointment_settings', $longer );
+    $available = xw_appt_available( $tomorrow );
+    appt_check( ! isset( $available[ $tomorrow . 'T09:30' ] ) && ! isset( $available[ $tomorrow . 'T09:45' ] ) && isset( $available[ $tomorrow . 'T10:00' ] ), 'changing duration from 30 to 60 extends existing pending booking occupancy' );
+    $ninety = $schedule; $ninety['duration'] = 90; update_option( 'xw_appointment_settings', $ninety );
+    appt_check( ! isset( xw_appt_available( $tomorrow )[ $tomorrow . 'T10:15' ] ) && isset( xw_appt_available( $tomorrow )[ $tomorrow . 'T10:30' ] ), 'a 90-minute duration extends the same existing booking without rounding to 30 minutes' );
+    update_option( 'xw_appointment_settings', $longer );
+    $response = appt_request( 'xw_appt_availability', array(), array( 'month' => substr( $tomorrow, 0, 7 ) ) );
+    $public_values = array_column( $response['data']['days'][ $tomorrow ], 'value' );
+    appt_check( $response['success'] && ! in_array( $tomorrow . 'T09:30', $public_values, true ) && in_array( $tomorrow . 'T10:00', $public_values, true ), 'public frontend availability immediately reflects the longer existing booking' );
+    $shorter = $schedule; $shorter['duration'] = 15; update_option( 'xw_appointment_settings', $shorter );
+    appt_check( isset( xw_appt_available( $tomorrow )[ $tomorrow . 'T09:15' ] ), 'pending occupancy also follows a shorter current duration' );
+    update_option( 'xw_appointment_settings', $schedule );
     $overlap = $schedule; $overlap['duration'] = 45; update_option( 'xw_appointment_settings', $overlap ); appt_check( ! isset( xw_appt_available( $tomorrow )[ $value ] ), 'existing appointments still prevent overlaps after duration changes' ); update_option( 'xw_appointment_settings', $schedule );
     $fail_value = array_key_first( xw_appt_available( $tomorrow ) ); $failed = new ApptRecord( $fail_value ); $failed_handler = new ApptHandler(); xw_appt_process( $failed, $failed_handler ); $ids[] = $GLOBALS['xw_appt_holds'][ spl_object_id( $failed ) ]['id']; $failed_handler->add_error_message( 'Synthetic delivery failure' ); xw_appt_complete( $failed, $failed_handler ); appt_check( isset( xw_appt_available( $tomorrow )[ $fail_value ] ), 'failed submit actions release their temporary booking' );
     $bad = new ApptRecord( $tomorrow . 'T13:00' ); $bad_handler = new ApptHandler(); xw_appt_process( $bad, $bad_handler ); appt_check( ! $bad_handler->is_success, 'manipulated lunch-break time rejected' );
@@ -77,6 +89,23 @@ try {
     $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'schedule', 'nonce' => 'invalid', 'schedule' => $schedule ) ); appt_check( ! $response['success'], 'admin writes reject invalid nonce' );
     $nonce = wp_create_nonce( 'xw_appointment_admin' );
     $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'status', 'booking' => $ids[0], 'status' => 'confirmed', 'nonce' => $nonce ) ); appt_check( $response['success'] && ! isset( xw_appt_available( $tomorrow )[ $tomorrow . 'T09:15' ] ), 'confirmed appointment still blocks overlapping quarter-hour choices' );
+    update_option( 'xw_appointment_settings', $longer );
+    appt_check( ! isset( xw_appt_available( $tomorrow )[ $tomorrow . 'T09:30' ] ) && isset( xw_appt_available( $tomorrow )[ $tomorrow . 'T10:00' ] ), 'confirmed booking uses the new duration without rewriting its saved start or end' );
+    $ten = new DateTimeImmutable( $tomorrow . ' 10:00:00', wp_timezone() );
+    $wpdb->insert( $table, array( 'starts_at' => gmdate( 'Y-m-d H:i:s', $ten->getTimestamp() ), 'ends_at' => gmdate( 'Y-m-d H:i:s', $ten->getTimestamp() + 1800 ), 'status' => 'pending', 'timezone' => wp_timezone_string(), 'fields' => '[]', 'form_id' => 'appointment-qa' ) );
+    $ten_id = (int) $wpdb->insert_id; $ids[] = $ten_id;
+    foreach ( array( 'pending', 'confirmed' ) as $ten_status ) {
+        $wpdb->update( $table, array( 'status' => $ten_status ), array( 'id' => $ten_id ) );
+        $ten_slots = xw_appt_available( $tomorrow );
+        appt_check( ! isset( $ten_slots[ $tomorrow . 'T10:30' ] ) && ! isset( $ten_slots[ $tomorrow . 'T10:45' ] ) && isset( $ten_slots[ $tomorrow . 'T11:00' ] ), '10:00 ' . $ten_status . ' reservation blocks through 11:00 after changing duration to 60' );
+    }
+    $month_end = current_datetime()->modify( 'last day of this month' )->format( 'Y-m-d' );
+    $wpdb->insert( $table, array( 'starts_at' => $month_end . ' 23:30:00', 'ends_at' => gmdate( 'Y-m-d H:i:s', strtotime( $month_end . ' 23:30:00 UTC' ) + 1800 ), 'status' => 'pending', 'timezone' => 'UTC', 'fields' => '[]', 'form_id' => 'appointment-qa' ) );
+    $ids[] = (int) $wpdb->insert_id;
+    $boundary = gmdate( 'Y-m-d H:i:s', strtotime( $month_end . ' 23:30:00 UTC' ) + 1800 );
+    $busy = xw_appt_busy( $boundary, gmdate( 'Y-m-d H:i:s', strtotime( $boundary . ' UTC' ) + 3600 ) );
+    appt_check( (bool) array_filter( $busy, static function( $slot ) use ( $month_end, $boundary ) { return $slot['starts_at'] === $month_end . ' 23:30:00' && $slot['ends_at'] > $boundary; } ), 'duration extension across midnight and month boundaries remains blocked' );
+    update_option( 'xw_appointment_settings', $schedule );
     $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'status', 'booking' => $ids[0], 'status' => 'cancelled', 'nonce' => $nonce ) ); appt_check( $response['success'] && isset( xw_appt_available( $tomorrow )[ $value ] ), 'admin cancellation releases the occupied slot' );
     $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'status', 'booking' => $ids[0], 'status' => 'confirmed', 'nonce' => $nonce ) ); appt_check( ! $response['success'], 'cancelled booking cannot bypass availability by reactivation' );
     wp_set_current_user( 0 ); $response = appt_request( 'xw_appt_admin_save', array( 'operation' => 'status', 'booking' => $ids[0], 'status' => 'pending', 'nonce' => $nonce ) ); appt_check( ! $response['success'], 'unauthenticated users cannot read or manage bookings' );

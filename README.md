@@ -4,6 +4,13 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.63 — Distribución de Citas y duración vigente
+
+- Reservas, filtros y tabla debajo de la introducción, antes de la guía y los ajustes. Las cajas siguen en dos columnas en escritorio y una en tablet/móvil.
+- Tres reglas en una fila de tres columnas y apiladas en móvil; controles de turnos, eliminar y añadir con altura común de **44 px**, con alineación revisada usando 12ui. Calendario de días libres al ancho completo interior de su caja, sin recorte en tablet.
+- Cambiar la duración recalcula la ocupación de citas pendientes, confirmadas y temporales activas: una reserva de las 10:00 creada con 30 minutos bloqueará hasta las 11:00 al cambiar a 60. Respeta también reducciones y duraciones mayores sin reescribir inicios ni registros históricos. Completadas mantienen su duración registrada; canceladas no bloquean.
+- Disponibilidad pública y validación final coherentes, incluidas extensiones desde el día/mes anterior. No cancela ni desplaza citas anteriores: revisa solapamientos al ampliar la duración. Pruebas locales de distribución y duración, excluidas del ZIP. No instala actualizaciones en los sitios.
+
 ## Versión 1.0.62 — Calendario y hora en un solo desplegable
 
 - Cita muestra un solo campo y desplegable: calendario → horas disponibles, con desvanecimiento y botón para volver. Fecha y hora juntas en el campo; instrucciones y zona horaria dentro del desplegable, sin selector de hora externo.

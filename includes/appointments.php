@@ -150,8 +150,21 @@ function xw_appt_candidates( $day, $settings = null, $now = null ) {
 function xw_appt_busy( $start, $end ) {
     global $wpdb;
     $table = xw_appt_table();
-    $rows = $wpdb->get_results( $wpdb->prepare( "SELECT starts_at,ends_at FROM $table WHERE status <> 'cancelled' AND (status <> 'holding' OR hold_expires > %d) AND starts_at < %s AND ends_at > %s", time(), $end, $start ), ARRAY_A );
-    return $wpdb->last_error ? null : $rows;
+    $duration = max( 5, min( 240, (int) xw_appt_settings()['duration'] ) ) * MINUTE_IN_SECONDS;
+    // A longer current duration can extend a reservation from before the query window.
+    $lookback = gmdate( 'Y-m-d H:i:s', strtotime( $start . ' UTC' ) - $duration );
+    $rows = $wpdb->get_results( $wpdb->prepare( "SELECT starts_at,ends_at,status FROM $table WHERE status <> 'cancelled' AND (status <> 'holding' OR hold_expires > %d) AND starts_at < %s AND (ends_at > %s OR (status IN ('pending','confirmed','holding') AND starts_at > %s))", time(), $end, $start, $lookback ), ARRAY_A );
+    if ( $wpdb->last_error || ! is_array( $rows ) ) { return null; }
+    $busy = array();
+    foreach ( $rows as $row ) {
+        if ( in_array( $row['status'], array( 'pending', 'confirmed', 'holding' ), true ) ) {
+            $starts_at = DateTimeImmutable::createFromFormat( '!Y-m-d H:i:s', $row['starts_at'], new DateTimeZone( 'UTC' ) );
+            if ( ! $starts_at ) { return null; }
+            $row['ends_at'] = gmdate( 'Y-m-d H:i:s', $starts_at->getTimestamp() + $duration );
+        }
+        if ( $row['starts_at'] < $end && $row['ends_at'] > $start ) { $busy[] = array( 'starts_at' => $row['starts_at'], 'ends_at' => $row['ends_at'] ); }
+    }
+    return $busy;
 }
 function xw_appt_available( $day, $busy = null ) {
     if ( ! xw_feature_enabled( 'elementor_appointments' ) || ! xw_appt_ready() ) { return array(); }
