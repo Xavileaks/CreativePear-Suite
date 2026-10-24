@@ -4,6 +4,10 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.70 — Fecha: flechas alineadas con mes y año
+
+- La fila de mes/año se convierte en la referencia de posición de sus flechas, evitando que aparezcan sobre el título superior. Ambas quedan centradas verticalmente, con área de 44 px, también en móvil. Conserva la ocultación al alcanzar los límites mínimo/máximo y la navegación existente.
+
 ## Versión 1.0.69 — Phone mask: color del campo de Elementor
 
 - El prefijo internacional y la flecha del selector con bandera usan el color calculado del input, es decir, **Field → Text Color** de ese formulario. No toman el color del contenedor ni el gris fijo del icono; cada campo mantiene su propio color.

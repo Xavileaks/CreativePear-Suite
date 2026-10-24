@@ -83,7 +83,9 @@
 .xw-date-calendar .xw-date-close { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; margin: 0; border: 0; border-radius: 8px; background: transparent; color: inherit; cursor: pointer; }
 .xw-date-calendar .xw-date-period-toggle { display: block; margin: 0 auto; min-height: 44px; max-width: calc(100% - 80px); padding: 8px 4px; border: 0; border-radius: 6px; background: transparent; color: inherit; font: inherit; font-size: 16px; cursor: pointer; }
 .xw-date-calendar .xw-date-period-toggle::after { content: ''; display: inline-block; width: 6px; height: 6px; border-bottom: 1.5px solid currentColor; border-right: 1.5px solid currentColor; transform: translateY(-2px) rotate(45deg); margin-inline-start: 10px; }
-.xw-date-calendar .flatpickr-months { min-height: 44px; align-items: center; }
+.xw-date-calendar .flatpickr-months { position: relative; min-height: 44px; align-items: center; }
+.xw-date-calendar .flatpickr-months .flatpickr-prev-month, .xw-date-calendar .flatpickr-months .flatpickr-next-month { top: 50%; transform: translateY(-50%); width: 44px; height: 44px; padding: 15px; box-sizing: border-box; }
+.xw-date-calendar .flatpickr-prev-month svg, .xw-date-calendar .flatpickr-next-month svg { display: block; }
 .xw-date-calendar .flatpickr-month { display: none; }
 .xw-date-calendar .flatpickr-days, .xw-date-calendar .flatpickr-rContainer { width: 100%; }
 .xw-date-calendar .dayContainer { width: 100%; min-width: 0; max-width: none; }
