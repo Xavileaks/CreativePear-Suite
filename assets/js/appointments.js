@@ -49,6 +49,10 @@
         const picker = window.flatpickr(input, {
             dateFormat: 'Y-m-d', ariaDateFormat: 'j F Y', allowInput: false, disableMobile: true, closeOnSelect: false,
             minDate: cfg.today, maxDate: cfg.max, locale: cfg.locale === 'es' ? spanish : 'default', enable: [],
+            // Measure before Flatpickr decides left/right alignment, including after resize.
+            onPreCalendarPosition: (_, __, instance) => {
+                instance.calendarContainer.style.setProperty('--xw-appt-input-width', input.getBoundingClientRect().width + 'px');
+            },
             onReady: function (_, __, instance) {
                 calendar = instance.calendarContainer; calendar.classList.add('xw-appointment-calendar');
                 calendar.id = 'xw-appointment-popup-' + Math.random().toString(36).slice(2);
@@ -105,6 +109,10 @@
         input.removeEventListener('focus', picker.open);
         input.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); picker.open(); } });
         root.querySelector('.xw-appointment-open').addEventListener('click', () => picker.open());
+        const fieldResize = typeof ResizeObserver === 'function' ? new ResizeObserver(() => {
+            if (picker.isOpen) picker._positionCalendar();
+        }) : null;
+        fieldResize?.observe(input);
         async function load() {
             const current = ++sequence, requestedMonth = month();
             request?.abort(); request = new AbortController();
@@ -146,7 +154,7 @@
         }
         const removal = new MutationObserver(() => {
             if (!root.isConnected) {
-                clearTimeout(transition); request?.abort(); picker.destroy(); removal.disconnect();
+                clearTimeout(transition); request?.abort(); fieldResize?.disconnect(); picker.destroy(); removal.disconnect();
                 form?.removeEventListener('submit', onSubmit, true); form?.removeEventListener('reset', onReset);
                 if (window.jQuery && form) window.jQuery(form).off('submit_success.xwAppointments', onSuccess);
             }

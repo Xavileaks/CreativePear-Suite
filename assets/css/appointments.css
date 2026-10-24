@@ -10,7 +10,7 @@
 .xw-appointment [hidden] { display: none !important; }
 .xw-appointment :focus-visible { outline: 2px solid var(--xw-appt-accent); outline-offset: 2px; }
 .flatpickr-calendar.xw-appointment-calendar { --xw-appt-accent: var(--e-global-color-primary, #3450d1); --xw-appt-ink: #283344; --xw-appt-muted: #626b77; background: var(--xw-appt-calendar-bg, #fff); color: var(--xw-appt-ink); max-width: calc(100vw - 24px); max-height: calc(100dvh - 32px); overflow-y: auto; z-index: 100010; border-radius: 12px; font-family: inherit; box-shadow: 0 8px 32px #18213326; }
-.flatpickr-calendar.xw-appointment-calendar { width: 336px; }
+.flatpickr-calendar.xw-appointment-calendar { width: 336px; box-sizing: border-box; }
 .flatpickr-calendar.xw-appointment-calendar::before, .flatpickr-calendar.xw-appointment-calendar::after { display: none; }
 .xw-appointment-calendar > .flatpickr-months, .xw-appointment-calendar > .flatpickr-innerContainer { opacity: 1; transition: opacity .12s ease-out; }
 .xw-appointment-calendar.xw-appointment-fading > .flatpickr-months, .xw-appointment-calendar.xw-appointment-fading > .flatpickr-innerContainer { opacity: 0; pointer-events: none; }
@@ -39,5 +39,8 @@
 .xw-appointment-calendar .xw-appointment-slot:hover, .xw-appointment-calendar .xw-appointment-slot[aria-pressed="true"] { background: var(--xw-appt-accent); color: #fff; }
 .xw-appointment-calendar button:focus-visible { outline: 2px solid var(--xw-appt-accent); outline-offset: 2px; }
 .flatpickr-calendar.xw-appointment-dark { --xw-appt-ink: #f4f6fa; --xw-appt-muted: #c7ced8; }
+@media (max-width: 1024px) {
+    .flatpickr-calendar.xw-appointment-calendar { width: var(--xw-appt-input-width, 336px); max-width: 100vw; }
+}
 @keyframes xw-appt-step-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .xw-appointment-calendar, .xw-appointment-calendar .xw-appointment-hours { animation: none !important; } .xw-appointment-calendar > .flatpickr-months, .xw-appointment-calendar > .flatpickr-innerContainer { transition: none; } }

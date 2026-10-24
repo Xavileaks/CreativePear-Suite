@@ -4,6 +4,11 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.66 — Citas: desplegable alineado en móvil
+
+- En móvil y tablet (hasta 1024 px), el calendario y las horas toman el ancho real del input de Cita. Se mide antes de que Flatpickr calcule su posición para mantener ambos bordes alineados, sin desplazarse a la derecha.
+- Recalcula el ancho al abrir, redimensionar o cambiar el tamaño del campo. Incluye el borde en el ancho y desconecta la observación al retirar el formulario. Conserva el ancho de escritorio y la selección de día y hora existente.
+
 ## Versión 1.0.65 — Fecha con formato persistente y foco de select
 
 - Global CSS styles elimina también la sombra de foco del `select` dentro de `.elementor-select-wrapper`: Elementor sitúa la clase `.elementor-field` en el contenedor, no en el select. Solo cambia `box-shadow`, sin quitar bordes ni añadir opciones.
