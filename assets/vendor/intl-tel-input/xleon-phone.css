@@ -15,7 +15,8 @@
 .iti__selected-country:focus {
     background: transparent !important;
     border: 0 !important;
-    color: inherit !important;
+    --iti-icon-color: currentColor;
+    color: var(--xw-phone-field-color, inherit) !important;
     margin: 0 !important;
     padding: 0 !important;
     box-shadow: none !important;

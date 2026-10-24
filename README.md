@@ -4,6 +4,11 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.69 — Phone mask: color del campo de Elementor
+
+- El prefijo internacional y la flecha del selector con bandera usan el color calculado del input, es decir, **Field → Text Color** de ese formulario. No toman el color del contenedor ni el gris fijo del icono; cada campo mantiene su propio color.
+- Sigue los cambios de estilos y clases del editor, hojas de estilo, foco y tamaño de pantalla, agrupando las actualizaciones por frame. Mantiene países, banderas, formato, validación y la paleta del desplegable. Integrado en Phone mask, sin opciones adicionales.
+
 ## Versión 1.0.68 — Fecha: selector conjunto de mes y año
 
 - El diseño aprobado con 12ui para Cita se aplica también al campo Date dentro del interruptor **Form Elementor: fecha**, sin nuevas opciones. Encabezado de mes y año juntos; dos ruedas desplazables sin barras visibles; × para volver al calendario del período centrado. Acento del color principal de Elementor con franja al 10 % y ancho alineado con el input en móvil/tablet.

@@ -4,6 +4,28 @@
     var config = window.xwPhoneSettings || {};
     var selector = 'form.elementor-form input[type="tel"], form.elementor-form .elementor-field-group-phone input';
     var errorIndex = 0;
+    var colourInputs = new Set();
+    var colourFrame = 0;
+
+    function syncInputColour(input) {
+        var wrapper = input.closest('.iti');
+        if (!wrapper) return;
+        var colour = window.getComputedStyle(input).color;
+        if (wrapper.style.getPropertyValue('--xw-phone-field-color') !== colour) {
+            wrapper.style.setProperty('--xw-phone-field-color', colour);
+        }
+    }
+
+    function scheduleColours() {
+        if (colourFrame) return;
+        colourFrame = window.requestAnimationFrame(function () {
+            colourFrame = 0;
+            colourInputs.forEach(function (input) {
+                if (!input.isConnected) colourInputs.delete(input);
+                else syncInputColour(input);
+            });
+        });
+    }
 
     function updateSubmitState(input, isValid) {
         var form = input.closest('form');
@@ -78,6 +100,10 @@
         var lastValidFormatted = '';
         var lastValidDigits = '';
         var wrapper = input.closest('.iti');
+        colourInputs.add(input);
+        syncInputColour(input);
+        input.addEventListener('focus', function () { syncInputColour(input); });
+        input.addEventListener('blur', function () { syncInputColour(input); });
         var error = document.createElement('span');
         errorIndex += 1;
         error.id = 'xw-phone-error-' + errorIndex;
@@ -205,16 +231,26 @@
         initialiseAll(document);
 
         var observer = new MutationObserver(function (mutations) {
+            var refreshColours = false;
             mutations.forEach(function (mutation) {
+                if ((mutation.target.nodeType === 1 && mutation.target.matches('style, link[rel="stylesheet"]')) || mutation.target.parentElement?.tagName === 'STYLE') refreshColours = true;
+                if (mutation.type === 'attributes') {
+                    colourInputs.forEach(function (input) { if (mutation.target.contains(input)) refreshColours = true; });
+                }
+                if (mutation.removedNodes.length) refreshColours = true;
                 mutation.addedNodes.forEach(function (node) {
                     if (node.nodeType === 1) {
                         initialiseAll(node);
+                        if (node.matches('style, link[rel="stylesheet"]') || node.querySelector('style, link[rel="stylesheet"]')) refreshColours = true;
                     }
                 });
             });
+            if (refreshColours) scheduleColours();
         });
 
-        observer.observe(document.body, { childList: true, subtree: true });
+        observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'style', 'href', 'media', 'disabled'] });
+        window.addEventListener('resize', scheduleColours, { passive: true });
+        document.addEventListener('load', function (event) { if (event.target.matches?.('link[rel="stylesheet"]')) scheduleColours(); }, true);
     }
 
     if (document.readyState === 'loading') {
