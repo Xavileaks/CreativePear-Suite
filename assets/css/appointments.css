@@ -22,6 +22,19 @@
 .xw-appointment-calendar .flatpickr-month, .xw-appointment-calendar .flatpickr-current-month, .xw-appointment-calendar .flatpickr-weekday { color: var(--xw-appt-ink); fill: var(--xw-appt-ink); }
 .xw-appointment-calendar .flatpickr-prev-month svg, .xw-appointment-calendar .flatpickr-next-month svg { fill: var(--xw-appt-ink); }
 .xw-appointment-calendar .flatpickr-current-month select { color: inherit; background: var(--xw-appt-calendar-bg, #fff); }
+.xw-appointment-calendar .xw-appointment-period-toggle { display: block; margin: 0 auto; min-height: 44px; max-width: calc(100% - 80px); padding: 8px 4px; border: 0; border-radius: 6px; background: transparent; color: var(--xw-appt-ink); font: inherit; font-size: 16px; cursor: pointer; }
+.xw-appointment-calendar .xw-appointment-period-toggle::after { content: ''; display: inline-block; width: 6px; height: 6px; border-bottom: 1.5px solid currentColor; border-right: 1.5px solid currentColor; transform: translateY(-2px) rotate(45deg); margin-inline-start: 10px; }
+.xw-appointment-calendar .xw-appointment-close svg { display: block; margin: auto; }
+.xw-appointment-calendar .flatpickr-months { min-height: 44px; align-items: center; }
+.xw-appointment-calendar .flatpickr-month { display: none; }
+.xw-appointment-calendar .xw-appointment-period { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 16px 20px; isolation: isolate; }
+.xw-appointment-calendar .xw-appointment-period::before { content: ''; position: absolute; inset: calc(50% - 22px) 0 auto; height: 44px; border-radius: 8px; background: #8792a31a; background: color-mix(in srgb, var(--xw-appt-accent) 10%, var(--xw-appt-calendar-bg, #fff)); z-index: -1; pointer-events: none; }
+.xw-appointment-calendar .xw-appointment-wheel { height: 220px; box-sizing: border-box; padding-block: 88px; overflow-y: auto; overscroll-behavior-y: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch; scrollbar-width: none; scroll-snap-type: y mandatory; scroll-padding-block: 88px; color: var(--xw-appt-muted); font-size: 16px; mask-image: linear-gradient(transparent, #000 25%, #000 75%, transparent); }
+.xw-appointment-calendar .xw-appointment-wheel::-webkit-scrollbar { display: none; }
+.xw-appointment-calendar .xw-appointment-wheel-option { display: grid; place-items: center; height: 44px; box-sizing: border-box; scroll-snap-align: center; cursor: pointer; white-space: nowrap; }
+.xw-appointment-calendar .xw-appointment-wheel-option[aria-selected="true"] { color: var(--xw-appt-ink); font-weight: 600; }
+.xw-appointment-calendar .xw-appointment-wheel:focus-visible { outline: 2px solid var(--xw-appt-accent); outline-offset: 2px; border-radius: 8px; }
+.xw-appointment-calendar.xw-appointment-period-view > .flatpickr-months, .xw-appointment-calendar.xw-appointment-period-view > .flatpickr-innerContainer { display: none; }
 .xw-appointment-calendar .flatpickr-days, .xw-appointment-calendar .flatpickr-rContainer { width: 100%; }
 .xw-appointment-calendar .dayContainer { width: 100%; min-width: 0; max-width: none; }
 .xw-appointment-calendar .flatpickr-day { flex-basis: calc(100% / 7 - 4px); max-width: calc(100% / 7 - 4px); width: calc(100% / 7 - 4px); height: auto; aspect-ratio: 1; line-height: normal; margin: 2px; display: grid; place-items: center; }
