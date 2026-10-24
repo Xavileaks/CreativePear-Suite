@@ -4,7 +4,7 @@ import vm from 'node:vm';
 const code = fs.readFileSync(new URL('../assets/js/elementor-date.js', import.meta.url), 'utf8');
 const context = { module: { exports: {} } };
 vm.runInNewContext(code, context);
-const { mask, toISO, isoToDisplay, remainingFormat, prefixError } = context.module.exports;
+const { mask, toISO, isoToDisplay, remainingFormat, prefixError, offStep } = context.module.exports;
 for (const [typed, expected] of [['', ''], ['2', '2'], ['22', '22'], ['221', '22/1'], ['2210', '22/10'], ['22102026', '22/10/2026'], ['22/10/2026', '22/10/2026'], ['2026-10-22', '22/10/2026'], ['abc22102026999', '22/10/2026']]) assert.equal(mask(typed), expected);
 for (const [display, iso] of [['29/02/2024', '2024-02-29'], ['22/10/2026', '2026-10-22'], ['01/01/1000', '1000-01-01'], ['31/12/3999', '3999-12-31']]) { assert.equal(toISO(display), iso); assert.equal(isoToDisplay(iso), display); }
 for (const invalid of ['', '22/10', '31/02/2026', '29/02/2025', '31/04/2026', '00/10/2026', '01/00/2026', '01/13/2026', '01/01/0000', '01/01/0001', '31/12/9999', '12/12/26', '2026-10-22']) assert.equal(toISO(invalid), '');
@@ -15,6 +15,12 @@ for (let month = 0; month < 100; month++) assert.equal(prefixError('01/' + Strin
 for (let first = 0; first < 10; first++) assert.equal(prefixError('01/01/' + first), first >= 1 && first <= 3 ? '' : 'year');
 for (const [typed, tail] of [['', ''], ['0', 'd/mm/aaaa'], ['01', '/mm/aaaa'], ['01/1', 'm/aaaa'], ['01/10', '/aaaa'], ['01/10/20', 'aa'], ['01/10/2026', '']]) assert.equal(remainingFormat(typed, 'dd/mm/aaaa'), tail);
 assert.equal(remainingFormat('01/10/20', 'dd/mm/yyyy'), 'yy');
+assert.equal(offStep('2026-10-24', '2026-10-20', '2'), false);
+assert.equal(offStep('2026-10-25', '2026-10-20', '2'), true);
+assert.equal(offStep('2026-10-26', '2026-10-20', '2'), false);
+assert.equal(offStep('2024-03-01', '2024-02-28', '2'), false, 'leap day contributes to the date step');
+assert.equal(offStep('2026-10-25', '2026-10-20', 'any'), false);
+assert.equal(offStep('1970-01-02', 'invalid', '2'), true, 'invalid step bases fall back to epoch');
 assert.ok(code.includes('input.elementor-date-field.flatpickr-input[type="text"]'), 'desktop Flatpickr Date fields are enhanced too');
 assert.ok(code.includes("picker.setDate(iso, false, 'Y-m-d')"), 'only complete validated ISO dates reach Flatpickr');
 assert.ok(code.includes('xw-date-open') && code.includes('native.showPicker()') && code.includes('picker.open()'), 'persistent calendar button opens the original native or Flatpickr picker');

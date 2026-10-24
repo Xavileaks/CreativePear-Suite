@@ -103,7 +103,7 @@ function xw_get_feature_definitions() {
         ),
         'elementor_date_input' => array(
             'title'       => xw_t( 'Form Elementor: fecha', 'Form Elementor: date' ),
-            'description' => xw_t( 'Permite escribir dd/mm/aaaa con teclado numérico en campos de fecha nativos y conserva su calendario e icono.', 'Allows typing dd/mm/yyyy with a numeric keyboard in native date fields while preserving their calendar and icon.' ),
+            'description' => xw_t( 'Permite escribir dd/mm/aaaa con teclado numérico y elegir mes y año juntos en el calendario.', 'Allows typing dd/mm/yyyy with a numeric keyboard and choosing month and year together in the calendar.' ),
         ),
         'elementor_appointments' => array(
             'title'       => xw_t( 'Form Elementor: citas', 'Form Elementor: appointments' ),

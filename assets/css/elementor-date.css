@@ -74,3 +74,27 @@
 .elementor-widget-form .elementor-form .xw-date-open svg { display: block; width: 20px; height: 20px; }
 .elementor-widget-form .elementor-form .xw-date-open:focus-visible { outline: 2px solid currentColor; outline-offset: -4px; }
 .elementor-widget-form .elementor-form .xw-date-open:disabled { opacity: .5; cursor: default; }
+/* The approved Cita month/year selector, independently gated by Form Elementor: fecha. */
+.flatpickr-calendar.xw-date-calendar { --xw-date-accent: var(--e-global-color-primary, #3450d1); --xw-date-ink: #283344; --xw-date-muted: #626b77; width: 336px; max-width: calc(100vw - 24px); max-height: calc(100dvh - 32px); box-sizing: border-box; overflow-y: auto; z-index: 100010; border-radius: 12px; background: #fff; color: var(--xw-date-ink); font-family: inherit; box-shadow: 0 8px 32px #18213326; }
+.xw-date-calendar::before, .xw-date-calendar::after { display: none; }
+.xw-date-calendar [hidden] { display: none !important; }
+.xw-date-calendar .xw-date-toolbar { display: flex; align-items: center; min-height: 52px; padding: 4px 8px 4px 16px; gap: 8px; border-bottom: 1px solid #8792a333; }
+.xw-date-calendar .xw-date-title { flex: 1; font-size: 15px; }
+.xw-date-calendar .xw-date-close { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; margin: 0; border: 0; border-radius: 8px; background: transparent; color: inherit; cursor: pointer; }
+.xw-date-calendar .xw-date-period-toggle { display: block; margin: 0 auto; min-height: 44px; max-width: calc(100% - 80px); padding: 8px 4px; border: 0; border-radius: 6px; background: transparent; color: inherit; font: inherit; font-size: 16px; cursor: pointer; }
+.xw-date-calendar .xw-date-period-toggle::after { content: ''; display: inline-block; width: 6px; height: 6px; border-bottom: 1.5px solid currentColor; border-right: 1.5px solid currentColor; transform: translateY(-2px) rotate(45deg); margin-inline-start: 10px; }
+.xw-date-calendar .flatpickr-months { min-height: 44px; align-items: center; }
+.xw-date-calendar .flatpickr-month { display: none; }
+.xw-date-calendar .flatpickr-days, .xw-date-calendar .flatpickr-rContainer { width: 100%; }
+.xw-date-calendar .dayContainer { width: 100%; min-width: 0; max-width: none; }
+.xw-date-calendar .flatpickr-day { flex-basis: calc(100% / 7 - 4px); max-width: calc(100% / 7 - 4px); width: calc(100% / 7 - 4px); height: auto; aspect-ratio: 1; line-height: normal; margin: 2px; display: grid; place-items: center; }
+.xw-date-calendar .flatpickr-day.selected, .xw-date-calendar .flatpickr-day:hover:not(.flatpickr-disabled) { background: var(--xw-date-accent); border-color: var(--xw-date-accent); color: #fff; }
+.xw-date-calendar .xw-date-period { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 16px 20px; isolation: isolate; }
+.xw-date-calendar .xw-date-period::before { content: ''; position: absolute; inset: calc(50% - 22px) 0 auto; height: 44px; border-radius: 8px; background: #8792a31a; background: color-mix(in srgb, var(--xw-date-accent) 10%, #fff); z-index: -1; pointer-events: none; }
+.xw-date-calendar .xw-date-wheel { height: 220px; box-sizing: border-box; padding-block: 88px; overflow-y: auto; overscroll-behavior-y: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch; scrollbar-width: none; scroll-snap-type: y mandatory; scroll-padding-block: 88px; color: var(--xw-date-muted); font-size: 16px; mask-image: linear-gradient(transparent, #000 25%, #000 75%, transparent); }
+.xw-date-calendar .xw-date-wheel::-webkit-scrollbar { display: none; }
+.xw-date-calendar .xw-date-wheel-option { display: grid; place-items: center; height: 44px; box-sizing: border-box; scroll-snap-align: center; cursor: pointer; white-space: nowrap; }
+.xw-date-calendar .xw-date-wheel-option[aria-selected="true"] { color: var(--xw-date-ink); font-weight: 600; }
+.xw-date-calendar .xw-date-wheel:focus-visible, .xw-date-calendar button:focus-visible { outline: 2px solid var(--xw-date-accent); outline-offset: 2px; border-radius: 8px; }
+.xw-date-calendar.xw-date-period-view > .flatpickr-months, .xw-date-calendar.xw-date-period-view > .flatpickr-innerContainer { display: none; }
+@media (max-width: 1024px) { .flatpickr-calendar.xw-date-calendar { width: var(--xw-date-input-width, 336px); max-width: 100vw; } }

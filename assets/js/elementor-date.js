@@ -30,12 +30,124 @@
         return '';
     }
     function remainingFormat(value, template) { return value && value.length < 10 ? template.slice(value.length) : ''; }
-    if (typeof module === 'object' && module.exports) module.exports = { mask, toISO, isoToDisplay, remainingFormat, prefixError };
+    function offStep(iso, base, step) {
+        if (step === 'any') return false;
+        const size = Number(step) > 0 ? Number(step) : 1;
+        const parsed = Date.parse(base + 'T00:00:00Z'), origin = Number.isFinite(parsed) ? parsed : Date.UTC(1970, 0, 1);
+        const distance = (Date.parse(iso + 'T00:00:00Z') - origin) / 86400000 / size;
+        return Math.abs(distance - Math.round(distance)) > 1e-8;
+    }
+    if (typeof module === 'object' && module.exports) module.exports = { mask, toISO, isoToDisplay, remainingFormat, prefixError, offStep };
     if (!root.document) return;
     const doc = root.document, settings = root.xwDateSettings || {};
     const selector = '.elementor-widget-form .elementor-form input.elementor-date-field.elementor-use-native[type="date"], .elementor-widget-form .elementor-form .elementor-field-type-date input.flatpickr-mobile[type="date"], .elementor-widget-form .elementor-form .elementor-field-type-date input.elementor-date-field.flatpickr-input[type="text"]';
     const states = new WeakMap();
     let sequence = 0;
+    const spanish = {
+        firstDayOfWeek: 1, weekdays: { shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'], longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'] },
+        months: { shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'], longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] },
+        rangeSeparator: ' a ', scrollTitle: 'Desplazar para cambiar', toggleTitle: 'Pulsar para cambiar', monthAriaLabel: 'Mes', yearAriaLabel: 'Año', time_24hr: true,
+    };
+    function element(tag, className, text) {
+        const node = doc.createElement(tag); node.className = className;
+        if (text) node.textContent = text;
+        return node;
+    }
+    // Same approved two-wheel interaction as Cita, scoped and owned by the Date feature.
+    function dateCalendar(picker, anchor, returnFocus) {
+        const calendar = picker.calendarContainer, hooks = [];
+        if (!calendar || calendar.classList.contains('xw-date-calendar')) return () => {};
+        calendar.classList.add('xw-date-calendar');
+        const oldId = calendar.id, oldRole = calendar.getAttribute('role'), oldLabel = calendar.getAttribute('aria-label');
+        const oldLocale = picker.config.locale;
+        if (settings.locale === 'es') picker.set('locale', spanish);
+        calendar.id ||= 'xw-date-calendar-' + (++sequence);
+        calendar.setAttribute('role', 'dialog'); calendar.setAttribute('aria-label', settings.calendar || 'Calendar');
+        const toolbar = element('div', 'xw-date-toolbar'), title = element('strong', 'xw-date-title', settings.chooseDay || 'Choose a day');
+        const close = element('button', 'xw-date-close'); close.type = 'button'; close.setAttribute('aria-label', settings.close || 'Close');
+        close.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+        toolbar.append(title, close); calendar.prepend(toolbar);
+        const heading = element('button', 'xw-date-period-toggle'); heading.type = 'button'; heading.setAttribute('aria-label', settings.choosePeriod || 'Choose month and year');
+        const oldHeading = picker.currentYearElement.parentElement.parentElement, wasHidden = oldHeading.hidden;
+        oldHeading.hidden = true; picker.monthNav.append(heading);
+        const period = element('div', 'xw-date-period'); period.hidden = true; period.id = calendar.id + '-period';
+        period.setAttribute('role', 'group'); period.setAttribute('aria-label', settings.period || 'Month and year'); heading.setAttribute('aria-controls', period.id);
+        calendar.append(period);
+        let wheelYear, monthWheel, yearWheel;
+        function label() { heading.textContent = picker.l10n.months.longhand[picker.currentMonth] + ' ' + picker.currentYear; heading.setAttribute('aria-description', heading.textContent); }
+        function days() { period.hidden = true; calendar.classList.remove('xw-date-period-view'); heading.setAttribute('aria-expanded', 'false'); title.textContent = settings.chooseDay || 'Choose a day'; label(); }
+        function wheel(labelText, key, onChange) {
+            const node = element('div', 'xw-date-wheel'); node.setAttribute('role', 'listbox'); node.setAttribute('aria-label', labelText); node.tabIndex = 0;
+            let items = [], active = -1;
+            function read() {
+                const height = node.firstElementChild?.getBoundingClientRect().height || 44;
+                const index = Math.max(0, Math.min(items.length - 1, Math.round(node.scrollTop / height)));
+                if (index !== active && items[index]) {
+                    node.children[active]?.setAttribute('aria-selected', 'false'); active = index; node.children[index].setAttribute('aria-selected', 'true');
+                    node.setAttribute('aria-activedescendant', node.children[index].id); onChange?.(items[index].value);
+                }
+                return items[index]?.value;
+            }
+            function select(index) { node.scrollTop = Math.max(0, Math.min(items.length - 1, index)) * (node.firstElementChild?.getBoundingClientRect().height || 44); read(); }
+            function render(next, value) {
+                items = next; active = -1; node.replaceChildren();
+                items.forEach((item, index) => {
+                    const option = element('div', 'xw-date-wheel-option', item.label); option.id = period.id + '-' + key + '-' + item.value; option.setAttribute('role', 'option'); option.setAttribute('aria-selected', 'false');
+                    option.addEventListener('click', () => { select(index); node.focus({ preventScroll: true }); }); node.append(option);
+                });
+                select(Math.max(0, items.findIndex(item => item.value === value)));
+            }
+            node.addEventListener('scroll', read, { passive: true });
+            node.addEventListener('keydown', event => {
+                const index = Math.max(0, items.findIndex(item => item.value === read()));
+                const next = { ArrowDown: index + 1, ArrowUp: index - 1, Home: 0, End: items.length - 1, PageDown: index + 3, PageUp: index - 3 }[event.key];
+                if (next !== undefined) { event.preventDefault(); select(next); }
+            });
+            return { node, read, render };
+        }
+        function bounds() {
+            return [picker.config.minDate && picker.config.minDate.getFullYear() >= 1000 ? picker.config.minDate : new Date(1000, 0, 1), picker.config.maxDate && picker.config.maxDate.getFullYear() <= 3999 ? picker.config.maxDate : new Date(3999, 11, 31)];
+        }
+        function months(year, preferred) {
+            const [min, max] = bounds(), first = year === min.getFullYear() ? min.getMonth() : 0, last = year === max.getFullYear() ? max.getMonth() : 11;
+            wheelYear = year;
+            monthWheel.render(Array.from({ length: Math.max(0, last - first + 1) }, (_, i) => ({ value: first + i, label: picker.l10n.months.longhand[first + i] })), Math.max(first, Math.min(last, preferred)));
+        }
+        monthWheel = wheel(picker.l10n.monthAriaLabel, 'month');
+        yearWheel = wheel(picker.l10n.yearAriaLabel, 'year', year => { if (year !== wheelYear) months(year, monthWheel.read() ?? picker.currentMonth); });
+        period.append(monthWheel.node, yearWheel.node);
+        function apply() {
+            const year = yearWheel.read(); if (year !== wheelYear) months(year, monthWheel.read());
+            if (year !== undefined && monthWheel.read() !== undefined) picker.jumpToDate(new Date(year, monthWheel.read(), 1), true);
+            days(); picker._positionCalendar(); heading.focus({ preventScroll: true });
+        }
+        heading.addEventListener('click', () => {
+            period.hidden = false; calendar.classList.add('xw-date-period-view'); heading.setAttribute('aria-expanded', 'true'); title.textContent = settings.period || 'Month and year';
+            const [min, max] = bounds(), first = min.getFullYear(), last = max.getFullYear(); wheelYear = Math.max(first, Math.min(last, picker.currentYear));
+            yearWheel.render(Array.from({ length: Math.max(0, last - first + 1) }, (_, i) => ({ value: first + i, label: String(first + i) })), wheelYear);
+            months(wheelYear, picker.currentMonth); monthWheel.node.focus({ preventScroll: true }); picker._positionCalendar();
+        });
+        close.addEventListener('click', () => { if (!period.hidden) apply(); else { picker.close(); returnFocus.focus({ preventScroll: true }); } });
+        [toolbar, heading, period].forEach(node => node.addEventListener('keydown', event => {
+            event.stopPropagation();
+            if (!period.hidden && (event.key === 'Escape' || event.key === 'Enter')) { event.preventDefault(); apply(); }
+            else if (event.key === 'Escape') { event.preventDefault(); picker.close(); returnFocus.focus({ preventScroll: true }); }
+        }));
+        function hook(name, callback) { picker.config[name].push(callback); hooks.push([name, callback]); }
+        hook('onOpen', days); hook('onMonthChange', label); hook('onYearChange', label); hook('onValueUpdate', label);
+        hook('onPreCalendarPosition', () => calendar.style.setProperty('--xw-date-input-width', anchor.getBoundingClientRect().width + 'px'));
+        const resize = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { if (picker.isOpen) picker._positionCalendar(); }) : null; resize?.observe(anchor);
+        days();
+        return destroying => {
+            resize?.disconnect(); hooks.forEach(([name, callback]) => { const index = picker.config[name].indexOf(callback); if (index !== -1) picker.config[name].splice(index, 1); });
+            if (!destroying) {
+                toolbar.remove(); heading.remove(); period.remove(); oldHeading.hidden = wasHidden; calendar.classList.remove('xw-date-calendar', 'xw-date-period-view');
+                calendar.id = oldId; if (oldRole === null) calendar.removeAttribute('role'); else calendar.setAttribute('role', oldRole);
+                if (oldLabel === null) calendar.removeAttribute('aria-label'); else calendar.setAttribute('aria-label', oldLabel);
+                if (settings.locale === 'es') picker.set('locale', oldLocale);
+            }
+        };
+    }
 
     function enhance(native) {
         if (states.has(native) || native.disabled || native.readOnly || native.closest('.elementor-edit-area-active')) return;
@@ -80,6 +192,14 @@
         native.before(wrap); wrap.append(native, editor, hint, open);
         native.classList.add('xw-date-native');
         let syncing = false, lastAccepted = '', lastCaret = 0, lastEnd = 0;
+        let calendarPicker = picker, proxy = null, calendarCleanup = () => {};
+        function calendarRules() {
+            const original = source._flatpickr?.config || {};
+            return {
+                minDate: native.min || original.minDate || '1000-01-01', maxDate: native.max || original.maxDate || '3999-12-31', ...(original.enable ? { enable: original.enable } : {}),
+                disable: [...(original.disable || []), date => offStep(root.flatpickr.formatDate(date, 'Y-m-d'), native.min || native.getAttribute('value') || '1970-01-01', native.step)],
+            };
+        }
         function errorMessage(key) { return settings[key] || settings.invalid || 'Enter a valid date: day 01–31, month 01–12, year 1000–3999.'; }
         function describeFormat() { prefix.textContent = editor.value; remainder.textContent = remainingFormat(editor.value, editor.placeholder); hint.hidden = !remainder.textContent; }
         function syncAttributes() {
@@ -87,6 +207,7 @@
             editor.readOnly = native.readOnly;
             editor.required = source.required;
             open.disabled = editor.disabled || editor.readOnly;
+            if (!flat && calendarPicker) { calendarPicker.set(calendarRules()); if (open.disabled) calendarPicker.close(); }
         }
         function fromPicker() {
             if (syncing) return;
@@ -95,6 +216,7 @@
             editor.setCustomValidity(error ? errorMessage(error) : native.validationMessage || '');
             if (error) editor.setAttribute('aria-invalid', 'true'); else editor.removeAttribute('aria-invalid');
             lastAccepted = error ? '' : editor.value; lastCaret = lastEnd = lastAccepted.length;
+            if (!flat && calendarPicker) { if (toISO(editor.value)) calendarPicker.setDate(native.value, false, 'Y-m-d'); else calendarPicker.clear(false); }
             describeFormat();
         }
         function toPicker() {
@@ -104,6 +226,7 @@
             // Never let Flatpickr loosely parse partial numeric text as a year.
             if (flat) { if (iso) picker.setDate(iso, false, 'Y-m-d'); else if (native.value || picker.selectedDates.length) picker.clear(false); }
             else native.value = iso;
+            if (!flat && calendarPicker) { if (iso) calendarPicker.setDate(iso, false, 'Y-m-d'); else calendarPicker.clear(false); }
             const nativeError = native.validationMessage;
             // Flatpickr's own change listener synchronizes its original named field.
             native.dispatchEvent(new Event('input', { bubbles: true }));
@@ -117,7 +240,23 @@
         open.addEventListener('click', function () {
             if (open.disabled) return;
             if (flat) picker.open();
-            else { try { if (typeof native.showPicker === 'function') native.showPicker(); else native.click(); } catch (_) { native.click(); } }
+            else if (typeof root.flatpickr === 'function') {
+                if (!calendarPicker) {
+                    // Keep the named native control and its validity; the popup uses an unnamed proxy.
+                    proxy = doc.createElement('input'); proxy.type = 'text'; proxy.hidden = true; proxy.tabIndex = -1; proxy.setAttribute('aria-hidden', 'true'); wrap.append(proxy);
+                    calendarPicker = root.flatpickr(proxy, {
+                        dateFormat: 'Y-m-d', ariaDateFormat: 'j F Y', disableMobile: true, clickOpens: false, positionElement: native,
+                        defaultDate: native.value || null, locale: settings.locale === 'es' ? spanish : source._flatpickr?.config.locale || 'default', ...calendarRules(),
+                        onChange: (dates, _, instance) => {
+                            native.value = dates[0] ? instance.formatDate(dates[0], 'Y-m-d') : '';
+                            native.dispatchEvent(new Event('input', { bubbles: true })); native.dispatchEvent(new Event('change', { bubbles: true }));
+                            fromPicker(); editor.focus({ preventScroll: true });
+                        }, onOpen, onClose,
+                    });
+                    calendarCleanup = dateCalendar(calendarPicker, native, editor);
+                }
+                calendarPicker.open();
+            } else { try { if (typeof native.showPicker === 'function') native.showPicker(); else native.click(); } catch (_) { native.click(); } }
         });
         editor.addEventListener('beforeinput', function () { lastCaret = editor.selectionStart; lastEnd = editor.selectionEnd; });
         editor.addEventListener('input', function (event) {
@@ -163,12 +302,14 @@
         form.addEventListener('submit', onSubmit, true);
         const observers = [new MutationObserver(syncAttributes)];
         observers[0].observe(native, { attributes: true, attributeFilter: ['disabled', 'readonly', 'required', 'min', 'max', 'step'] });
-        if (source !== native) { const observer = new MutationObserver(syncAttributes); observer.observe(source, { attributes: true, attributeFilter: ['disabled', 'required'] }); observers.push(observer); }
+        if (source !== native) { const observer = new MutationObserver(syncAttributes); observer.observe(source, { attributes: true, attributeFilter: ['disabled', 'readonly', 'required', 'min', 'max', 'step'] }); observers.push(observer); }
         syncAttributes(); fromPicker();
         const onOpen = () => open.setAttribute('aria-expanded', 'true'), onClose = () => { open.setAttribute('aria-expanded', 'false'); if (doc.activeElement === native) editor.focus(); };
         function cleanup(destroying = false) {
             states.delete(native);
             observers.forEach(observer => observer.disconnect());
+            calendarCleanup(destroying);
+            if (!flat && calendarPicker) { calendarPicker.destroy(); proxy.remove(); }
             native.removeEventListener('input', fromPicker); native.removeEventListener('change', fromPicker); native.removeEventListener('invalid', onInvalid);
             form.removeEventListener('reset', onReset); form.removeEventListener('submit', onSubmit, true);
             originalLabels.forEach(([label, target]) => { if (label.htmlFor === editor.id) label.htmlFor = target; });
@@ -188,6 +329,7 @@
         if (flat) {
             for (const [hook, listener] of [['onValueUpdate', fromPicker], ['onChange', fromPicker], ['onOpen', onOpen], ['onClose', onClose], ['onDestroy', onDestroy]]) picker.config[hook].push(listener);
             open.setAttribute('aria-expanded', 'false');
+            calendarCleanup = dateCalendar(picker, native, editor);
         }
     }
     function scan(scope) {
