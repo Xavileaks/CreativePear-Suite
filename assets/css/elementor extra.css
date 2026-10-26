@@ -4,9 +4,12 @@
   --color-web: #E52427;
 }
 
-html, body {
- width: 100% !important;
- overflow-x: hidden !important;
+/* Clip horizontal overflow without creating a second vertical scroll container.
+   Leave vertical overflow and site widths to the theme. */
+@supports (overflow-x: clip) {
+  html, body {
+    overflow-x: clip;
+  }
 }
 
 a {

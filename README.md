@@ -4,6 +4,10 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.75 — Estilos globales: evitar el doble scroll
+
+Se elimina el ancho forzado y `overflow-x: hidden !important` sobre `html` y `body`. El recorte horizontal usa `overflow-x: clip`, sin `!important`, y únicamente si el navegador lo admite. No convierte `body` en un contenedor adicional de scroll vertical ni impone anchos, alturas o `overflow-y`. Se aplica en ambos elementos para evitar también la ampliación del viewport móvil cuando un hijo sobresale horizontalmente. En navegadores sin `clip` se mantiene el comportamiento del tema. Sigue dependiendo de la caja Estilos CSS globales.
+
 ## Versión 1.0.74 — Estilos globales: respetar el ancho de Elementor
 
 Se retiran las reglas que imponían `--container-max-width: 90%` entre 1025 y 1400 px y `70%` desde 1700 px. Cada sitio conserva el ancho de sus contenedores configurado en Elementor.
