@@ -4,6 +4,10 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.74 — Estilos globales: respetar el ancho de Elementor
+
+Se retiran las reglas que imponían `--container-max-width: 90%` entre 1025 y 1400 px y `70%` desde 1700 px. Cada sitio conserva el ancho de sus contenedores configurado en Elementor.
+
 ## Versión 1.0.73 — Elementor: ancho del mensaje de confirmación
 
 El campo Mensaje de confirmación ocupa todo el ancho interior de su caja, también en móvil, y permite ajustar su altura. Se mantienen las dos columnas de funciones en escritorio.

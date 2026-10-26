@@ -77,17 +77,6 @@ input[type=radio] {
     accent-color: var(--color-web);
 }
 
-/*Prueba*/
-@media (min-width: 1025px) and (max-width:1400px) {
-	.e-con  { --container-max-width: 90%;
-}
-}
-
-@media (min-width: 1700px) {
-	.e-con  { --container-max-width: 70%;
-}
-}
-
 .elementor-icon-wrapper {
     line-height: 0;
 }
