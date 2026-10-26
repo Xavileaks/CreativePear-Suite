@@ -4,6 +4,17 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.71 — Elementor: estilos de correo para administrador y cliente
+
+Dos cajas nuevas al principio de **Elementor**, apagadas por defecto e independientes:
+
+- **Correo del administrador**: da estilo a la acción Email existente. Nombre/logo del sitio, aviso de nuevo mensaje, campos ordenados y metadatos seleccionados. Omite campos vacíos y controles de seguridad como CAPTCHA/contraseñas; conserva campos ordinarios, incluido el valor 0, y el manejo nativo de adjuntos.
+- **Correo del cliente**: da estilo únicamente a **Email 2 ya configurado**. Confirmación breve con icono, sin repetir los datos enviados. En su caja puedes cambiar el texto; vacío usa el mensaje genérico en español/inglés según el idioma de WordPress. Configura en Elementor el destinatario de Email 2, por ejemplo `[field id="email"]`; la suite no añade envíos ni cambia destinatarios, remitentes, copias o adjuntos.
+
+Se aplican solo si **Mensaje** está vacío o es exactamente `[all-fields]`, y **Enviar como** es HTML. Si el contenido tiene texto, HTML, códigos de campo personalizados o contenido dinámico, se respeta el correo de Elementor. El modo texto plano también se conserva. Los metadatos se eligen en cada acción y desaparecen cuando no están activados. Los asuntos genéricos se adaptan al idioma de WordPress; los asuntos personalizados, las etiquetas y los valores del formulario se mantienen.
+
+No requiere Global CSS ni guarda copias de los correos. Transporte y errores siguen siendo de Elementor/WordPress. HTML con tablas, estilos en línea, fuentes del sistema e iconos PNG; vista previa de navegador, sin afirmar entrega comprobada en cada cliente de correo. Diseño revisado con 12ui y pruebas locales con todas las llamadas a `wp_mail` interceptadas. Dos columnas de cajas en escritorio, una en tablet/móvil. No instala ni activa la utilidad en sitios automáticamente.
+
 ## Versión 1.0.70 — Fecha: flechas alineadas con mes y año
 
 - La fila de mes/año se convierte en la referencia de posición de sus flechas, evitando que aparezcan sobre el título superior. Ambas quedan centradas verticalmente, con área de 44 px, también en móvil. Conserva la ocultación al alcanzar los límites mínimo/máximo y la navegación existente.

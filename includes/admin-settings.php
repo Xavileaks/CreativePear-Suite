@@ -87,6 +87,16 @@ function xw_get_feature_definitions() {
             'description' => xw_t( 'Muestra un acceso flotante configurable que abre una conversación con el número indicado.', 'Displays a configurable floating shortcut that opens a conversation with the specified number.' ),
             'settings'    => true,
         ),
+        'elementor_email_admin_style' => array(
+            'title'       => xw_t( 'Form Elementor: correo del administrador', 'Form Elementor: admin email styles' ),
+            'description' => xw_t( 'Organiza el correo del formulario con sus campos y metadatos activados. Solo para el mensaje predeterminado [all-fields].', 'Organizes the form email with its fields and enabled metadata. Only for the default [all-fields] message.' ),
+            'settings'    => true,
+        ),
+        'elementor_email_customer_style' => array(
+            'title'       => xw_t( 'Form Elementor: correo del cliente', 'Form Elementor: customer email styles' ),
+            'description' => xw_t( 'Da estilo a la confirmación de Email 2 ya configurado en Elementor, con un mensaje breve editable.', 'Styles the confirmation from Email 2 already configured in Elementor, with an editable short message.' ),
+            'settings'    => true,
+        ),
         'elementor_wishlist' => array(
             'title'       => 'Wishlist',
             'description' => xw_t( 'Añade tres widgets a Elementor: tabla de deseos, icono con contador y botón para guardar productos.', 'Adds three Elementor widgets: wishlist table, counter icon, and save-product button.' ),
@@ -212,6 +222,8 @@ function xw_get_feature_groups() {
             'title'       => 'Elementor',
             'description' => xw_t( 'Widgets y funciones para Elementor.', 'Widgets and features for Elementor.' ),
             'features'    => array(
+                'elementor_email_admin_style',
+                'elementor_email_customer_style',
                 'elementor_wishlist',
                 'elementor_messages',
                 'elementor_phone_mask',
@@ -314,6 +326,7 @@ function xw_get_default_settings() {
             'hide_tablet'       => 0,
             'hide_desktop'      => 0,
         ),
+        'elementor_emails' => array( 'customer_message' => '' ),
         'phone' => array(
             'mode'              => 'area_code',
             'language'          => xw_interface_language(),
@@ -493,6 +506,8 @@ function xw_sanitize_settings( $input ) {
     }
 
     $sanitized['duplicate_page'] = xw_duplicate_sanitize( $input['duplicate_page'] ?? array() );
+    $customer_email_message = $input['elementor_emails']['customer_message'] ?? '';
+    $sanitized['elementor_emails']['customer_message'] = is_scalar( $customer_email_message ) ? sanitize_textarea_field( (string) $customer_email_message ) : '';
     $sanitized['quantity_buttons'] = xw_quantity_sanitize( $input['quantity_buttons'] ?? array() );
     $wishlist_page = absint( $input['wishlist']['page_id'] ?? 0 );
     $sanitized['wishlist']['page_id'] = $wishlist_page && 'page' === get_post_type( $wishlist_page ) && 'publish' === get_post_status( $wishlist_page ) ? $wishlist_page : 0;
@@ -1202,6 +1217,16 @@ function xw_render_settings_page() {
                                         );
                                         ?>
                                         <p><?php echo esc_html( xw_t( 'Escriba el mensaje, seleccione una palabra o frase y pulse el botón de enlace.', 'Write the message, select a word or phrase, and press the link button.' ) ); ?></p>
+                                    </div>
+                                <?php elseif ( in_array( $key, array( 'elementor_email_admin_style', 'elementor_email_customer_style' ), true ) ) : ?>
+                                    <div class="xw-field-row xw-field-full">
+                                        <p><?php echo esc_html( xw_t( 'Se aplica al correo HTML cuando Mensaje está vacío o contiene únicamente [all-fields]. Si personalizas ese contenido en Elementor, se conserva tu correo. Los metadatos se eligen en la acción Email correspondiente.', 'Applies to HTML email when Message is empty or contains only [all-fields]. If you customize that content in Elementor, your email is preserved. Choose metadata in the corresponding Email action.' ) ); ?></p>
+                                        <?php if ( 'elementor_email_customer_style' === $key ) : ?>
+                                            <p><?php echo esc_html( xw_t( 'Configura primero Email 2 y su destinatario en Elementor. Esta utilidad no añade envíos ni cambia destinatarios.', 'Configure Email 2 and its recipient in Elementor first. This utility does not add sends or change recipients.' ) ); ?></p>
+                                            <label for="xw-customer-email-message"><?php echo esc_html( xw_t( 'Mensaje de confirmación', 'Confirmation message' ) ); ?></label>
+                                            <textarea id="xw-customer-email-message" name="xw_settings[elementor_emails][customer_message]" rows="4" placeholder="<?php echo esc_attr( xw_t( 'Gracias por ponerte en contacto con nosotros. Hemos recibido tu mensaje correctamente.', 'Thank you for contacting us. We have received your message successfully.' ) ); ?>"><?php echo esc_textarea( $settings['elementor_emails']['customer_message'] ); ?></textarea>
+                                            <p><?php echo esc_html( xw_t( 'Vacío: mensaje genérico según el idioma de WordPress. El texto personalizado se muestra tal como lo escribas, sin códigos de campo.', 'Empty: generic message in the WordPress language. Custom text is displayed as written, without field shortcodes.' ) ); ?></p>
+                                        <?php endif; ?>
                                     </div>
                                 <?php elseif ( 'elementor_appointments' === $key ) : ?>
                                     <div class="xw-field-row xw-field-full">
