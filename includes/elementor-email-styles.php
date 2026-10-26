@@ -71,7 +71,7 @@ function xw_form_email_render( $record, $kind ) {
     $settings = xw_get_settings(); $custom = $settings['elementor_emails']['customer_message'] ?? '';
     $message = is_string( $custom ) && '' !== trim( $custom ) ? $custom : xw_form_email_t( 'Gracias por ponerte en contacto con nosotros. Hemos recibido tu mensaje correctamente.', 'Thank you for contacting us. We have received your message successfully.' );
     $logo = wp_get_attachment_image_url( (int) get_theme_mod( 'custom_logo' ), 'medium' );
-    $icon = plugin_dir_url( XW_FUNCTIONS_FILE ) . 'assets/images/' . ( $customer ? 'email-received.png' : 'email-message.png' );
+    $icon = add_query_arg( 'ver', XW_FUNCTIONS_VERSION, plugin_dir_url( XW_FUNCTIONS_FILE ) . 'assets/images/' . ( $customer ? 'email-received.png' : 'email-message.png' ) );
     $lang = 0 === strpos( strtolower( get_locale() ), 'es' ) ? 'es' : 'en';
     ob_start();
     ?>

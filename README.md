@@ -4,6 +4,10 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.72 — Elementor: iconos verdes en los correos
+
+Los iconos de mensaje y recepción usan verde con fondo verde suave. La URL incluye la versión del plugin para renovar la imagen almacenada en caché.
+
 ## Versión 1.0.71 — Elementor: estilos de correo para administrador y cliente
 
 Dos cajas nuevas al principio de **Elementor**, apagadas por defecto e independientes:
