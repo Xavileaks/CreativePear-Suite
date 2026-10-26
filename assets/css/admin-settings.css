@@ -261,6 +261,15 @@
     grid-column: 1 / -1;
 }
 
+.xw-settings-wrap #xw-customer-email-message {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    resize: vertical;
+}
+
 .xw-color-control,
 .xw-media-control,
 .xw-number-control {
