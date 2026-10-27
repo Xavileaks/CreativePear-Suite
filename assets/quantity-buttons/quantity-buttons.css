@@ -43,14 +43,16 @@ body .wc-block-components-quantity-selector .wc-block-components-quantity-select
     color: var(--xw-qty-hover-color, #1d2327) !important;
 }
 body .quantity.xw-quantity input.qty,
-body .wc-block-components-quantity-selector .wc-block-components-quantity-selector__input {
+body .wc-block-components-quantity-selector input.wc-block-components-quantity-selector__input {
     box-sizing: border-box !important;
     flex: 0 0 var(--xw-qty-input-width, 60px) !important;
     width: var(--xw-qty-input-width, 60px) !important;
     min-width: var(--xw-qty-input-width, 60px) !important;
     max-width: var(--xw-qty-input-width, 60px) !important;
     height: var(--xw-qty-input-height, 44px) !important;
-    min-height: 44px;
+    /* Theme min/max heights must not clamp the configured quantity height. */
+    min-height: var(--xw-qty-input-height, 44px) !important;
+    max-height: var(--xw-qty-input-height, 44px) !important;
     padding: 4px !important;
     margin: 0 !important;
     font: inherit;

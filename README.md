@@ -4,6 +4,10 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.76 — Cantidad: respetar la altura configurada
+
+El input del módulo Quantity Plus Minus Button fija `height`, `min-height` y `max-height` al valor de su ajuste. Así los límites de altura del tema no encogen ni agrandan el campo. Se limita al control mejorado `.quantity.xw-quantity` y al selector nativo de bloques WooCommerce que ya estiliza el módulo; no afecta otros inputs ni los controles de otros plugins que el módulo omite. Los botones circulares mantienen su diámetro independiente. La carga sigue dependiendo del interruptor existente.
+
 ## Versión 1.0.75 — Estilos globales: evitar el doble scroll
 
 Se elimina el ancho forzado y `overflow-x: hidden !important` sobre `html` y `body`. El recorte horizontal usa `overflow-x: clip`, sin `!important`, y únicamente si el navegador lo admite. No convierte `body` en un contenedor adicional de scroll vertical ni impone anchos, alturas o `overflow-y`. Se aplica en ambos elementos para evitar también la ampliación del viewport móvil cuando un hijo sobresale horizontalmente. En navegadores sin `clip` se mantiene el comportamiento del tema. Sigue dependiendo de la caja Estilos CSS globales.
