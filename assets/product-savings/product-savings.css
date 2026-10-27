@@ -1,0 +1,27 @@
+/* Compact badge from the supplied reference; all controls are per Elementor instance. */
+.xw-product-savings .xw-product-savings__badge {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .3em;
+    box-sizing: border-box;
+    max-width: 100%;
+    padding: 3px 6px;
+    border: 0 solid transparent;
+    border-radius: 2px;
+    background-color: #cf5656;
+    color: #fff;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    vertical-align: middle;
+}
+.xw-product-savings .xw-product-savings__badge [hidden],
+.xw-product-savings .xw-product-savings__badge[hidden],
+.xw-product-savings .xw-product-savings__notice[hidden] { display: none !important; }
+.xw-product-savings__badge .woocommerce-Price-amount,
+.xw-product-savings__badge .woocommerce-Price-currencySymbol,
+.xw-product-savings__badge bdi { color: inherit; font: inherit; }
+.xw-product-savings .xw-product-savings__notice { font: inherit; font-size: 13px; opacity: .75; }

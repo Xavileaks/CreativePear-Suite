@@ -4,6 +4,16 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+## Versión 1.0.77 — WooCommerce: Valor relativo y absoluto
+
+Nueva caja al principio de **WooCommerce**, apagada por defecto. Actívala, guarda y busca **Valor relativo y absoluto** en Elementor, dentro de la categoría de la suite. El widget muestra el ahorro de la oferta como **porcentaje** (`Ahorra 11%`) o **importe** (`Ahorra 60€`, con el formato monetario de la tienda). Colócalo junto al widget de precio en una plantilla de producto o Loop.
+
+En el widget puedes editar texto, color, fondo, tipografía, borde, redondeado, espacio interior y alineación; los estilos se aplican por instancia. Lee el producto actual, no cambia sus precios ni aplica descuentos. El importe es por unidad y respeta moneda e impuestos de visualización de WooCommerce. El porcentaje entero se calcula a la baja para no exagerar el ahorro; los inferiores al 1% se muestran como `< 1%`.
+
+Sin oferta activa, con precios inválidos o fuera de las fechas de oferta, se oculta. En productos variables espera a la selección y usa el ahorro de **esa variación**, sin mezclar precios mínimos/máximos de variantes distintas; se oculta al reiniciar o elegir una variante sin oferta. Los eventos de WooCommerce actualizan cada instancia y conservan separados otros Loops. No necesita Elementor Pro para registrar el widget, aunque el editor de plantillas/Loops depende de las funciones disponibles en tu Elementor.
+
+Activos cargados por el widget, independientes de Estilos CSS globales. Sin WooCommerce o Elementor no se registra; no se añade una tabla ni se guardan copias de precios. Diseño basado en la etiqueta de la referencia y convertido con 12ui. Probado localmente con WooCommerce 11.2.1, Elementor 4.3.4 y sus controles nativos; cálculo, estados, exclusiones, estilos por instancia y vista móvil. Publicar no lo instala ni activa automáticamente en los sitios.
+
 ## Versión 1.0.76 — Cantidad: respetar la altura configurada
 
 El input del módulo Quantity Plus Minus Button fija `height`, `min-height` y `max-height` al valor de su ajuste. Así los límites de altura del tema no encogen ni agrandan el campo. Se limita al control mejorado `.quantity.xw-quantity` y al selector nativo de bloques WooCommerce que ya estiliza el módulo; no afecta otros inputs ni los controles de otros plugins que el módulo omite. Los botones circulares mantienen su diámetro independiente. La carga sigue dependiendo del interruptor existente.

@@ -128,6 +128,11 @@ function xw_get_feature_definitions() {
             'title'       => xw_t( 'Form Elementor: validación de mensajes', 'Form Elementor: message validation' ),
             'description' => xw_t( 'Limita los caracteres admitidos en áreas de texto de Elementor.', 'Limits the characters allowed in Elementor text areas.' ),
         ),
+        'woocommerce_product_savings' => array(
+            'title'       => xw_t( 'Valor relativo y absoluto', 'Relative and absolute savings' ),
+            'description' => xw_t( 'Añade un widget de Elementor que muestra el ahorro de la oferta como porcentaje o importe.', 'Adds an Elementor widget showing sale savings as a percentage or amount.' ),
+            'settings'    => true,
+        ),
         'woocommerce_quantity_buttons' => array(
             'title'       => 'Quantity Plus Minus Button',
             'description' => xw_t( 'Añade botones + y − a los campos de cantidad de WooCommerce, con colores y dimensiones configurables.', 'Adds + and − buttons to WooCommerce quantity inputs, with configurable colors and dimensions.' ),
@@ -237,6 +242,7 @@ function xw_get_feature_groups() {
             'title'       => 'WooCommerce',
             'description' => xw_t( 'Funciones específicas para tiendas WooCommerce.', 'Features specifically for WooCommerce stores.' ),
             'features'    => array(
+                'woocommerce_product_savings',
                 'woocommerce_quantity_buttons',
                 'woocommerce_orders_menu',
                 'woocommerce_auto_cart',
@@ -1283,6 +1289,11 @@ function xw_render_settings_page() {
                                             </label>
                                         </div>
                                         <div class="xw-country-code-grid" data-xw-country-grid></div>
+                                    </div>
+                                <?php elseif ( 'woocommerce_product_savings' === $key ) : ?>
+                                    <div class="xw-field-row xw-field-full">
+                                        <p><?php echo esc_html( xw_t( 'Guarda y busca el widget «Valor relativo y absoluto» en Elementor. Elige porcentaje o importe y configura el texto, fondo, borde y redondeado en el propio widget. Requiere WooCommerce y Elementor.', 'Save and find the “Relative and absolute savings” widget in Elementor. Choose percentage or amount and configure text, background, border and radius in the widget. Requires WooCommerce and Elementor.' ) ); ?></p>
+                                        <p><?php echo esc_html( xw_t( 'Colócalo junto al precio en la plantilla de producto o en un Loop. Se oculta sin oferta; en productos variables espera a que se elija una variación. No modifica los precios ni añade descuentos.', 'Place it beside the price in a product template or Loop. Hidden without a sale; variable products wait for a variation to be selected. It does not change prices or apply discounts.' ) ); ?></p>
                                     </div>
                                 <?php elseif ( 'woocommerce_quantity_buttons' === $key ) : ?>
                                     <?php xw_render_quantity_settings( $settings['quantity_buttons'] ); ?>
