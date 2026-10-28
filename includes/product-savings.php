@@ -56,11 +56,6 @@ add_action( 'wp_enqueue_scripts', 'xw_product_savings_register_assets' );
 add_action( 'elementor/frontend/after_register_styles', 'xw_product_savings_register_assets' );
 add_action( 'elementor/frontend/after_register_scripts', 'xw_product_savings_register_assets' );
 
-add_action( 'elementor/elements/categories_registered', static function( $manager ) {
-    if ( ! xw_product_savings_enabled() || isset( $manager->get_categories()['xw-suite'] ) ) { return; }
-    $metadata = get_file_data( XW_FUNCTIONS_FILE, array( 'name' => 'Plugin Name' ) );
-    $manager->add_category( 'xw-suite', array( 'title' => $metadata['name'] ?: 'Suite', 'icon' => 'eicon-woocommerce' ) );
-}, 20 );
 add_action( 'elementor/widgets/register', static function( $manager ) {
     if ( ! xw_product_savings_enabled() ) { return; }
     require_once __DIR__ . '/product-savings/widget.php';

@@ -6,13 +6,15 @@ if ( ! $qa_root || ! is_file( $qa_root . '/wp-load.php' ) ) { exit( 'Supply the 
 $qa_suite = ( PHP_SAPI === 'cli' ? ( $argv[2] ?? '' ) : ( $_GET['suite'] ?? '' ) ) === 'creativepear' ? 'creativepear-suite' : 'xleon-suite';
 $qa_mode = PHP_SAPI === 'cli' ? ( $argv[3] ?? 'on' ) : 'on';
 $qa_woo_plugin = is_file( $qa_root . '/wp-content/plugins/xw-qa-woocommerce/woocommerce.php' ) ? 'xw-qa-woocommerce/woocommerce.php' : 'woocommerce/woocommerce.php';
+$GLOBALS['wp_filter']['pre_http_request'][10][] = array( 'function' => static function() { return new WP_Error( 'local_qa', 'External HTTP disabled in the isolated test.' ); }, 'accepted_args' => 1 );
 $GLOBALS['wp_filter']['option_active_plugins'][10][] = array( 'function' => static function() use ( $qa_suite, $qa_mode, $qa_woo_plugin ) {
     $plugins = array( $qa_suite . '/' . $qa_suite . '.php' );
     if ( 'no-woocommerce' !== $qa_mode ) { array_unshift( $plugins, $qa_woo_plugin ); }
     if ( 'no-elementor' !== $qa_mode ) { array_unshift( $plugins, 'elementor/elementor.php' ); }
     return $plugins;
 }, 'accepted_args' => 1 );
-$GLOBALS['wp_filter']['pre_option_xw_settings'][10][] = array( 'function' => static function() use ( $qa_mode ) { return array( 'features' => array( 'woocommerce_product_savings' => 'off' !== $qa_mode ? 1 : 0 ) ); }, 'accepted_args' => 1 );
+$qa_features = PHP_SAPI === 'cli' ? ( $argv[4] ?? 'savings' ) : ( $_GET['feature'] ?? 'savings' );
+$GLOBALS['wp_filter']['pre_option_xw_settings'][10][] = array( 'function' => static function() use ( $qa_mode, $qa_features ) { return array( 'features' => array( 'woocommerce_product_savings' => 'off' !== $qa_mode && in_array( $qa_features, array( 'savings', 'both' ), true ) ? 1 : 0, 'woocommerce_product_price' => 'off' !== $qa_mode && in_array( $qa_features, array( 'price', 'both' ), true ) ? 1 : 0 ) ); }, 'accepted_args' => 1 );
 require rtrim( $qa_root, '/\\' ) . '/wp-load.php';
 if ( 'local' !== wp_get_environment_type() ) { exit( 'Local environment required.' ); }
 add_filter( 'pre_wp_mail', '__return_true', 100 );

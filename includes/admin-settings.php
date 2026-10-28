@@ -128,6 +128,11 @@ function xw_get_feature_definitions() {
             'title'       => xw_t( 'Form Elementor: validación de mensajes', 'Form Elementor: message validation' ),
             'description' => xw_t( 'Limita los caracteres admitidos en áreas de texto de Elementor.', 'Limits the characters allowed in Elementor text areas.' ),
         ),
+        'woocommerce_product_price' => array(
+            'title'       => xw_t( 'Precio en oferta', 'Sale price' ),
+            'description' => xw_t( 'Añade un widget de precios de WooCommerce con estilos independientes para el precio actual y el original tachado.', 'Adds a WooCommerce price widget with independent styles for the current and crossed-out original price.' ),
+            'settings'    => true,
+        ),
         'woocommerce_product_savings' => array(
             'title'       => xw_t( 'Valor relativo y absoluto', 'Relative and absolute savings' ),
             'description' => xw_t( 'Añade un widget de Elementor que muestra el ahorro de la oferta como porcentaje o importe.', 'Adds an Elementor widget showing sale savings as a percentage or amount.' ),
@@ -243,6 +248,7 @@ function xw_get_feature_groups() {
             'description' => xw_t( 'Funciones específicas para tiendas WooCommerce.', 'Features specifically for WooCommerce stores.' ),
             'features'    => array(
                 'woocommerce_product_savings',
+                'woocommerce_product_price',
                 'woocommerce_quantity_buttons',
                 'woocommerce_orders_menu',
                 'woocommerce_auto_cart',
@@ -1289,6 +1295,11 @@ function xw_render_settings_page() {
                                             </label>
                                         </div>
                                         <div class="xw-country-code-grid" data-xw-country-grid></div>
+                                    </div>
+                                <?php elseif ( 'woocommerce_product_price' === $key ) : ?>
+                                    <div class="xw-field-row xw-field-full">
+                                        <p><?php echo esc_html( xw_t( 'Guarda y busca «Precio en oferta» en la categoría de la suite en Elementor. Configura alineación vertical y horizontal, separación y los estilos de cada precio en el widget. Requiere WooCommerce y Elementor.', 'Save and find “Sale price” in the suite category in Elementor. Configure vertical and horizontal alignment, gap and each price style in the widget. Requires WooCommerce and Elementor.' ) ); ?></p>
+                                        <p><?php echo esc_html( xw_t( 'Con oferta muestra el original tachado. Sin oferta, el precio normal adopta el estilo del precio actual. Colócalo en plantillas de producto o Loops; los importes siguen la moneda y los impuestos de la tienda.', 'Shows the crossed-out original during a sale. Without a sale, the regular price takes the current-price style. Place it in product templates or Loops; amounts follow the shop currency and tax display.' ) ); ?></p>
                                     </div>
                                 <?php elseif ( 'woocommerce_product_savings' === $key ) : ?>
                                     <div class="xw-field-row xw-field-full">

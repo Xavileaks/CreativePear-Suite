@@ -1,0 +1,24 @@
+.xw-product-price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    min-width: 0;
+    line-height: 1.25;
+}
+.xw-product-price > .xw-product-price__original {
+    color: #808080;
+    font-size: 20px;
+    opacity: 1;
+    text-decoration: line-through;
+}
+.xw-product-price > .xw-product-price__current {
+    color: inherit;
+    font-size: 32px;
+    font-weight: 700;
+}
+.xw-product-price > .xw-product-price__suffix:empty { display: none; }
+.xw-product-price > [hidden] { display: none !important; }
+.xw-product-price .woocommerce-Price-amount { color: inherit; font: inherit; }
+.xw-product-price__notice { font-size: 14px; font-weight: 400; }

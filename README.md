@@ -1,5 +1,13 @@
 # Creative Pear Suite
 
+## WooCommerce: Precio en oferta y categoría de Elementor (1.0.81)
+
+Nueva caja opcional «Precio en oferta» (Sale price), desactivada de forma predeterminada, en WooCommerce. Actívala y guarda para añadir su widget a la categoría de la suite en Elementor. Mantiene la distribución habitual de dos cajas por fila en escritorio y una hasta 1024 px.
+
+El widget muestra el precio actual y, solo con una oferta activa, el original tachado. Cuando no hay oferta, el precio normal utiliza el mismo estilo del precio actual. Cada precio tiene color, tipografía, trazo de texto, sombra y modo de fusión independientes. Incluye alineación vertical arriba/medio/abajo, alineación horizontal y separación adaptables por dispositivo. Lee el producto actual en plantillas y Loops, respeta moneda e impuestos y actualiza las variaciones con o sin descuento; al restablecerlas recupera el rango del producto. No modifica precios ni aplica descuentos. Requiere WooCommerce y Elementor; no requiere Elementor Pro.
+
+La categoría XLeon Suite / Creative Pear Suite aparece justo antes de «Custom Widget» y conserva su posición al cambiar de documento. Si esa sección no existe en la versión de Elementor, se coloca antes de Pro. Las demás categorías mantienen su orden.
+
 Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pantalla para activar, desactivar y configurar cada módulo.
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
