@@ -145,3 +145,17 @@ body.xw-appt-restricted .xw-appointments-admin { margin: 0 auto; }
 #xw-appt-results .xw-appt-pagination { margin-bottom: 24px; }
 @media (max-width: 1024px) { .xw-appt-messages-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 600px) { #xw-appt-search { width: 100%; } .xw-appt-filters { align-items: flex-start; } }
+
+.xw-appt-builder .xw-appt-builder-greeting { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 12px; }
+.xw-appt-builder label { margin: 14px 0 6px; }
+.xw-appt-builder-greeting label { margin-top: 0; }
+.xw-appt-builder input[type="text"], .xw-appt-builder select { width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; min-height: 44px; }
+.xw-appt-builder h4 { margin: 20px 0 10px; font-size: 13px; }
+.xw-appt-builder .xw-appt-detail-row { display: grid; grid-template-columns: minmax(0, 1fr) 44px 44px; gap: 6px; margin-bottom: 8px; }
+.xw-appt-builder .xw-appt-detail-row .button { padding: 0; min-height: 44px; height: 44px; font-size: 20px; line-height: 1; }
+.xw-appt-builder .xw-appt-site-toggle { display: flex; align-items: center; gap: 8px; min-height: 44px; margin: 16px 0 0; font-weight: 400; }
+.xw-appt-builder .xw-appt-site-toggle input { margin: 0; flex: 0 0 auto; }
+@media (max-width: 600px) { .xw-appt-builder .xw-appt-builder-greeting { grid-template-columns: minmax(0, 1fr); } }
+
+/* Override WordPress select's 25rem maximum only inside our message editor. */
+.xw-appointments-admin .xw-appt-builder input[type="text"], .xw-appointments-admin .xw-appt-builder select { width: 100%; max-width: none; min-width: 0; height: 44px; min-height: 44px; max-height: 44px; box-sizing: border-box; }

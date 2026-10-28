@@ -10,28 +10,72 @@ function xw_appt_field_string( $value ) {
 function xw_appt_record_revision( $row ) {
     return hash( 'sha256', wp_json_encode( array_intersect_key( $row, array_flip( array( 'id', 'fields', 'customer_name', 'email', 'phone', 'starts_at', 'ends_at', 'status', 'status_changed_at', 'rebooked_to' ) ) ) ) );
 }
-/** Normalize legacy snapshots without changing labels or guessing fields from a different form. */
+/** Preserve submitted fields; never synthesize empty contact inputs. */
 function xw_appt_record_fields( $row ) {
-    $fields = is_array( $row['fields'] ) ? $row['fields'] : json_decode( $row['fields'], true ); $out = array(); $mapped = array();
-    foreach ( array_slice( is_array( $fields ) ? $fields : array(), 0, 50 ) as $index => $field ) {
+    $fields = is_array( $row['fields'] ) ? $row['fields'] : json_decode( $row['fields'], true ); $out = array();
+    foreach ( array_slice( is_array( $fields ) ? $fields : array(), 0, 53 ) as $index => $field ) {
         if ( ! is_array( $field ) || ! is_string( $field['label'] ?? null ) || ! is_scalar( $field['value'] ?? null ) ) { continue; }
-        $field['value'] = (string) $field['value']; $field['id'] = $field['id'] ?? 'legacy_' . $index; $field['type'] = $field['type'] ?? 'text';
-        if ( 'xw_appointment' === $field['type'] || ( str_starts_with( $field['id'], 'legacy_' ) && preg_match( '/^(?:\d{4}-\d{2}-\d{2}T\d{2}:\d{2})$/D', $field['value'] ) && preg_match( '/cita|appointment|fecha preferida/i', $field['label'] ) ) ) { $field['role'] = 'appointment'; }
-        $role = $field['contact_role'] ?? '';
-        if ( ! in_array( $role, array( 'customer_name', 'email', 'phone' ), true ) ) {
-            $role = '';
-            foreach ( array( 'customer_name', 'email', 'phone' ) as $candidate ) {
-                if ( empty( $mapped[ $candidate ] ) && '' !== (string) $row[ $candidate ] && $field['value'] === (string) $row[ $candidate ] ) { $role = $candidate; break; }
-            }
-        }
-        if ( $role && ! isset( $mapped[ $role ] ) ) { $field['contact_role'] = $role; $field['value'] = (string) $row[ $role ]; $mapped[ $role ] = true; }
-        else { unset( $field['contact_role'] ); }
+        $field['value'] = (string) $field['value']; $field['id'] = is_string( $field['id'] ?? null ) ? $field['id'] : 'legacy_' . $index; $field['type'] = $field['type'] ?? 'text';
+        // These reserved IDs came from the old editor, never from a submitted form.
+        if ( 'text' === $field['type'] && in_array( $field['id'], array( '__customer_name', '__email', '__phone' ), true ) && ( $field['contact_role'] ?? '' ) === substr( $field['id'], 2 ) ) { continue; }
+        if ( 'xw_appointment' === $field['type'] || ( str_starts_with( $field['id'], 'legacy_' ) && preg_match( '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/D', $field['value'] ) && preg_match( '/cita|appointment|fecha preferida/i', $field['label'] ) ) ) { $field['role'] = 'appointment'; }
         $out[] = $field;
     }
-    foreach ( array( 'customer_name' => xw_t( 'Nombre', 'Name' ), 'email' => xw_t( 'Correo electrónico', 'Email' ), 'phone' => xw_t( 'Teléfono', 'Phone' ) ) as $role => $label ) {
-        if ( ! isset( $mapped[ $role ] ) ) { $out[] = array( 'id' => '__' . $role, 'label' => $label, 'value' => (string) $row[ $role ], 'type' => 'text', 'contact_role' => $role ); }
+    $assigned = array(); $used = array();
+    // Explicit field mappings win, including when their submitted value is empty.
+    foreach ( $out as $index => $field ) {
+        $role = $field['contact_role'] ?? '';
+        if ( in_array( $role, array( 'customer_name', 'email', 'phone' ), true ) && 'appointment' !== ( $field['role'] ?? '' ) ) {
+            $previous = isset( $assigned[ $role ] ) ? $out[ $assigned[ $role ] ]['value'] : null;
+            if ( null === $previous || ( '' === $previous && '' !== $field['value'] ) || ( '' !== (string) ( $row[ $role ] ?? '' ) && $field['value'] === (string) $row[ $role ] && $previous !== $field['value'] ) ) {
+                if ( isset( $assigned[ $role ] ) ) { unset( $used[ $assigned[ $role ] ] ); }
+                $assigned[ $role ] = $index; $used[ $index ] = true;
+            }
+        }
     }
+    foreach ( array( 'email', 'phone', 'customer_name' ) as $role ) {
+        if ( isset( $assigned[ $role ] ) ) { continue; } $best = -1; $score = 0;
+        foreach ( $out as $index => $field ) {
+            if ( isset( $used[ $index ] ) || 'appointment' === ( $field['role'] ?? '' ) ) { continue; }
+            $rank = 0; $hint = strtolower( remove_accents( $field['label'] . ' ' . $field['id'] ) );
+            if ( '' !== (string) ( $row[ $role ] ?? '' ) && $field['value'] === (string) $row[ $role ] ) { $rank = 90; }
+            if ( ( 'email' === $role && 'email' === $field['type'] ) || ( 'phone' === $role && 'tel' === $field['type'] ) ) { $rank = max( $rank, 80 ); }
+            $pattern = array( 'email' => '/correo|e[-_ ]?mail/', 'phone' => '/telefon|phone|movil|mobile|whatsapp/', 'customer_name' => '/nombre|apellido|(?:^|[ _-])(?:full[ _-]?)?name(?:$|[ _-])/' )[ $role ];
+            if ( preg_match( $pattern, $hint ) ) { $rank = max( $rank, 70 ); }
+            if ( $rank > $score ) { $best = $index; $score = $rank; }
+        }
+        if ( $best >= 0 ) { $assigned[ $role ] = $best; $used[ $best ] = true; }
+    }
+    foreach ( $out as &$field ) { unset( $field['contact_role'] ); } unset( $field );
+    foreach ( $assigned as $role => $index ) { $out[ $index ]['contact_role'] = $role; }
     return $out;
+}
+/** The visible form fields are authoritative for contact actions on legacy records too. */
+function xw_appt_contact_row( $row ) {
+    foreach ( xw_appt_record_fields( $row ) as $field ) {
+        $role = $field['contact_role'] ?? '';
+        if ( in_array( $role, array( 'customer_name', 'email', 'phone' ), true ) ) { $row[ $role ] = mb_substr( sanitize_text_field( $field['value'] ), 0, 'phone' === $role ? 100 : 200 ); }
+    }
+    return $row;
+}
+/** Repair legacy contact indexes in bounded, compare-and-swap batches; preserve form values and dates. */
+function xw_appt_repair_contacts() {
+    if ( ! xw_appt_can_manage() || ! xw_appt_ready() ) { return; }
+    $state = (array) get_option( 'xw_appt_contact_repair_v1', array() ); if ( ! empty( $state['done'] ) ) { return; }
+    $owner = xw_appt_lock(); if ( ! $owner ) { return; } global $wpdb;
+    try {
+        $state = (array) get_option( 'xw_appt_contact_repair_v1', array() ); if ( ! empty( $state['done'] ) ) { return; }
+        $after = (int) ( $state['after'] ?? 0 );
+        $rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM ' . xw_appt_table() . " WHERE id>%d AND status<>'holding' ORDER BY id ASC LIMIT 100", $after ), ARRAY_A );
+        if ( ! is_array( $rows ) ) { return; }
+        foreach ( $rows as $row ) {
+            $contact = xw_appt_contact_row( $row ); $change = array(); $where = array( 'id' => $row['id'], 'fields' => $row['fields'] );
+            foreach ( array( 'customer_name', 'email', 'phone' ) as $key ) { $where[ $key ] = $row[ $key ]; if ( $contact[ $key ] !== $row[ $key ] ) { $change[ $key ] = $contact[ $key ]; } }
+            if ( $change && false === $wpdb->update( xw_appt_table(), $change, $where ) ) { return; }
+            $after = (int) $row['id'];
+        }
+        update_option( 'xw_appt_contact_repair_v1', array( 'after' => $after, 'done' => count( $rows ) < 100 ), false );
+    } finally { xw_appt_unlock( $owner ); }
 }
 function xw_appt_sync_date_field( $fields, $value ) {
     foreach ( $fields as &$field ) { if ( 'appointment' === ( $field['role'] ?? '' ) || 'xw_appointment' === ( $field['type'] ?? '' ) ) { $field['value'] = $value; } } unset( $field );
@@ -54,11 +98,12 @@ function xw_appt_details_update( $id, $input ) {
             $field['value'] = sanitize_textarea_field( $values[ $index ] );
         } unset( $field );
         if ( array_diff( array_map( 'strval', array_keys( $values ) ), $expected ) ) { return new WP_Error( 'field', xw_t( 'Hay campos desconocidos. Recarga la página.', 'Unknown fields. Reload the page.' ), 400 ); }
+        $no_name = isset( $input['name_field'] ) && '' === $input['name_field'];
         $name_index = is_scalar( $input['name_field'] ?? null ) && ctype_digit( (string) $input['name_field'] ) ? (int) $input['name_field'] : -1;
-        if ( ! isset( $fields[ $name_index ] ) || 'appointment' === ( $fields[ $name_index ]['role'] ?? '' ) || in_array( $fields[ $name_index ]['contact_role'] ?? '', array( 'email', 'phone' ), true ) ) { return new WP_Error( 'name', xw_t( 'Elige el campo que contiene el nombre.', 'Choose the field containing the name.' ), 400 ); }
+        if ( ! $no_name && ( ! isset( $fields[ $name_index ] ) || 'appointment' === ( $fields[ $name_index ]['role'] ?? '' ) || in_array( $fields[ $name_index ]['contact_role'] ?? '', array( 'email', 'phone' ), true ) ) ) { return new WP_Error( 'name', xw_t( 'Elige el campo que contiene el nombre.', 'Choose the field containing the name.' ), 400 ); }
         foreach ( $fields as &$field ) { if ( 'customer_name' === ( $field['contact_role'] ?? '' ) ) { unset( $field['contact_role'] ); } } unset( $field );
-        $fields[ $name_index ]['contact_role'] = 'customer_name';
-        $data = array();
+        if ( ! $no_name ) { $fields[ $name_index ]['contact_role'] = 'customer_name'; }
+        $contact = xw_appt_contact_row( $row ); $data = array( 'customer_name' => '', 'email' => $contact['email'], 'phone' => $contact['phone'] );
         foreach ( $fields as &$field ) {
             $role = $field['contact_role'] ?? '';
             if ( in_array( $role, array( 'customer_name', 'email', 'phone' ), true ) ) { $data[ $role ] = mb_substr( sanitize_text_field( $field['value'] ), 0, 'phone' === $role ? 100 : 200 ); $field['value'] = $data[ $role ]; }

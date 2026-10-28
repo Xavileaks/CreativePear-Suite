@@ -6,6 +6,17 @@ Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
 
 
+
+## Versión 1.0.80 — Citas: campos reales y editor visual de mensajes
+
+Editar datos usa únicamente los campos guardados por el formulario; deja de añadir contactos vacíos y elimina los campos internos que el editor anterior había generado. Si el formulario tiene dos correos, conserva sus dos campos reales. La tarjeta y el envío consultan el mismo correo del formulario, también en reservas antiguas con el índice interno vacío. Una reparación por lotes de 100 actualiza los índices de contacto mediante comparación de los datos originales, sin cambiar campos enviados, estados ni fechas de las citas. No verifica que una dirección tenga buzón: valida su formato.
+
+Se retira la caja inferior Listas para reagendar: el número de días se elige en el apartado superior.
+
+Cada uno de los cuatro mensajes ofrece Saludo, un selector de campo para personalizarlo, Mensaje central, detalles seleccionables con botones + y eliminar, y Mostrar el nombre del sitio. El catálogo utiliza etiquetas de los formularios Elementor conectados y de las reservas existentes; nunca muestra sus respuestas en los desplegables, contraseñas ni campos ocultos. Los campos de un formulario distinto o sin valor se omiten. Se pueden añadir hasta diez detalles. Los mensajes ya personalizados con el formato anterior siguen activos hasta guardar la nueva configuración, según el aviso de cada tarjeta.
+
+WhatsApp prepara saludo, mensaje y detalles; el correo muestra los detalles en una tabla HTML y permite revisar el saludo/mensaje antes de enviar. Desmarcar el nombre del sitio lo quita del mensaje, del asunto automático y de las cabeceras/pies automáticos del correo. Solo se envía al pulsar Enviar correo. Las selecciones y el destinatario se comprueban de nuevo al enviar; cambiar la configuración invalida la vista previa anterior. Se mantienen dos columnas de mensajes en escritorio y una hasta 1024 px.
+
 ## Versión 1.0.79 — Citas: apartados y búsqueda en vivo
 
 Próximas citas muestra las confirmadas vigentes y Pendientes tiene su propio apartado, situado a continuación. Historial conserva completadas, canceladas y confirmadas ya pasadas. Se elimina el desplegable de estados. El buscador filtra por nombre, correo o teléfono mientras se escribe, consulta todos los registros del apartado y pagina los resultados, sin limitarse a las tarjetas ya cargadas. Reconoce teléfonos sin espacios o separadores. Las respuestas antiguas se descartan y los borradores de tarjetas se conservan antes de actualizar la lista.

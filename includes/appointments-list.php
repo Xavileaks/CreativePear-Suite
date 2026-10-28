@@ -5,6 +5,7 @@ function xw_appt_list_state( $input ) {
     return array( 'view' => $view, 'days' => xw_appt_rebook_days( $input['rebook_after'] ?? null ), 'search' => is_string( $input['booking_search'] ?? null ) ? mb_substr( sanitize_text_field( $input['booking_search'] ), 0, 100 ) : '', 'page' => is_scalar( $input['booking_page'] ?? null ) ? max( 1, min( 100000, absint( $input['booking_page'] ) ) ) : 1, 'id' => is_scalar( $input['booking_id'] ?? null ) ? absint( $input['booking_id'] ) : 0 );
 }
 function xw_appt_list_data( $state ) {
+    xw_appt_repair_contacts();
     global $wpdb; $table = xw_appt_table(); $args = array(); $now = gmdate( 'Y-m-d H:i:s' );
     if ( 'upcoming' === $state['view'] ) { $where = "status='confirmed' AND ends_at >= %s"; $args[] = $now; }
     elseif ( 'pending' === $state['view'] ) { $where = "status='pending'"; }

@@ -53,7 +53,7 @@ function xw_appt_install() {
 add_action( 'init', 'xw_appt_install', 20 );
 
 function xw_appt_defaults() {
-    return array( 'weekly' => array_fill( 0, 7, '' ), 'closed' => array(), 'duration' => 30, 'notice' => 120, 'horizon' => 90, 'colors' => array(), 'whatsapp_country_code' => '', 'messages' => array(), 'rebook_days' => 15 );
+    return array( 'weekly' => array_fill( 0, 7, '' ), 'closed' => array(), 'duration' => 30, 'notice' => 120, 'horizon' => 90, 'colors' => array(), 'whatsapp_country_code' => '', 'messages' => array(), 'message_layouts' => array(), 'rebook_days' => 15 );
 }
 function xw_appt_settings() { return array_merge( xw_appt_defaults(), (array) get_option( 'xw_appointment_settings', array() ) ); }
 
@@ -133,6 +133,7 @@ function xw_appt_sanitize_schedule( $raw ) {
         if ( ! is_string( $message ) || mb_strlen( $message ) > 4000 ) { return new WP_Error( 'message', xw_t( 'Cada mensaje admite hasta 4000 caracteres.', 'Each message allows up to 4000 characters.' ) ); }
         $out['messages'][ $status ] = sanitize_textarea_field( $message );
     }
+    $out['message_layouts'] = xw_appt_settings()['message_layouts'];
     foreach ( array( 'border', 'background', 'text', 'calendar_background' ) as $key ) {
         $color = $raw['colors'][ $key ] ?? ( xw_appt_settings()['colors'][ $key ] ?? '' );
         if ( ! is_string( $color ) || ( '' !== $color && ! preg_match( '/^#[a-fA-F0-9]{6}$/D', $color ) ) ) { return new WP_Error( 'schedule', xw_t( 'Usa colores hexadecimales de seis dígitos o deja el color automático.', 'Use six-digit hex colors or leave the color automatic.' ) ); }
@@ -247,7 +248,7 @@ function xw_appt_customer( $record, $item ) {
         $out['fields'][] = $entry;
         foreach ( array( 'customer_name' => array( 'xw_appt_name', 'text', 200 ), 'email' => array( 'xw_appt_email', 'email', 200 ), 'phone' => array( 'xw_appt_phone', 'tel', 100 ) ) as $target => $rule ) {
             $mapped = $item[ $rule[0] ] ?? '';
-            if ( ( $mapped && $id === $mapped ) || ( ! $mapped && ! $out[ $target ] && $field['type'] === $rule[1] ) ) { $out[ $target ] = mb_substr( sanitize_text_field( $value ), 0, $rule[2] ); $out['fields'][ count( $out['fields'] ) - 1 ]['contact_role'] = $target; }
+            if ( ( $mapped && $id === $mapped ) || ( ! $mapped && ! $out[ $target ] && $field['type'] === $rule[1] ) ) { foreach ( $out['fields'] as &$saved_field ) { if ( ( $saved_field['contact_role'] ?? '' ) === $target ) { unset( $saved_field['contact_role'] ); } } unset( $saved_field ); $out[ $target ] = mb_substr( sanitize_text_field( $value ), 0, $rule[2] ); $out['fields'][ count( $out['fields'] ) - 1 ]['contact_role'] = $target; }
         }
     }
     $out['fields'] = wp_json_encode( $out['fields'] );
@@ -359,6 +360,7 @@ add_action( 'admin_init', static function() {
 
 require_once __DIR__ . '/appointments-admin.php';
 require_once __DIR__ . '/appointments-records.php';
+require_once __DIR__ . '/appointments-message-builder.php';
 require_once __DIR__ . '/appointments-messages.php';
 require_once __DIR__ . '/appointments-cards.php';
 require_once __DIR__ . '/appointments-privacy.php';

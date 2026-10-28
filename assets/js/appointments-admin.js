@@ -76,6 +76,25 @@
         });
         previewColors();
     }
+    document.querySelectorAll('.xw-appt-builder').forEach(panel => {
+        const details = panel.querySelector('.xw-appt-builder-details'), template = panel.querySelector('.xw-appt-detail-template');
+        let sequence = details.children.length;
+        function changed() {
+            panel.querySelectorAll('.xw-appt-detail-add, .xw-appt-detail-plus').forEach(button => { button.disabled = details.children.length >= 10; });
+            panel.closest('form').dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        panel.addEventListener('click', event => {
+            const remove = event.target.closest('.xw-appt-detail-remove'), add = event.target.closest('.xw-appt-detail-add, .xw-appt-detail-plus');
+            if (remove) { const next = remove.closest('.xw-appt-detail-row').nextElementSibling; remove.closest('.xw-appt-detail-row').remove(); changed(); (next?.querySelector('select') || panel.querySelector('.xw-appt-detail-add')).focus(); }
+            if (add && details.children.length < 10) {
+                const row = template.content.firstElementChild.cloneNode(true), select = row.querySelector('select');
+                select.id = `xw-detail-${panel.dataset.kind}-${++sequence}`; row.querySelector('[data-detail-label]').htmlFor = select.id;
+                const after = add.closest('.xw-appt-detail-row'); if (after) after.after(row); else details.append(row);
+                changed(); select.focus();
+            }
+        });
+        changed();
+    });
     function reorderCards() {
         const grid = document.querySelector('.xw-appt-bookings');
         if (!grid) return;
