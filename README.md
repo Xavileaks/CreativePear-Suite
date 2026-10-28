@@ -1,5 +1,9 @@
 # Creative Pear Suite
 
+## WooCommerce Cart CSS: espacio adicional en móvil (1.0.82)
+
+Elimina los 28 px laterales que Elementor añade a las filas del carrito hasta 767 px, además del padding configurado en la sección. Conserva el padding y los márgenes elegidos en Elementor, el espacio vertical de los productos y el diseño de escritorio. La regla solo afecta al widget Carrito de Elementor cuando WooCommerce Cart CSS está activo; no cambia el carrito clásico, el mini carrito ni el checkout. Sin `!important`, para permitir estilos propios más específicos.
+
 ## WooCommerce: Precio en oferta y categoría de Elementor (1.0.81)
 
 Nueva caja opcional «Precio en oferta» (Sale price), desactivada de forma predeterminada, en WooCommerce. Actívala y guarda para añadir su widget a la categoría de la suite en Elementor. Mantiene la distribución habitual de dos cajas por fila en escritorio y una hasta 1024 px.
