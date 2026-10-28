@@ -24,6 +24,7 @@ function xw_appt_admin_assets( $hook ) {
         'statuses' => xw_appt_statuses(), 'rescheduled' => xw_t( 'Fecha actualizada. No se ha enviado ningún aviso.', 'Date updated. No notification was sent.' ),
         'previewFirst' => xw_t( 'Actualiza la vista previa antes de enviar.', 'Refresh the preview before sending.' ),
         'emailSent' => xw_t( 'Correo entregado al sistema de envío de WordPress.', 'Email handed to the WordPress mail system.' ),
+        'searching' => xw_t( 'Buscando citas…', 'Searching appointments…' ), 'searchOne' => xw_t( '1 cita encontrada.', '1 appointment found.' ), 'searchCount' => xw_t( '%d citas encontradas.', '%d appointments found.' ), 'finishEdits' => xw_t( 'Guarda los cambios de las tarjetas para actualizar la búsqueda.', 'Save card changes to update the search.' ), 'invalidDays' => xw_t( 'Indica de 1 a 3650 días.', 'Enter 1 to 3650 days.' ),
         'emailSending' => xw_t( 'Enviando…', 'Sending…' ), 'nonce' => wp_create_nonce( 'xw_appointment_admin' ),
     ) ) . ');', 'before' );
 }
@@ -38,13 +39,36 @@ function xw_appt_admin_save() {
     if ( ! check_ajax_referer( 'xw_appointment_admin', 'nonce', false ) ) { wp_send_json_error( array( 'message' => xw_t( 'La sesión ha caducado. Recarga esta página.', 'Your session expired. Reload this page.' ) ), 403 ); }
     if ( ! xw_feature_enabled( 'elementor_appointments' ) || ! xw_appt_ready() ) { wp_send_json_error( array( 'message' => xw_t( 'Activa la utilidad Citas.', 'Enable the Appointments utility.' ) ), 400 ); }
     $op = isset( $_POST['operation'] ) && is_string( $_POST['operation'] ) ? $_POST['operation'] : '';
+    if ( 'list' === $op ) {
+        $state = xw_appt_list_state( wp_unslash( $_POST ) );
+        if ( false === $state['days'] ) { wp_send_json_error( array( 'message' => xw_t( 'Indica de 1 a 3650 días.', 'Enter 1 to 3650 days.' ) ), 400 ); }
+        $data = xw_appt_list_data( $state );
+        wp_send_json_success( array( 'html' => xw_appt_list_results( $data, wp_create_nonce( 'xw_appointment_admin' ) ), 'count' => $data['count'], 'page' => $data['state']['page'] ) );
+    }
+    if ( 'messages' === $op ) {
+        $messages = isset( $_POST['messages'] ) && is_array( $_POST['messages'] ) ? wp_unslash( $_POST['messages'] ) : array();
+        $clean = array();
+        foreach ( array( 'pending', 'confirmed', 'cancelled', 'rebook' ) as $key ) {
+            if ( ! is_string( $messages[ $key ] ?? null ) || mb_strlen( $messages[ $key ] ) > 4000 ) { wp_send_json_error( array( 'message' => xw_t( 'Revisa los cuatro mensajes (máximo 4000 caracteres cada uno).', 'Check all four messages (up to 4000 characters each).' ) ), 400 ); }
+            $clean[ $key ] = sanitize_textarea_field( $messages[ $key ] );
+        }
+        $owner = xw_appt_lock(); if ( ! $owner ) { wp_send_json_error( array( 'message' => xw_t( 'La agenda está ocupada. Inténtalo de nuevo.', 'The calendar is busy. Please try again.' ) ), 409 ); }
+        try { $settings = xw_appt_settings(); $settings['messages'] = $clean; update_option( 'xw_appointment_settings', $settings, false ); $saved = get_option( 'xw_appointment_settings' ) === $settings; }
+        finally { xw_appt_unlock( $owner ); }
+        if ( ! $saved ) { wp_send_json_error( array( 'message' => xw_t( 'No se pudieron guardar los mensajes.', 'Could not save messages.' ) ), 500 ); }
+        wp_send_json_success();
+    }
     if ( 'schedule' === $op ) {
         $input = isset( $_POST['schedule'] ) && is_array( $_POST['schedule'] ) ? wp_unslash( $_POST['schedule'] ) : null;
         $settings = xw_appt_sanitize_schedule( $input );
         if ( is_wp_error( $settings ) ) { wp_send_json_error( array( 'message' => $settings->get_error_message() ), 400 ); }
         $owner = xw_appt_lock();
         if ( ! $owner ) { wp_send_json_error( array( 'message' => xw_t( 'La agenda está ocupada. Inténtalo de nuevo.', 'The calendar is busy. Please try again.' ) ), 409 ); }
-        try { update_option( 'xw_appointment_settings', $settings, false ); $saved = get_option( 'xw_appointment_settings' ) === $settings; }
+        try {
+            // The independent message form may have saved while this request waited for the lock.
+            if ( ! array_key_exists( 'messages', $input ) ) { $settings['messages'] = xw_appt_settings()['messages']; }
+            update_option( 'xw_appointment_settings', $settings, false ); $saved = get_option( 'xw_appointment_settings' ) === $settings;
+        }
         finally { xw_appt_unlock( $owner ); }
         if ( ! $saved ) { wp_send_json_error( array( 'message' => xw_t( 'No se pudo guardar la configuración.', 'Could not save the settings.' ) ), 500 ); }
         wp_send_json_success();
@@ -53,11 +77,11 @@ function xw_appt_admin_save() {
     if ( in_array( $op, array( 'details', 'rebook', 'message_preview', 'message_send' ), true ) ) {
         $input = wp_unslash( $_POST );
         if ( 'details' === $op ) { $result = xw_appt_details_update( $id, $input ); }
-        elseif ( 'rebook' === $op ) { $result = xw_appt_rebook( $id, $input['appointment'] ?? '', is_string( $input['changed_before'] ?? null ) ? $input['changed_before'] : '' ); }
+        elseif ( 'rebook' === $op ) { $result = xw_appt_rebook( $id, $input['appointment'] ?? '', $input['rebook_after'] ?? null ); }
         else { $result = xw_appt_message_request( $id, $input, 'message_send' === $op ); }
         if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), (int) $result->get_error_data() ?: 400 ); }
         if ( 'details' === $op ) { $result = xw_appt_card_result( $result ); }
-        elseif ( 'rebook' === $op ) { $result = array( 'redirect' => add_query_arg( array( 'booking_view' => 'upcoming', 'booking_id' => $result['id'] ), xw_appt_admin_url() ) . '#xw-booking-' . $result['id'] ); }
+        elseif ( 'rebook' === $op ) { $result = array( 'redirect' => add_query_arg( array( 'booking_view' => 'pending', 'booking_id' => $result['id'] ), xw_appt_admin_url() ) . '#xw-booking-' . $result['id'] ); }
         wp_send_json_success( $result );
     }
     if ( 'reschedule' === $op ) {
@@ -86,9 +110,9 @@ function xw_appt_admin_save() {
     wp_send_json_success( xw_appt_card_result( $updated ) );
 }
 function xw_appt_card_result( $row ) {
-    $view = isset( $_POST['booking_view'] ) && is_string( $_POST['booking_view'] ) && in_array( $_POST['booking_view'], array( 'upcoming', 'rebook', 'history' ), true ) ? $_POST['booking_view'] : 'upcoming';
-    $before = isset( $_POST['changed_before'] ) && is_string( $_POST['changed_before'] ) && xw_appt_rebook_cutoff( $_POST['changed_before'] ) ? $_POST['changed_before'] : '';
-    return array( 'status' => $row['status'], 'card' => xw_appt_booking_card( $row, wp_create_nonce( 'xw_appointment_admin' ), $view, $before ) );
+    $view = isset( $_POST['booking_view'] ) && is_string( $_POST['booking_view'] ) && in_array( $_POST['booking_view'], array( 'upcoming', 'pending', 'rebook', 'history' ), true ) ? $_POST['booking_view'] : 'upcoming';
+    $days = xw_appt_rebook_days( $_POST['rebook_after'] ?? null );
+    return array( 'status' => $row['status'], 'card' => xw_appt_booking_card( $row, wp_create_nonce( 'xw_appointment_admin' ), $view, false === $days ? null : $days ) );
 }
 add_action( 'wp_ajax_xw_appt_admin_save', 'xw_appt_admin_save' );
 
@@ -150,6 +174,7 @@ function xw_appt_admin_page() {
         <?php xw_appt_admin_list( $nonce ); ?>
         <p class="description"><?php echo esc_html( xw_t( 'Las reservas quedan pendientes hasta que las confirmes. No se envían avisos adicionales al cambiar estados. Datos privados: acceso de administrador o cuenta autorizada, exportación y borrado por un administrador mediante Herramientas → Datos personales de WordPress. Configura consentimiento y antispam en tu formulario; no recopiles datos clínicos innecesarios.', 'Bookings remain pending until you confirm them. Status changes do not send additional notifications. Private data: administrator or authorized account access, export and erasure by an administrator through WordPress Tools → Personal Data. Configure consent and antispam in your form; do not collect unnecessary clinical data.' ) ); ?></p>
         <div class="xw-appt-guide"><strong><?php echo esc_html( xw_t( 'Conecta un formulario', 'Connect a form' ) ); ?></strong><p><?php echo esc_html( xw_t( 'En el widget Formulario de Elementor, añade un campo de tipo Cita. Solo los formularios con ese campo crean reservas. Nombre, correo y teléfono se detectan automáticamente; puedes indicar sus IDs dentro del campo Cita. Usa un solo campo Cita por formulario.', 'In the Elementor Form widget, add an Appointment field. Only forms with this field create bookings. Name, email and phone are detected automatically; you can map their IDs in the Appointment field. Use one Appointment field per form.' ) ); ?></p><small><?php echo esc_html( xw_t( 'Requiere el widget Formulario de Elementor Pro o una implementación compatible. Las acciones de correo y antispam se configuran en el formulario.', 'Requires the Elementor Pro Form widget or a compatible implementation. Email and antispam actions are configured in the form.' ) ); ?></small></div>
+        <?php xw_appt_message_settings(); ?>
         <form id="xw-appt-schedule" data-nonce="<?php echo esc_attr( $nonce ); ?>">
             <div class="xw-appt-settings-grid">
                 <div class="xw-appt-settings-column">
@@ -183,8 +208,7 @@ function xw_appt_admin_page() {
                     <?php endforeach; ?></div><div class="xw-appt-color-preview"><span>15</span><small><?php echo esc_html( xw_t( 'Fecha disponible · Vista previa', 'Available date · Preview' ) ); ?></small></div></div>
                     <div class="xw-appt-contact-settings"><h3><?php echo esc_html( xw_t( 'Contacto por WhatsApp', 'WhatsApp contact' ) ); ?></h3><label for="xw-appt-country"><?php echo esc_html( xw_t( 'Código de país para teléfonos locales', 'Country code for local phone numbers' ) ); ?></label><input id="xw-appt-country" name="schedule[whatsapp_country_code]" type="text" inputmode="numeric" pattern="[1-9][0-9]{0,2}" maxlength="3" value="<?php echo esc_attr( $settings['whatsapp_country_code'] ); ?>" placeholder="58" aria-describedby="xw-appt-country-help"><p class="description" id="xw-appt-country-help"><?php echo esc_html( xw_t( 'Solo dígitos, sin +: por ejemplo, 58 para Venezuela o 1 para EE. UU. Vacío: WhatsApp solo estará disponible para números que ya incluyan + o 00 y su código de país. No se envían mensajes automáticamente.', 'Digits only, without +: for example, 58 for Venezuela or 1 for the USA. Empty: WhatsApp is only available for numbers already including + or 00 and their country code. Messages are not sent automatically.' ) ); ?></p></div>
                 </section>
-                <section class="xw-appt-panel"><h2><?php echo esc_html( xw_t( 'Listas para reagendar', 'Ready to rebook' ) ); ?></h2><label for="xw-appt-rebook-days"><?php echo esc_html( xw_t( 'Mostrar después de', 'Show after' ) ); ?></label><div class="xw-appt-followup-days"><input id="xw-appt-rebook-days" type="number" name="schedule[rebook_days]" min="1" max="3650" required value="<?php echo (int) $settings['rebook_days']; ?>"><span><?php echo esc_html( xw_t( 'días desde el cambio de estado', 'days from the status change' ) ); ?></span></div><p class="description"><?php echo esc_html( xw_t( 'Incluye canceladas y citas confirmadas/completadas que ya terminaron. No incluye pendientes ni confirmadas futuras. Para citas antiguas, completa la fecha del estado en Editar datos.', 'Includes cancelled and ended confirmed/completed appointments. Excludes pending and future confirmed appointments. For older bookings, enter the status date in Edit details.' ) ); ?></p></section>
-                <?php xw_appt_message_settings(); ?>
+                <section class="xw-appt-panel"><h2><?php echo esc_html( xw_t( 'Listas para reagendar', 'Ready to rebook' ) ); ?></h2><label for="xw-appt-rebook-days"><?php echo esc_html( xw_t( 'Mostrar después de', 'Show after' ) ); ?></label><div class="xw-appt-followup-days"><input id="xw-appt-rebook-days" type="number" name="schedule[rebook_days]" min="1" max="3650" required value="<?php echo (int) $settings['rebook_days']; ?>"><span><?php echo esc_html( xw_t( 'días desde el cambio de estado', 'days from the status change' ) ); ?></span></div><p class="description"><?php echo esc_html( xw_t( 'Incluye solo citas completadas y canceladas. No incluye pendientes ni confirmadas. Para citas antiguas, completa la fecha del estado en Editar datos.', 'Includes only completed and cancelled appointments. Excludes pending and confirmed appointments. For older bookings, enter the status date in Edit details.' ) ); ?></p></section>
                 </div>
             </div>
             <div class="xw-appt-save"><p role="status" aria-live="polite" id="xw-appt-save-status"><?php echo esc_html( xw_t( 'Sin cambios pendientes.', 'No unsaved changes.' ) ); ?></p><button type="submit" class="button button-primary" disabled><?php echo esc_html( xw_t( 'Guardar cambios', 'Save changes' ) ); ?></button></div>

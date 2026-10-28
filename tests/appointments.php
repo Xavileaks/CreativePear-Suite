@@ -133,7 +133,7 @@ try {
     $owner = xw_appt_lock(); $locked = xw_appt_reschedule( $ids[0], $tomorrow . 'T09:30' ); xw_appt_unlock( $owner ); appt_check( is_wp_error( $locked ), 'rescheduling shares the booking mutex to prevent concurrent collisions' );
     // Restore the synthetic start for the existing cancellation regression below.
     appt_check( ! is_wp_error( xw_appt_reschedule( $ids[0], $value ) ), 'unchanged original slot can be selected again without self-conflict' );
-    ob_start(); xw_appt_admin_list( $nonce ); $cards = ob_get_clean();
+    $_GET = array( 'booking_view' => 'upcoming' ); ob_start(); xw_appt_admin_list( $nonce ); $cards = ob_get_clean();
     appt_check( str_contains( $cards, 'class="xw-appt-bookings"' ) && str_contains( $cards, 'class="xw-appt-booking"' ) && ! str_contains( $cards, '<table' ) && str_contains( $cards, 'xw-appt-reschedule' ) && str_contains( $cards, 'xw-appt-email-open' ) && ! str_contains( $cards, '<details' ), 'booking cards preserve status, contact links, reschedule and details without a table' );
     preg_match_all( '/class="xw-appt-booking"[^>]*data-status="([a-z]+)"/', $cards, $matches ); $priority = array( 'pending' => 0, 'confirmed' => 1, 'cancelled' => 2, 'completed' => 3 );
     $ordering = array_map( static function( $status ) use ( $priority ) { return $priority[ $status ]; }, $matches[1] ); $sorted = $ordering; sort( $sorted );

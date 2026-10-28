@@ -78,24 +78,29 @@ function xw_appt_details_update( $id, $input ) {
     } finally { xw_appt_unlock( $owner ); }
 }
 
-function xw_appt_rebook_cutoff( $day = '' ) {
-    $date = '' === $day ? current_datetime()->modify( '-' . (int) xw_appt_settings()['rebook_days'] . ' days' )->setTime( 23, 59, 59 ) : xw_appt_day( $day );
+function xw_appt_rebook_days( $value = null ) {
+    $value = null === $value ? xw_appt_settings()['rebook_days'] : $value;
+    return is_scalar( $value ) && preg_match( '/^\d+$/D', (string) $value ) && (int) $value >= 1 && (int) $value <= 3650 ? (int) $value : false;
+}
+function xw_appt_rebook_cutoff( $day = '', $days = null ) {
+    $days = xw_appt_rebook_days( $days ); if ( false === $days ) { return false; }
+    $date = '' === $day ? current_datetime()->modify( '-' . $days . ' days' )->setTime( 23, 59, 59 ) : xw_appt_day( $day );
     if ( ! $date || $date->format( 'Y-m-d' ) > current_datetime()->format( 'Y-m-d' ) ) { return false; }
     return $date->setTime( 23, 59, 59 )->setTimezone( new DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' );
 }
 function xw_appt_can_rebook_row( $row, $cutoff = null ) {
     $cutoff = $cutoff ?? xw_appt_rebook_cutoff();
     return $cutoff && empty( $row['rebooked_to'] ) && ! empty( $row['status_changed_at'] ) && $row['status_changed_at'] <= $cutoff &&
-        in_array( $row['status'], array( 'confirmed', 'completed', 'cancelled' ), true ) && ( 'cancelled' === $row['status'] || $row['ends_at'] <= gmdate( 'Y-m-d H:i:s' ) );
+        in_array( $row['status'], array( 'completed', 'cancelled' ), true ) && ( 'cancelled' === $row['status'] || $row['ends_at'] <= gmdate( 'Y-m-d H:i:s' ) );
 }
-function xw_appt_rebook( $id, $value, $before = '' ) {
+function xw_appt_rebook( $id, $value, $days = null ) {
     if ( ! xw_appt_can_manage() || ! xw_appt_ready() ) { return new WP_Error( 'forbidden', xw_t( 'No autorizado.', 'Not authorized.' ), 403 ); }
     global $wpdb; $owner = xw_appt_lock(); if ( ! $owner ) { return new WP_Error( 'busy', xw_t( 'La agenda está ocupada.', 'The calendar is busy.' ), 409 ); }
     $transaction = false;
     try {
         if ( false === $wpdb->query( 'START TRANSACTION' ) ) { return new WP_Error( 'transaction', xw_t( 'No se pudo iniciar el guardado.', 'Could not start saving.' ), 500 ); } $transaction = true;
         $row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . xw_appt_table() . ' WHERE id=%d', $id ), ARRAY_A );
-        if ( ! $row || ! xw_appt_can_rebook_row( $row, xw_appt_rebook_cutoff( $before ) ) ) { return new WP_Error( 'state', xw_t( 'Esta cita no está lista para reagendar o ya se reagendó.', 'This appointment is not ready to rebook or has already been rebooked.' ), 409 ); }
+        if ( ! $row || ! xw_appt_can_rebook_row( $row, xw_appt_rebook_cutoff( '', $days ) ) ) { return new WP_Error( 'state', xw_t( 'Esta cita no está lista para reagendar o ya se reagendó.', 'This appointment is not ready to rebook or has already been rebooked.' ), 409 ); }
         $slots = is_string( $value ) && preg_match( '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/D', $value ) ? xw_appt_available( substr( $value, 0, 10 ) ) : array();
         if ( ! isset( $slots[ $value ] ) ) { return new WP_Error( 'unavailable', xw_t( 'Elige una fecha y hora disponibles.', 'Choose an available date and time.' ), 409 ); }
         $copy = array_intersect_key( $row, array_flip( array( 'customer_name', 'email', 'phone', 'form_name', 'form_id' ) ) );

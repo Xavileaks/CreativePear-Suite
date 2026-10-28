@@ -131,3 +131,17 @@ body.xw-appt-restricted .xw-appointments-admin { margin: 0 auto; }
 .xw-appt-mail-recipient { overflow-wrap: anywhere; }
 @media (max-width: 1024px) { .xw-appt-mail-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 600px) { body.xw-appt-restricted #wpcontent { padding: 12px; } #xw-appt-mail-dialog { padding: 16px; } .xw-appt-heading { align-items: flex-start; } }
+
+.xw-appt-messages { margin: 24px 0; }
+.xw-appt-messages-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 16px; }
+.xw-appt-message-panel h3 { margin: 0 0 12px; }
+.xw-appt-message-panel h3 label { margin: 0; }
+.xw-appt-message-panel textarea { display: block; width: 100%; box-sizing: border-box; resize: vertical; }
+.xw-appt-messages .xw-appt-save { padding-bottom: 0; }
+#xw-appt-search { width: 300px; max-width: 100%; min-height: 44px; }
+.xw-appt-days-filter input { width: 90px; min-height: 44px; }
+#xw-appt-list-status { min-height: 1.5em; margin: 8px 0; color: var(--xw-appt-muted); }
+#xw-appt-results[aria-busy="true"] { cursor: progress; }
+#xw-appt-results .xw-appt-pagination { margin-bottom: 24px; }
+@media (max-width: 1024px) { .xw-appt-messages-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) { #xw-appt-search { width: 100%; } .xw-appt-filters { align-items: flex-start; } }

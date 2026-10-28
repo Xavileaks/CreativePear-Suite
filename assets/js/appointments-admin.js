@@ -85,16 +85,16 @@
     }
     const forms = new Map(), savingCards = new WeakSet();
     const snapshot = form => JSON.stringify(Array.from(new FormData(form)));
-    async function request(data) {
-        const response = await fetch(cfg.url, { method: 'POST', body: data, credentials: 'same-origin' });
+    async function request(data, signal) {
+        const response = await fetch(cfg.url, { method: 'POST', body: data, credentials: 'same-origin', signal });
         const result = await response.json();
         if (!response.ok || !result.success) throw new Error(result.data?.message || cfg.error);
         return result.data || {};
     }
     function bindForm(form) {
         if (forms.has(form)) return;
-        const isSchedule = form.id === 'xw-appt-schedule', isAccess = form.id === 'xw-appt-access';
-        const operation = isSchedule ? 'schedule' : isAccess ? 'access' : form.dataset.operation || (form.classList.contains('xw-appt-details-form') ? 'details' : 'status');
+        const isSchedule = form.id === 'xw-appt-schedule', isAccess = form.id === 'xw-appt-access', isMessages = form.id === 'xw-appt-messages';
+        const operation = isSchedule ? 'schedule' : isAccess ? 'access' : isMessages ? 'messages' : form.dataset.operation || (form.classList.contains('xw-appt-details-form') ? 'details' : 'status');
         const card = form.closest('.xw-appt-booking');
         const button = Array.from(form.elements).find(el => el.matches('button[type="submit"]'));
         const status = isSchedule ? document.querySelector('#xw-appt-save-status') : isAccess ? document.querySelector('#xw-appt-access-status') : form.querySelector('[role="status"]');
@@ -106,13 +106,14 @@
             if (!state.busy) status.textContent = dirty() ? cfg.dirty : '';
         }
         // Controls in the access panel belong to an external form, not the surrounding schedule.
-        document.addEventListener('input', event => { if (event.target.form === form) update(); });
-        document.addEventListener('change', event => { if (event.target.form === form || event.target === form) update(); });
+        form.addEventListener('input', event => { if (event.target.form === form) update(); });
+        form.addEventListener('change', event => { if (event.target.form === form || event.target === form) update(); });
+        if (isAccess) Array.from(form.elements).forEach(control => { control.addEventListener('input', update); control.addEventListener('change', update); });
         form.addEventListener('submit', async event => {
             event.preventDefault(); if (state.busy || !dirty()) return;
             if (card && savingCards.has(card)) { status.textContent = cfg.saving; return; }
             if (operation === 'status' && form.elements.status.value === 'cancelled' && !window.confirm(cfg.cancel)) return;
-            const drafts = card ? Array.from(card.querySelectorAll('form')).filter(other => other !== form && forms.has(other) && forms.get(other).baseline !== snapshot(other)).map(other => ({ selector: other.id ? '#' + other.id : '.' + other.className.split(' ')[0], values: Array.from(new FormData(other)).filter(([key]) => !['revision','booking_view','changed_before'].includes(key)), visible: !other.hidden, dateDisplay: other.querySelector('.xw-appointment-date-input')?.value })) : [];
+            const drafts = card ? Array.from(card.querySelectorAll('form')).filter(other => other !== form && forms.has(other) && forms.get(other).baseline !== snapshot(other)).map(other => ({ selector: other.id ? '#' + other.id : '.' + other.className.split(' ')[0], values: Array.from(new FormData(other)).filter(([key]) => !['revision','booking_view','rebook_after'].includes(key)), visible: !other.hidden, dateDisplay: other.querySelector('.xw-appointment-date-input')?.value })) : [];
             const sent = snapshot(form), data = new FormData(form);
             data.set('action', isAccess ? 'xw_appt_access_save' : 'xw_appt_admin_save'); data.set('nonce', form.dataset.nonce);
             data.set('operation', operation);
@@ -152,7 +153,7 @@
             } catch (error) {
                 controls.forEach(([el, disabled]) => { el.disabled = disabled; });
                 state.busy = false; update(); status.textContent = error.message || cfg.error;
-            } finally { if (card) savingCards.delete(card); }
+            } finally { if (card) savingCards.delete(card); if ((card || isMessages) && state.baseline === sent) refreshList(); }
         });
         update();
     }
@@ -167,7 +168,53 @@
         card.querySelectorAll('form').forEach(bindForm);
     }
     document.querySelectorAll('.xw-appt-booking').forEach(bindCard);
-    document.querySelectorAll('#xw-appt-schedule, #xw-appt-access').forEach(bindForm);
+    document.querySelectorAll('#xw-appt-schedule, #xw-appt-access, #xw-appt-messages').forEach(bindForm);
+    const searchForm = document.querySelector('#xw-appt-live-search'), results = document.querySelector('#xw-appt-results');
+    let listTimer, listRequest, listSequence = 0;
+    const dirtyResults = () => Array.from(forms).some(([form, saved]) => results?.contains(form) && (saved.busy || saved.baseline !== snapshot(form)));
+    function refreshList(page = null, fromPagination = false) {
+        if (!searchForm || !results) return;
+        clearTimeout(listTimer); listRequest?.abort(); const sequence = ++listSequence;
+        listTimer = setTimeout(async () => {
+            const status = document.querySelector('#xw-appt-list-status');
+            if (!searchForm.checkValidity()) { status.textContent = cfg.invalidDays; results.setAttribute('aria-busy', 'false'); return; }
+            if (dirtyResults()) { status.textContent = cfg.finishEdits; results.setAttribute('aria-busy', 'false'); return; }
+            const data = new FormData(searchForm), targetPage = page ?? Number(searchForm.dataset.page || 1);
+            data.set('action', 'xw_appt_admin_save'); data.set('operation', 'list'); data.set('nonce', cfg.nonce);
+            data.set('rebook_after', searchForm.elements.rebook_after?.value || searchForm.dataset.days);
+            data.set('booking_page', targetPage);
+            if (searchForm.dataset.bookingId !== '0') data.set('booking_id', searchForm.dataset.bookingId);
+            listRequest = new AbortController(); status.textContent = cfg.searching; results.setAttribute('aria-busy', 'true');
+            try {
+                const response = await request(data, listRequest.signal);
+                if (sequence !== listSequence) return;
+                if (dirtyResults()) { status.textContent = cfg.finishEdits; return; }
+                results.querySelectorAll('.xw-appt-booking form').forEach(form => forms.delete(form));
+                results.innerHTML = response.html; results.querySelectorAll('.xw-appt-booking').forEach(bindCard);
+                if (fromPagination) { results.tabIndex = -1; results.focus({ preventScroll: true }); results.scrollIntoView({ block: 'start' }); }
+                document.querySelector('.xw-appt-count').textContent = response.count;
+                searchForm.dataset.page = response.page; searchForm.dataset.days = data.get('rebook_after');
+                status.textContent = response.count === 1 ? cfg.searchOne : cfg.searchCount.replace('%d', response.count);
+                const url = new URL(window.location.href);
+                ['booking_status', 'changed_before', 'booking_id'].forEach(key => url.searchParams.delete(key));
+                url.searchParams.set('booking_view', searchForm.dataset.view); url.searchParams.set('booking_page', response.page);
+                url.searchParams.set('rebook_after', data.get('rebook_after'));
+                if (data.get('booking_search')) url.searchParams.set('booking_search', data.get('booking_search')); else url.searchParams.delete('booking_search');
+                if (data.has('booking_id')) url.searchParams.set('booking_id', data.get('booking_id'));
+                window.history.replaceState(null, '', url);
+                document.querySelectorAll('.xw-appt-views a').forEach(link => { const target = new URL(link.href); target.searchParams.set('rebook_after', data.get('rebook_after')); link.href = target.href; });
+            } catch (error) { if (sequence === listSequence && error.name !== 'AbortError') status.textContent = error.message || cfg.error; }
+            finally { if (sequence === listSequence) results.setAttribute('aria-busy', 'false'); }
+        }, 220);
+    }
+    if (searchForm && results) {
+        searchForm.addEventListener('submit', event => { event.preventDefault(); searchForm.dataset.bookingId = '0'; refreshList(1); });
+        searchForm.addEventListener('input', () => { searchForm.dataset.bookingId = '0'; refreshList(1); });
+        results.addEventListener('click', event => {
+            const link = event.target.closest('.xw-appt-pagination a'); if (!link) return;
+            event.preventDefault(); refreshList(Number(new URL(link.href).searchParams.get('booking_page')) || 1, true);
+        });
+    }
     const dialog = document.querySelector('#xw-appt-mail-dialog'), mail = dialog?.querySelector('form');
     if (mail) {
         const send = mail.querySelector('[type="submit"]'), refresh = mail.querySelector('.xw-appt-mail-preview');

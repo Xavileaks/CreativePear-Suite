@@ -5,6 +5,15 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
 
+
+## Versión 1.0.79 — Citas: apartados y búsqueda en vivo
+
+Próximas citas muestra las confirmadas vigentes y Pendientes tiene su propio apartado, situado a continuación. Historial conserva completadas, canceladas y confirmadas ya pasadas. Se elimina el desplegable de estados. El buscador filtra por nombre, correo o teléfono mientras se escribe, consulta todos los registros del apartado y pagina los resultados, sin limitarse a las tarjetas ya cargadas. Reconoce teléfonos sin espacios o separadores. Las respuestas antiguas se descartan y los borradores de tarjetas se conservan antes de actualizar la lista.
+
+Listas para reagendar sustituye el calendario por un número de días (15 por defecto, de 1 a 3650). Solo incluye completadas y canceladas cuyo cambio de estado alcance ese plazo, excluyendo las ya reagendadas; los días se cuentan por calendario en la zona horaria del sitio. El plazo de la búsqueda se conserva al cambiar de apartado; el ajuste inferior sigue definiendo el valor predeterminado. Crear una nueva cita abre Pendientes.
+
+Los cuatro mensajes están inmediatamente después de Conecta un formulario: Pendiente y Confirmada en la primera fila, Cancelada y Reagendar en la segunda. Se apilan hasta 1024 px y tienen Guardar mensajes en esa posición; su guardado conserva el resto de la disponibilidad y actualiza los contactos visibles. Las búsquedas y el guardado de mensajes requieren los mismos permisos y nonce de Citas. No generan envíos automáticos.
+
 ## Versión 1.0.78 — Citas: acceso, edición, mensajes y reagendado
 
 Citas incorpora acceso por correo para cuentas existentes de cualquier rol, incluidas administradoras. Las cuentas listadas solo pueden gestionar Citas: se ocultan los menús y la barra superior, se restringen rutas, capacidades y API, y se añade Cerrar sesión/Log out según el idioma del sitio. La lista se guarda aparte; solo un administrador sin restricción puede editarla y debe quedar al menos uno fuera. No se crean usuarios ni se alteran sus roles. Desactivar Citas deja de aplicar esta restricción.

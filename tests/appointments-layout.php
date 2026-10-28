@@ -16,11 +16,13 @@ $guide = strpos( $markup, 'class="xw-appt-guide"' ); $schedule = strpos( $markup
 appt_layout_check( false !== $intro && $intro < $bookings && $bookings < $guide && $guide < $schedule, 'bookings follow the introduction and precede the guide and settings' );
 appt_layout_check( 1 === substr_count( $markup, 'id="xw-appt-bookings"' ), 'the booking list is rendered exactly once' );
 appt_layout_check( strpos( $markup, 'class="xw-appt-filters"' ) < $guide && strpos( $markup, 'class="xw-appt-bookings"' ) < $guide && ! str_contains( $markup, '<table' ), 'filters and booking cards precede the guide, without a table' );
+appt_layout_check( strpos( $markup, 'id="xw-appt-messages"' ) > $guide && strpos( $markup, 'id="xw-appt-messages"' ) < $schedule, 'message cards follow the guide and precede availability settings' );
 $dom = new DOMDocument(); libxml_use_internal_errors( true ); $dom->loadHTML( '<?xml encoding="UTF-8">' . $markup ); libxml_clear_errors();
 $xpath = new DOMXPath( $dom );
 appt_layout_check( 3 === $xpath->query( '//div[@class="xw-appt-rules"]/div[@class="xw-appt-rule"]' )->length, 'the three booking rules share one responsive grid' );
 appt_layout_check( 2 === $xpath->query( '//div[@class="xw-appt-settings-grid"]/div[@class="xw-appt-settings-column"]' )->length, 'the two desktop settings panels remain intact' );
 appt_layout_check( 0 === $xpath->query( '//form[@id="xw-appt-schedule"]//table | //form[@id="xw-appt-schedule"]//form' )->length, 'booking forms are not nested inside the schedule form' );
+appt_layout_check( 4 === $xpath->query( '//div[@class="xw-appt-messages-grid"]/section' )->length && 0 === $xpath->query( '//form//form' )->length, 'four message cards have their own form without nesting' );
 if ( ! empty( $argv[3] ) ) {
     xw_appt_admin_assets( 'toplevel_page_xw-appointments' );
     wp_enqueue_style( 'common' ); wp_enqueue_style( 'forms' ); wp_enqueue_style( 'buttons' );

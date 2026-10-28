@@ -1,34 +1,54 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) { exit; }
+function xw_appt_list_state( $input ) {
+    $view = is_string( $input['booking_view'] ?? null ) && in_array( $input['booking_view'], array( 'upcoming', 'pending', 'rebook', 'history' ), true ) ? $input['booking_view'] : 'upcoming';
+    return array( 'view' => $view, 'days' => xw_appt_rebook_days( $input['rebook_after'] ?? null ), 'search' => is_string( $input['booking_search'] ?? null ) ? mb_substr( sanitize_text_field( $input['booking_search'] ), 0, 100 ) : '', 'page' => is_scalar( $input['booking_page'] ?? null ) ? max( 1, min( 100000, absint( $input['booking_page'] ) ) ) : 1, 'id' => is_scalar( $input['booking_id'] ?? null ) ? absint( $input['booking_id'] ) : 0 );
+}
+function xw_appt_list_data( $state ) {
+    global $wpdb; $table = xw_appt_table(); $args = array(); $now = gmdate( 'Y-m-d H:i:s' );
+    if ( 'upcoming' === $state['view'] ) { $where = "status='confirmed' AND ends_at >= %s"; $args[] = $now; }
+    elseif ( 'pending' === $state['view'] ) { $where = "status='pending'"; }
+    elseif ( 'history' === $state['view'] ) { $where = "(status IN ('completed','cancelled') OR (status='confirmed' AND ends_at < %s))"; $args[] = $now; }
+    else { $where = "status IN ('completed','cancelled') AND rebooked_to IS NULL AND status_changed_at IS NOT NULL AND status_changed_at <= %s AND (status='cancelled' OR ends_at <= %s)"; $args[] = xw_appt_rebook_cutoff( '', $state['days'] ); $args[] = $now; }
+    if ( '' !== $state['search'] ) {
+        $like = '%' . $wpdb->esc_like( $state['search'] ) . '%'; $where .= ' AND (customer_name LIKE %s OR email LIKE %s OR phone LIKE %s'; $args = array_merge( $args, array( $like, $like, $like ) );
+        $digits = preg_replace( '/\D/', '', $state['search'] );
+        if ( strlen( $digits ) >= 2 && preg_match( '/^[+\d\s().-]+$/D', $state['search'] ) ) { $where .= " OR REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone,' ',''),'-',''),'(',''),')',''),'.',''),'+','') LIKE %s"; $args[] = '%' . $digits . '%'; }
+        $where .= ')';
+    }
+    if ( $state['id'] ) { $where .= ' AND id=%d'; $args[] = $state['id']; }
+    $sql = "SELECT COUNT(*) FROM $table WHERE $where"; $count = (int) $wpdb->get_var( $args ? $wpdb->prepare( $sql, $args ) : $sql );
+    $state['page'] = min( $state['page'], max( 1, (int) ceil( $count / 25 ) ) );
+    $args[] = 25; $args[] = ( $state['page'] - 1 ) * 25;
+    $rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table WHERE $where ORDER BY starts_at ASC, id DESC LIMIT %d OFFSET %d", $args ), ARRAY_A );
+    return array( 'state' => $state, 'count' => $count, 'rows' => $rows ?: array() );
+}
+function xw_appt_list_results( $data, $nonce ) {
+    $state = $data['state']; ob_start(); ?>
+    <div class="xw-appt-bookings" aria-labelledby="xw-appt-bookings">
+        <?php if ( ! $data['rows'] ) { echo '<p class="xw-appt-empty">' . esc_html( xw_t( 'No hay citas que coincidan en este apartado.', 'No matching appointments in this view.' ) ) . '</p>'; } ?>
+        <?php foreach ( $data['rows'] as $row ) { echo xw_appt_booking_card( $row, $nonce, $state['view'], $state['days'] ); } ?>
+    </div>
+    <?php if ( $data['count'] > 25 ) {
+        $base = add_query_arg( array( 'booking_view' => $state['view'], 'booking_search' => $state['search'], 'rebook_after' => $state['days'], 'booking_page' => '%#%' ), xw_appt_admin_url() );
+        echo '<nav class="xw-appt-pagination tablenav-pages" aria-label="' . esc_attr( xw_t( 'Páginas de citas', 'Appointment pages' ) ) . '">' . wp_kses_post( paginate_links( array( 'base' => $base, 'format' => '', 'current' => $state['page'], 'total' => (int) ceil( $data['count'] / 25 ) ) ) ) . '</nav>';
+    }
+    return ob_get_clean();
+}
 function xw_appt_admin_list( $nonce ) {
     if ( ! xw_appt_can_manage() ) { return; }
-    global $wpdb;
-    $table = xw_appt_table(); $statuses = xw_appt_statuses();
-    $view = isset( $_GET['booking_view'] ) && is_string( $_GET['booking_view'] ) && in_array( $_GET['booking_view'], array( 'upcoming', 'rebook', 'history' ), true ) ? $_GET['booking_view'] : 'upcoming';
-    $before = isset( $_GET['changed_before'] ) && is_string( $_GET['changed_before'] ) && xw_appt_rebook_cutoff( $_GET['changed_before'] ) ? $_GET['changed_before'] : '';
-    $cutoff = xw_appt_rebook_cutoff( $before );
-    $filter = isset( $_GET['booking_status'] ) && is_string( $_GET['booking_status'] ) ? sanitize_key( $_GET['booking_status'] ) : '';
-    $search = isset( $_GET['booking_search'] ) && is_string( $_GET['booking_search'] ) ? mb_substr( sanitize_text_field( wp_unslash( $_GET['booking_search'] ) ), 0, 100 ) : '';
-    $page = isset( $_GET['booking_page'] ) && is_scalar( $_GET['booking_page'] ) ? max( 1, min( 100000, absint( $_GET['booking_page'] ) ) ) : 1;
-    $where = "status <> 'holding'"; $args = array(); $now = gmdate( 'Y-m-d H:i:s' );
-    if ( 'upcoming' === $view ) { $where .= " AND status IN ('pending','confirmed') AND ends_at >= %s"; $args[] = $now; }
-    elseif ( 'history' === $view ) { $where .= " AND (ends_at < %s OR status IN ('completed','cancelled'))"; $args[] = $now; }
-    else { $where .= " AND status IN ('confirmed','completed','cancelled') AND rebooked_to IS NULL AND status_changed_at IS NOT NULL AND status_changed_at <= %s AND (status='cancelled' OR ends_at <= %s)"; $args[] = $cutoff; $args[] = $now; }
-    if ( isset( $statuses[ $filter ] ) ) { $where .= ' AND status = %s'; $args[] = $filter; }
-    if ( $search ) { $where .= ' AND (customer_name LIKE %s OR email LIKE %s OR phone LIKE %s)'; $like = '%' . $wpdb->esc_like( $search ) . '%'; $args = array_merge( $args, array( $like, $like, $like ) ); }
-    if ( isset( $_GET['booking_id'] ) && is_scalar( $_GET['booking_id'] ) ) { $where .= ' AND id=%d'; $args[] = absint( $_GET['booking_id'] ); }
-    $count_sql = "SELECT COUNT(*) FROM $table WHERE $where";
-    $count = (int) $wpdb->get_var( $args ? $wpdb->prepare( $count_sql, $args ) : $count_sql );
-    $args[] = 25; $args[] = ( $page - 1 ) * 25;
-    $rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table WHERE $where ORDER BY CASE status WHEN 'pending' THEN 0 WHEN 'confirmed' THEN 1 WHEN 'cancelled' THEN 2 ELSE 3 END, starts_at ASC, id DESC LIMIT %d OFFSET %d", $args ), ARRAY_A );
-    ?>
-    <nav class="xw-appt-views" aria-label="<?php echo esc_attr( xw_t( 'Apartados de citas', 'Appointment views' ) ); ?>"><?php foreach ( array( 'upcoming' => xw_t( 'Próximas citas', 'Upcoming appointments' ), 'rebook' => xw_t( 'Listas para reagendar', 'Ready to rebook' ), 'history' => xw_t( 'Historial', 'History' ) ) as $key => $label ) { echo '<a class="button' . ( $key === $view ? ' button-primary' : '' ) . '" href="' . esc_url( add_query_arg( 'booking_view', $key, xw_appt_admin_url() ) ) . '" ' . ( $key === $view ? 'aria-current="page"' : '' ) . '>' . esc_html( $label ) . '</a>'; } ?></nav>
-    <h2 id="xw-appt-bookings"><?php echo esc_html( 'rebook' === $view ? xw_t( 'Listas para reagendar', 'Ready to rebook' ) : ( 'history' === $view ? xw_t( 'Historial de citas', 'Appointment history' ) : xw_t( 'Personas que han reservado', 'People who booked' ) ) ); ?> <span class="xw-appt-count"><?php echo $count; ?></span></h2>
-    <?php if ( 'rebook' === $view ) : ?><p class="description"><?php echo esc_html( sprintf( xw_t( 'Se cuentan %d días desde el cambio de estado. Las confirmadas futuras y las pendientes quedan fuera. Las antiguas sin fecha de estado se pueden completar en Editar datos.', '%d days are counted from the status change. Future confirmed and pending appointments are excluded. Use Edit details to enter a missing status date on older bookings.' ), xw_appt_settings()['rebook_days'] ) ); ?></p><?php endif; ?>
-    <form method="get" class="xw-appt-filters"><input type="hidden" name="page" value="xw-appointments"><input type="hidden" name="booking_view" value="<?php echo esc_attr( $view ); ?>"><label for="xw-appt-filter" class="screen-reader-text"><?php echo esc_html( xw_t( 'Estado', 'Status' ) ); ?></label><select name="booking_status" id="xw-appt-filter"><option value=""><?php echo esc_html( xw_t( 'Todos los estados', 'All statuses' ) ); ?></option><?php foreach ( $statuses as $key => $label ) { echo '<option value="' . esc_attr( $key ) . '" ' . selected( $filter, $key, false ) . '>' . esc_html( $label ) . '</option>'; } ?></select><label for="xw-appt-search" class="screen-reader-text"><?php echo esc_html( xw_t( 'Buscar por nombre, correo o teléfono', 'Search name, email or phone' ) ); ?></label><input id="xw-appt-search" name="booking_search" type="search" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php echo esc_attr( xw_t( 'Nombre, correo o teléfono', 'Name, email or phone' ) ); ?>"><?php if ( 'rebook' === $view ) : ?><label class="xw-appt-date-filter" for="xw-appt-changed-before"><?php echo esc_html( xw_t( 'Cambios de estado hasta', 'Status changes through' ) ); ?><input type="date" id="xw-appt-changed-before" name="changed_before" max="<?php echo esc_attr( current_datetime()->format( 'Y-m-d' ) ); ?>" value="<?php echo esc_attr( $before ?: current_datetime()->modify( '-' . (int) xw_appt_settings()['rebook_days'] . ' days' )->format( 'Y-m-d' ) ); ?>"></label><?php endif; ?><button class="button"><?php echo esc_html( xw_t( 'Filtrar', 'Filter' ) ); ?></button></form>
-    <div class="xw-appt-bookings" aria-labelledby="xw-appt-bookings">
-    <?php if ( ! $rows ) { echo '<p class="xw-appt-empty">' . esc_html( xw_t( 'No hay citas para estos filtros.', 'No appointments match these filters.' ) ) . '</p>'; } ?>
-    <?php foreach ( $rows ?: array() as $row ) { echo xw_appt_booking_card( $row, $nonce, $view, $before ); } ?>
-    </div>
-    <?php if ( $count > 25 ) { echo '<nav class="tablenav-pages" aria-label="' . esc_attr( xw_t( 'Páginas de citas', 'Appointment pages' ) ) . '">' . wp_kses_post( paginate_links( array( 'base' => add_query_arg( 'booking_page', '%#%' ), 'format' => '', 'current' => $page, 'total' => (int) ceil( $count / 25 ) ) ) ) . '</nav>'; }
+    $state = xw_appt_list_state( wp_unslash( $_GET ) ); if ( false === $state['days'] ) { $state['days'] = xw_appt_rebook_days(); }
+    $data = xw_appt_list_data( $state ); $state = $data['state'];
+    $views = array( 'upcoming' => xw_t( 'Próximas citas', 'Upcoming appointments' ), 'pending' => xw_t( 'Pendientes', 'Pending' ), 'rebook' => xw_t( 'Listas para reagendar', 'Ready to rebook' ), 'history' => xw_t( 'Historial', 'History' ) ); ?>
+    <nav class="xw-appt-views" aria-label="<?php echo esc_attr( xw_t( 'Apartados de citas', 'Appointment views' ) ); ?>"><?php foreach ( $views as $key => $label ) { echo '<a class="button' . ( $key === $state['view'] ? ' button-primary' : '' ) . '" href="' . esc_url( add_query_arg( array( 'booking_view' => $key, 'rebook_after' => $state['days'] ), xw_appt_admin_url() ) ) . '" ' . ( $key === $state['view'] ? 'aria-current="page"' : '' ) . '>' . esc_html( $label ) . '</a>'; } ?></nav>
+    <h2 id="xw-appt-bookings"><?php echo esc_html( $views[ $state['view'] ] ); ?> <span class="xw-appt-count" aria-live="polite"><?php echo $data['count']; ?></span></h2>
+    <?php if ( 'rebook' === $state['view'] ) : ?><p class="description"><?php echo esc_html( xw_t( 'Completadas y canceladas cuyo último cambio de estado fue hace al menos los días indicados. Las antiguas sin esa fecha se pueden completar en Editar datos.', 'Completed and cancelled appointments whose last status change was at least the specified number of days ago. For older records without that date, use Edit details.' ) ); ?></p><?php endif; ?>
+    <form method="get" class="xw-appt-filters" id="xw-appt-live-search" data-view="<?php echo esc_attr( $state['view'] ); ?>" data-days="<?php echo (int) $state['days']; ?>" data-page="<?php echo (int) $state['page']; ?>" data-booking-id="<?php echo (int) $state['id']; ?>">
+        <input type="hidden" name="page" value="xw-appointments"><input type="hidden" name="booking_view" value="<?php echo esc_attr( $state['view'] ); ?>">
+        <label for="xw-appt-search" class="screen-reader-text"><?php echo esc_html( xw_t( 'Buscar por nombre, correo o teléfono', 'Search name, email or phone' ) ); ?></label><input id="xw-appt-search" name="booking_search" type="search" value="<?php echo esc_attr( $state['search'] ); ?>" placeholder="<?php echo esc_attr( xw_t( 'Nombre, correo o teléfono', 'Name, email or phone' ) ); ?>" autocomplete="off" aria-controls="xw-appt-results">
+        <?php if ( 'rebook' === $state['view'] ) : ?><label class="xw-appt-days-filter" for="xw-appt-rebook-after"><?php echo esc_html( xw_t( 'Días desde el cambio de estado', 'Days since status change' ) ); ?><input type="number" id="xw-appt-rebook-after" name="rebook_after" min="1" max="3650" step="1" required value="<?php echo (int) $state['days']; ?>" aria-controls="xw-appt-results"></label><?php endif; ?>
+        <noscript><button class="button"><?php echo esc_html( xw_t( 'Buscar', 'Search' ) ); ?></button></noscript>
+    </form>
+    <p id="xw-appt-list-status" role="status" aria-live="polite"></p><div id="xw-appt-results"><?php echo xw_appt_list_results( $data, $nonce ); ?></div>
+    <?php
 }
