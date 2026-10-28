@@ -19,7 +19,7 @@ appt_layout_check( strpos( $markup, 'class="xw-appt-filters"' ) < $guide && strp
 $dom = new DOMDocument(); libxml_use_internal_errors( true ); $dom->loadHTML( '<?xml encoding="UTF-8">' . $markup ); libxml_clear_errors();
 $xpath = new DOMXPath( $dom );
 appt_layout_check( 3 === $xpath->query( '//div[@class="xw-appt-rules"]/div[@class="xw-appt-rule"]' )->length, 'the three booking rules share one responsive grid' );
-appt_layout_check( 2 === $xpath->query( '//div[@class="xw-appt-settings-grid"]/section' )->length, 'the two desktop settings panels remain intact' );
+appt_layout_check( 2 === $xpath->query( '//div[@class="xw-appt-settings-grid"]/div[@class="xw-appt-settings-column"]' )->length, 'the two desktop settings panels remain intact' );
 appt_layout_check( 0 === $xpath->query( '//form[@id="xw-appt-schedule"]//table | //form[@id="xw-appt-schedule"]//form' )->length, 'booking forms are not nested inside the schedule form' );
 if ( ! empty( $argv[3] ) ) {
     xw_appt_admin_assets( 'toplevel_page_xw-appointments' );

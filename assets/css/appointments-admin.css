@@ -74,10 +74,6 @@
 .xw-appointments-admin .xw-appt-booking-status select, .xw-appointments-admin .xw-appt-booking-status button { height: 44px; min-height: 44px; margin: 0; box-sizing: border-box; }
 .xw-appt-booking-status [role="status"] { grid-column: 1 / -1; margin: 0; }
 .xw-appt-booking-status [role="status"]:empty { display: none; }
-.xw-appt-booking-details { border-top: 1px solid var(--xw-appt-border); padding-top: 12px; margin-top: 16px; color: var(--xw-appt-muted); font-size: 12px; }
-.xw-appt-booking-details summary { cursor: pointer; color: var(--xw-appt-primary); min-height: 28px; }
-.xw-appt-booking-details dt { font-weight: 600; margin-top: 8px; }
-.xw-appt-booking-details dd { margin: 2px 0; }
 .xw-appt-empty { grid-column: 1 / -1; padding: 20px; border: 1px solid var(--xw-appt-border); background: #fff; border-radius: 12px; }
 .xw-appt-reschedule:not([hidden]) { display: block; border: 1px solid var(--xw-appt-border); border-radius: 8px; margin-top: 16px; padding: 12px; }
 .xw-appt-reschedule[hidden] { display: none; }
@@ -91,3 +87,47 @@
 @media (max-width: 1024px) and (min-width: 601px) { .xw-appt-bookings { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .xw-appt-bookings { grid-template-columns: minmax(0, 1fr); } .xw-appt-booking { padding: 16px; } .xw-appt-booking-header { flex-wrap: wrap; } }
 @media (max-width: 600px) { .xw-appt-rules, .xw-appt-colors { grid-template-columns: minmax(0, 1fr); } .xw-appt-day { grid-template-columns: minmax(0, 1fr); } .xw-appt-add-shift { justify-self: start; } .xw-appt-filters > * { max-width: 100%; } }
+
+/* Keep the same native WordPress controls and two-column settings cards. */
+.xw-appt-settings-column { display: grid; gap: 20px; min-width: 0; }
+.xw-appt-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-top: 10px; }
+.xw-appt-heading h1 { padding: 0; }
+.xw-appointments-admin .xw-appt-logout { display: inline-flex; align-items: center; min-height: 44px; margin: 0; }
+body.xw-appt-restricted #adminmenumain, body.xw-appt-restricted #wpadminbar, body.xw-appt-restricted #wpfooter { display: none !important; }
+body.xw-appt-restricted #wpcontent, body.xw-appt-restricted #wpfooter { margin-left: 0 !important; }
+body.xw-appt-restricted #wpcontent { padding: 16px 24px; }
+body.xw-appt-restricted .xw-appointments-admin { margin: 0 auto; }
+.xw-appt-access-panel textarea, .xw-appt-message-panel textarea { box-sizing: border-box; resize: vertical; max-width: 100%; padding: 10px; }
+.xw-appt-access-panel label, .xw-appt-message-panel label { display: block; font-weight: 600; margin-top: 20px; }
+.xw-appt-booking-fields { margin: 16px 0; }
+.xw-appt-booking-fields > div { margin: 10px 0; }
+.xw-appt-booking-fields dt { font-weight: 600; }
+.xw-appt-booking-fields dd { margin: 3px 0 0; white-space: normal; }
+.xw-appt-form-name { font-size: 12px; color: var(--xw-appt-muted); }
+.xw-appt-booking-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.xw-appt-details-form { border: 1px solid var(--xw-appt-border); border-radius: 8px; margin-top: 16px; padding: 12px; }
+.xw-appt-details-form[hidden], .xw-appt-reschedule[hidden] { display: none !important; }
+.xw-appt-details-form label { display: block; font-weight: 600; margin: 12px 0 6px; }
+.xw-appt-details-form label:first-of-type { margin-top: 0; }
+.xw-appt-details-form textarea, .xw-appt-details-form input, .xw-appt-details-form select { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; }
+.xw-appt-details-form textarea { padding: 8px; min-height: 40px; resize: vertical; }
+.xw-appt-views { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.xw-appt-views a { display: inline-flex; align-items: center; min-height: 44px; box-sizing: border-box; padding: 8px 14px; text-decoration: none; border: 1px solid var(--xw-appt-border); background: #fff; border-radius: 6px; }
+.xw-appt-views a[aria-current="page"] { color: #fff; background: var(--xw-appt-primary); border-color: var(--xw-appt-primary); }
+.xw-appt-filters label { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+#xw-appt-mail-dialog { box-sizing: border-box; width: min(1000px, calc(100% - 32px)); max-width: none; max-height: calc(100dvh - 32px); overflow: auto; padding: 24px; border: 1px solid #dcdcde; border-radius: 12px; color: #1d2327; background: #fff; }
+#xw-appt-mail-dialog::backdrop { background: rgb(0 0 0 / 45%); }
+.xw-appt-mail-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.xw-appt-mail-heading h2 { margin: 0; font-size: 20px; }
+.xw-appt-mail-heading .button { font-size: 24px; min-width: 44px; min-height: 44px; }
+.xw-appt-mail-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 24px; }
+.xw-appt-mail-grid > * { min-width: 0; }
+.xw-appt-mail-grid label { display: block; font-weight: 600; margin: 16px 0 6px; }
+.xw-appt-mail-grid input, .xw-appt-mail-grid textarea { width: 100%; box-sizing: border-box; padding: 10px; }
+.xw-appt-mail-grid textarea { resize: vertical; }
+.xw-appt-mail-grid iframe { width: 100%; height: 600px; max-height: 70dvh; border: 1px solid #dcdcde; border-radius: 6px; box-sizing: border-box; background: #f5f7fc; }
+.xw-appt-mail-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.xw-appt-mail-actions .button { min-height: 44px; }
+.xw-appt-mail-recipient { overflow-wrap: anywhere; }
+@media (max-width: 1024px) { .xw-appt-mail-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) { body.xw-appt-restricted #wpcontent { padding: 12px; } #xw-appt-mail-dialog { padding: 16px; } .xw-appt-heading { align-items: flex-start; } }

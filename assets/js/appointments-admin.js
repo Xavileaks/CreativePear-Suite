@@ -83,54 +83,138 @@
         [...grid.querySelectorAll('.xw-appt-booking')].sort((a, b) => (priority[a.dataset.status] ?? 3) - (priority[b.dataset.status] ?? 3) || a.dataset.start.localeCompare(b.dataset.start)).forEach(card => grid.append(card));
         if (focused?.isConnected) focused.focus({ preventScroll: true });
     }
-    document.querySelectorAll('.xw-appt-reschedule-toggle').forEach(toggle => {
-        const form = document.getElementById(toggle.getAttribute('aria-controls'));
-        toggle.addEventListener('click', () => {
-            form.hidden = !form.hidden; toggle.setAttribute('aria-expanded', String(!form.hidden));
-            if (!form.hidden) form.querySelector('input[type="text"]').focus();
-        });
-    });
-    const savingCards = new WeakSet();
-    document.querySelectorAll('#xw-appt-schedule, .xw-appt-booking-status, .xw-appt-reschedule').forEach(form => {
-        const isSchedule = form.id === 'xw-appt-schedule', isMove = form.classList.contains('xw-appt-reschedule');
+    const forms = new Map(), savingCards = new WeakSet();
+    const snapshot = form => JSON.stringify(Array.from(new FormData(form)));
+    async function request(data) {
+        const response = await fetch(cfg.url, { method: 'POST', body: data, credentials: 'same-origin' });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.data?.message || cfg.error);
+        return result.data || {};
+    }
+    function bindForm(form) {
+        if (forms.has(form)) return;
+        const isSchedule = form.id === 'xw-appt-schedule', isAccess = form.id === 'xw-appt-access';
+        const operation = isSchedule ? 'schedule' : isAccess ? 'access' : form.dataset.operation || (form.classList.contains('xw-appt-details-form') ? 'details' : 'status');
         const card = form.closest('.xw-appt-booking');
-        const button = form.querySelector('button[type="submit"]') || form.querySelector('button');
-        const status = isSchedule ? form.querySelector('#xw-appt-save-status') : form.querySelector('[role="status"]');
-        const snapshot = () => JSON.stringify(Array.from(new FormData(form)));
-        let baseline = snapshot(), busy = false;
-        function update() { button.disabled = busy || baseline === snapshot() || (isMove && !form.elements.appointment.value); if (!busy) status.textContent = button.disabled ? '' : cfg.dirty; }
-        form.addEventListener('input', update); form.addEventListener('change', update);
+        const button = Array.from(form.elements).find(el => el.matches('button[type="submit"]'));
+        const status = isSchedule ? document.querySelector('#xw-appt-save-status') : isAccess ? document.querySelector('#xw-appt-access-status') : form.querySelector('[role="status"]');
+        if (!button || !status) return;
+        const state = { baseline: snapshot(form), busy: false }; forms.set(form, state);
+        const dirty = () => state.baseline !== snapshot(form);
+        function update() {
+            button.disabled = state.busy || !dirty() || (['reschedule', 'rebook'].includes(operation) && !form.elements.appointment.value);
+            if (!state.busy) status.textContent = dirty() ? cfg.dirty : '';
+        }
+        // Controls in the access panel belong to an external form, not the surrounding schedule.
+        document.addEventListener('input', event => { if (event.target.form === form) update(); });
+        document.addEventListener('change', event => { if (event.target.form === form || event.target === form) update(); });
         form.addEventListener('submit', async event => {
-            event.preventDefault(); if (busy || baseline === snapshot()) return;
+            event.preventDefault(); if (state.busy || !dirty()) return;
             if (card && savingCards.has(card)) { status.textContent = cfg.saving; return; }
-            if (!isSchedule && !isMove && form.elements.status.value === 'cancelled' && !window.confirm(cfg.cancel)) return;
-            const sent = snapshot(); const data = new FormData(form);
-            data.set('action', 'xw_appt_admin_save'); data.set('nonce', form.dataset.nonce);
-            data.set('operation', isSchedule ? 'schedule' : isMove ? 'reschedule' : 'status');
-            if (!isSchedule) data.set('booking', form.dataset.booking);
-            busy = true; button.disabled = true; status.textContent = cfg.saving;
+            if (operation === 'status' && form.elements.status.value === 'cancelled' && !window.confirm(cfg.cancel)) return;
+            const drafts = card ? Array.from(card.querySelectorAll('form')).filter(other => other !== form && forms.has(other) && forms.get(other).baseline !== snapshot(other)).map(other => ({ selector: other.id ? '#' + other.id : '.' + other.className.split(' ')[0], values: Array.from(new FormData(other)).filter(([key]) => !['revision','booking_view','changed_before'].includes(key)), visible: !other.hidden, dateDisplay: other.querySelector('.xw-appointment-date-input')?.value })) : [];
+            const sent = snapshot(form), data = new FormData(form);
+            data.set('action', isAccess ? 'xw_appt_access_save' : 'xw_appt_admin_save'); data.set('nonce', form.dataset.nonce);
+            data.set('operation', operation);
+            if (isAccess) data.set('revision', form.dataset.revision);
+            if (card) data.set('booking', form.dataset.booking);
+            state.busy = true; button.disabled = true; status.textContent = cfg.saving;
+            const controls = card ? Array.from(card.querySelectorAll('input,select,textarea,button')).map(el => [el, el.disabled]) : [];
+            controls.forEach(([el]) => { el.disabled = true; });
             if (card) savingCards.add(card);
             try {
-                const response = await fetch(cfg.url, { method: 'POST', body: data, credentials: 'same-origin' });
-                const result = await response.json();
-                if (!response.ok || !result.success) throw new Error(result.data?.message || cfg.error);
-                baseline = sent; busy = false; update();
-                status.textContent = baseline === snapshot() ? (isMove ? cfg.rescheduled : cfg.saved) : cfg.dirty;
-                if (!isSchedule) {
-                    card.dataset.status = result.data.status; card.querySelector('.xw-appt-badge').textContent = cfg.statuses[result.data.status];
-                    const toggle = card.querySelector('.xw-appt-reschedule-toggle');
-                    toggle.disabled = !['pending', 'confirmed'].includes(result.data.status);
-                    if (toggle.disabled) { card.querySelector('.xw-appt-reschedule').hidden = true; toggle.setAttribute('aria-expanded', 'false'); }
-                    if (isMove) {
-                        card.querySelector('.xw-appt-booking-date').textContent = result.data.date;
-                        card.querySelector('.xw-appt-booking-zone span').textContent = result.data.timezone;
-                        card.dataset.start = result.data.start;
-                    } else if (result.data.status === 'cancelled') { form.querySelector('select').value = 'cancelled'; form.querySelector('select').disabled = true; baseline = snapshot(); button.disabled = true; }
+                const result = await request(data);
+                controls.forEach(([el, disabled]) => { el.disabled = disabled; });
+                state.baseline = sent; state.busy = false;
+                if (result.revision) form.dataset.revision = result.revision;
+                if (result.redirect) { window.location.assign(result.redirect); return; }
+                // Refresh existing contact links after changing templates or the country code.
+                if (isSchedule && state.baseline === snapshot(form) && !Array.from(forms).some(([other, saved]) => other !== form && other.isConnected && (saved.busy || saved.baseline !== snapshot(other)))) { window.location.reload(); return; }
+                if (card && result.card) {
+                    const template = document.createElement('template'); template.innerHTML = result.card;
+                    const replacement = template.content.firstElementChild;
+                    card.querySelectorAll('form').forEach(old => forms.delete(old));
+                    card.replaceWith(replacement); bindCard(replacement);
+                    drafts.forEach(draft => {
+                        const other = replacement.querySelector(draft.selector); if (!other) return;
+                        draft.values.forEach(([key, value]) => { if (other.elements.namedItem(key)) other.elements.namedItem(key).value = value; });
+                        if (draft.dateDisplay) other.querySelector('.xw-appointment-date-input').value = draft.dateDisplay;
+                        other.hidden = !draft.visible;
+                        const toggle = replacement.querySelector('[aria-controls="' + other.id + '"]'); if (toggle) toggle.setAttribute('aria-expanded', String(draft.visible));
+                        other.dispatchEvent(new Event('change', { bubbles: true }));
+                    });
                     reorderCards();
-                }
-            } catch (error) { busy = false; button.disabled = baseline === snapshot(); status.textContent = error.message || cfg.error; }
-            finally { if (card) savingCards.delete(card); }
+                    const notice = replacement.querySelector('[role="status"]');
+                    if (notice) notice.textContent = operation === 'reschedule' ? cfg.rescheduled : cfg.saved;
+                    replacement.querySelector('h3').tabIndex = -1;
+                    replacement.querySelector('h3').focus({ preventScroll: true });
+                } else { update(); status.textContent = dirty() ? cfg.dirty : cfg.saved; }
+            } catch (error) {
+                controls.forEach(([el, disabled]) => { el.disabled = disabled; });
+                state.busy = false; update(); status.textContent = error.message || cfg.error;
+            } finally { if (card) savingCards.delete(card); }
         });
-        window.addEventListener('beforeunload', event => { if (busy || baseline !== snapshot()) { event.preventDefault(); event.returnValue = ''; } });
+        update();
+    }
+    function bindCard(card) {
+        card.querySelectorAll('.xw-appt-reschedule-toggle, .xw-appt-edit-toggle').forEach(toggle => {
+            const form = document.getElementById(toggle.getAttribute('aria-controls'));
+            toggle.addEventListener('click', () => {
+                form.hidden = !form.hidden; toggle.setAttribute('aria-expanded', String(!form.hidden));
+                if (!form.hidden) form.querySelector('textarea, input:not([type="hidden"]), select')?.focus();
+            });
+        });
+        card.querySelectorAll('form').forEach(bindForm);
+    }
+    document.querySelectorAll('.xw-appt-booking').forEach(bindCard);
+    document.querySelectorAll('#xw-appt-schedule, #xw-appt-access').forEach(bindForm);
+    const dialog = document.querySelector('#xw-appt-mail-dialog'), mail = dialog?.querySelector('form');
+    if (mail) {
+        const send = mail.querySelector('[type="submit"]'), refresh = mail.querySelector('.xw-appt-mail-preview');
+        const status = mail.querySelector('[role="status"]'), frame = mail.querySelector('iframe');
+        let booking = '', kind = '', token = '', preview = '', busy = false, sent = false, requestId = '', opening;
+        const value = () => JSON.stringify([mail.elements.subject.value, mail.elements.text.value]);
+        const update = () => { send.disabled = busy || sent || !token || preview !== value(); refresh.disabled = busy || sent; };
+        function data(operation, initial = false) {
+            const body = new FormData();
+            Object.entries({ action: 'xw_appt_admin_save', operation, nonce: cfg.nonce, booking, kind, preview_token: token, request_id: requestId }).forEach(([key, val]) => body.set(key, val));
+            if (!initial) { body.set('subject', mail.elements.subject.value); body.set('text', mail.elements.text.value); }
+            return body;
+        }
+        async function showPreview(initial = false) {
+            if (busy) return;
+            busy = true; update(); status.textContent = cfg.saving;
+            mail.elements.subject.readOnly = true; mail.elements.text.readOnly = true;
+            try {
+                const result = await request(data('message_preview', initial));
+                mail.elements.subject.value = result.subject; mail.elements.text.value = result.text;
+                mail.querySelector('.xw-appt-mail-recipient').textContent = result.recipient;
+                kind = result.kind; token = result.preview_token; preview = value(); frame.srcdoc = result.html; status.textContent = '';
+            } catch (error) { token = ''; status.textContent = error.message || cfg.error; }
+            finally { busy = false; mail.elements.subject.readOnly = false; mail.elements.text.readOnly = false; update(); }
+        }
+        document.addEventListener('click', event => {
+            const button = event.target.closest('.xw-appt-email-open');
+            if (!button || busy) return;
+            opening = button; booking = button.closest('.xw-appt-booking').dataset.booking; kind = button.dataset.kind;
+            requestId = window.crypto?.randomUUID?.() || Date.now().toString(36) + '-' + Math.random().toString(36).slice(2) + '-' + Math.random().toString(36).slice(2); token = ''; preview = ''; sent = false; frame.srcdoc = ''; mail.reset();
+            dialog.showModal(); showPreview(true);
+        });
+        mail.addEventListener('input', () => { update(); status.textContent = cfg.previewFirst; });
+        refresh.addEventListener('click', () => showPreview());
+        mail.addEventListener('submit', async event => {
+            event.preventDefault(); if (send.disabled || busy) return;
+            busy = true; update(); status.textContent = cfg.emailSending;
+            mail.elements.subject.readOnly = true; mail.elements.text.readOnly = true;
+            try { await request(data('message_send')); sent = true; status.textContent = cfg.emailSent; }
+            catch (error) { status.textContent = error.message || cfg.error; }
+            finally { busy = false; mail.elements.subject.readOnly = sent; mail.elements.text.readOnly = sent; update(); }
+        });
+        dialog.querySelector('.xw-appt-mail-close').addEventListener('click', () => { if (!busy) dialog.close(); });
+        dialog.addEventListener('cancel', event => { if (busy) event.preventDefault(); });
+        dialog.addEventListener('close', () => opening?.focus());
+    }
+    window.addEventListener('beforeunload', event => {
+        if (Array.from(forms).some(([form, state]) => form.isConnected && (state.busy || state.baseline !== snapshot(form)))) { event.preventDefault(); event.returnValue = ''; }
     });
 }());

@@ -4,6 +4,19 @@ Plugin de WordPress de Creative Pear Agency con funciones reutilizables y una pa
 
 Sitio web: [creativepearagency.com](https://creativepearagency.com)
 
+
+## Versión 1.0.78 — Citas: acceso, edición, mensajes y reagendado
+
+Citas incorpora acceso por correo para cuentas existentes de cualquier rol, incluidas administradoras. Las cuentas listadas solo pueden gestionar Citas: se ocultan los menús y la barra superior, se restringen rutas, capacidades y API, y se añade Cerrar sesión/Log out según el idioma del sitio. La lista se guarda aparte; solo un administrador sin restricción puede editarla y debe quedar al menos uno fuera. No se crean usuarios ni se alteran sus roles. Desactivar Citas deja de aplicar esta restricción.
+
+Las tarjetas muestran todos los datos ordinarios del formulario, sin desplegable, y permiten editarlos y elegir qué campo usar como nombre. Los campos técnicos de cita se cambian mediante disponibilidad. WhatsApp y Correo desaparecen cuando su dato es inválido y vuelven al corregirlo. WhatsApp valida formato internacional con metadatos locales de libphonenumber-js 1.13.15 (MIT, licencia incluida); esto no comprueba que el número tenga una cuenta de WhatsApp.
+
+Hay mensajes editables para pendiente, confirmada, cancelada y reagendar, con saludo opcional por nombre y marcadores {fecha}, {hora}, {consultorio}, {sitio} y {campo:ID}. WhatsApp abre el texto preparado; el correo tiene un editor con asunto, mensaje y vista previa HTML. Solo se envía al pulsar Enviar correo, al destinatario guardado; los reintentos de una misma solicitud se deduplican. Cambiar estados, fechas o datos no envía avisos automáticamente. WordPress debe tener configurado el envío de correo.
+
+Próximas citas, Listas para reagendar e Historial son apartados separados. El plazo configurable (15 días por defecto) se cuenta por días del calendario desde el cambio de estado, con filtro por fecha de corte. Se incluyen canceladas y confirmadas/completadas que ya terminaron; se excluyen pendientes, confirmadas futuras y las ya reagendadas. Las antiguas sin fecha de cambio no reciben una fecha inventada: se puede indicar la fecha conocida en Editar datos. Reagendar comprueba disponibilidad, crea una nueva cita pendiente y conserva la original enlazada en el historial. La migración añade dos columnas sin reescribir fechas originales.
+
+Cajas de ajustes en dos columnas de escritorio y una hasta 1024 px; tarjetas de citas en tres columnas, dos en tablet y una en móvil. Verificado con WordPress local, Elementor, cuentas administradora/suscriptora restringidas, edición, conflictos, mensajes interceptados (sin entregas reales), calendario y reagendado. Publicar no instala la actualización en los sitios.
+
 ## Versión 1.0.77 — WooCommerce: Valor relativo y absoluto
 
 Nueva caja al principio de **WooCommerce**, apagada por defecto. Actívala, guarda y busca **Valor relativo y absoluto** en Elementor, dentro de la categoría de la suite. El widget muestra el ahorro de la oferta como **porcentaje** (`Ahorra 11%`) o **importe** (`Ahorra 60€`, con el formato monetario de la tienda). Colócalo junto al widget de precio en una plantilla de producto o Loop.

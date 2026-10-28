@@ -1,13 +1,15 @@
 <?php
 /** One optional, site-wide appointment calendar. No public customer-data endpoint. */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
+require_once __DIR__ . '/appointments-access.php';
+require_once __DIR__ . '/appointments-phone.php';
 
 function xw_appt_table( $suffix = '' ) {
     global $wpdb;
     return $wpdb->prefix . 'xw_appointments' . $suffix;
 }
 
-function xw_appt_ready() { return '1' === get_option( 'xw_appointments_schema' ); }
+function xw_appt_ready() { return '2' === get_option( 'xw_appointments_schema' ); }
 
 function xw_appt_install() {
     if ( ! xw_feature_enabled( 'elementor_appointments' ) || xw_appt_ready() ) { return; }
@@ -29,6 +31,8 @@ function xw_appt_install() {
         form_id varchar(100) NOT NULL DEFAULT '',
         fields longtext NOT NULL,
         created_at datetime NOT NULL,
+        status_changed_at datetime DEFAULT NULL,
+        rebooked_to bigint(20) unsigned DEFAULT NULL,
         PRIMARY KEY  (id),
         KEY starts_at (starts_at),
         KEY email (email),
@@ -42,13 +46,14 @@ function xw_appt_install() {
     ) ENGINE=InnoDB $collate;" );
     if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) ) === $table &&
         $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $locks ) ) ) === $locks ) {
-        update_option( 'xw_appointments_schema', '1', false );
+        $columns = $wpdb->get_col( "DESC $table", 0 );
+        if ( in_array( 'status_changed_at', $columns, true ) && in_array( 'rebooked_to', $columns, true ) ) { update_option( 'xw_appointments_schema', '2', false ); }
     }
 }
 add_action( 'init', 'xw_appt_install', 20 );
 
 function xw_appt_defaults() {
-    return array( 'weekly' => array_fill( 0, 7, '' ), 'closed' => array(), 'duration' => 30, 'notice' => 120, 'horizon' => 90, 'colors' => array(), 'whatsapp_country_code' => '' );
+    return array( 'weekly' => array_fill( 0, 7, '' ), 'closed' => array(), 'duration' => 30, 'notice' => 120, 'horizon' => 90, 'colors' => array(), 'whatsapp_country_code' => '', 'messages' => array(), 'rebook_days' => 15 );
 }
 function xw_appt_settings() { return array_merge( xw_appt_defaults(), (array) get_option( 'xw_appointment_settings', array() ) ); }
 
@@ -118,6 +123,16 @@ function xw_appt_sanitize_schedule( $raw ) {
     $country = $raw['whatsapp_country_code'] ?? ( xw_appt_settings()['whatsapp_country_code'] ?? '' );
     if ( ! is_string( $country ) || ( '' !== $country && ! preg_match( '/^[1-9]\d{0,2}$/D', $country ) ) ) { return new WP_Error( 'schedule', xw_t( 'Código de país de WhatsApp no válido. Usa de uno a tres dígitos sin +.', 'Invalid WhatsApp country code. Use one to three digits without +.' ) ); }
     $out['whatsapp_country_code'] = $country;
+    $rebook_days = $raw['rebook_days'] ?? xw_appt_settings()['rebook_days'];
+    if ( ! is_scalar( $rebook_days ) || ! preg_match( '/^\d+$/D', (string) $rebook_days ) || (int) $rebook_days < 1 || (int) $rebook_days > 3650 ) { return new WP_Error( 'days', xw_t( 'Indica de 1 a 3650 días para reagendar.', 'Enter 1 to 3650 rebooking days.' ) ); }
+    $out['rebook_days'] = (int) $rebook_days;
+    $messages = $raw['messages'] ?? xw_appt_settings()['messages'];
+    if ( ! is_array( $messages ) ) { return new WP_Error( 'messages', xw_t( 'Mensajes no válidos.', 'Invalid messages.' ) ); }
+    foreach ( array( 'pending', 'confirmed', 'cancelled', 'rebook' ) as $status ) {
+        $message = $messages[ $status ] ?? '';
+        if ( ! is_string( $message ) || mb_strlen( $message ) > 4000 ) { return new WP_Error( 'message', xw_t( 'Cada mensaje admite hasta 4000 caracteres.', 'Each message allows up to 4000 characters.' ) ); }
+        $out['messages'][ $status ] = sanitize_textarea_field( $message );
+    }
     foreach ( array( 'border', 'background', 'text', 'calendar_background' ) as $key ) {
         $color = $raw['colors'][ $key ] ?? ( xw_appt_settings()['colors'][ $key ] ?? '' );
         if ( ! is_string( $color ) || ( '' !== $color && ! preg_match( '/^#[a-fA-F0-9]{6}$/D', $color ) ) ) { return new WP_Error( 'schedule', xw_t( 'Usa colores hexadecimales de seis dígitos o deja el color automático.', 'Use six-digit hex colors or leave the color automatic.' ) ); }
@@ -224,14 +239,15 @@ function xw_appt_customer( $record, $item ) {
     $out = array( 'customer_name' => '', 'email' => '', 'phone' => '', 'fields' => array() );
     $types = array( 'text', 'email', 'tel', 'textarea', 'select', 'radio', 'checkbox', 'date', 'time', 'number', 'url', 'xw_appointment' );
     foreach ( array_slice( (array) $record->get( 'fields' ), 0, 50, true ) as $id => $field ) {
-        if ( ! in_array( $field['type'] ?? '', $types, true ) || ! is_scalar( $field['value'] ?? null ) ) { continue; }
-        $value = mb_substr( sanitize_textarea_field( (string) $field['value'] ), 0, 2000 );
-        $entry = array( 'label' => mb_substr( sanitize_text_field( $field['title'] ?? $id ), 0, 150 ), 'value' => $value );
+        if ( ! in_array( $field['type'] ?? '', $types, true ) ) { continue; }
+        $value = mb_substr( sanitize_textarea_field( xw_appt_field_string( $field['value'] ?? '' ) ), 0, 2000 );
+        $entry = array( 'id' => mb_substr( sanitize_text_field( (string) $id ), 0, 100 ), 'type' => $field['type'], 'label' => mb_substr( sanitize_text_field( $field['title'] ?? $id ), 0, 150 ), 'value' => $value );
+        if ( 'xw_appointment' === $field['type'] ) { $entry['role'] = 'appointment'; }
         if ( ! empty( $item['xw_appt_office'] ) && $id === $item['xw_appt_office'] ) { $entry['role'] = 'office'; }
         $out['fields'][] = $entry;
         foreach ( array( 'customer_name' => array( 'xw_appt_name', 'text', 200 ), 'email' => array( 'xw_appt_email', 'email', 200 ), 'phone' => array( 'xw_appt_phone', 'tel', 100 ) ) as $target => $rule ) {
             $mapped = $item[ $rule[0] ] ?? '';
-            if ( ( $mapped && $id === $mapped ) || ( ! $mapped && ! $out[ $target ] && $field['type'] === $rule[1] ) ) { $out[ $target ] = mb_substr( $target === 'email' ? sanitize_email( $value ) : sanitize_text_field( $value ), 0, $rule[2] ); }
+            if ( ( $mapped && $id === $mapped ) || ( ! $mapped && ! $out[ $target ] && $field['type'] === $rule[1] ) ) { $out[ $target ] = mb_substr( sanitize_text_field( $value ), 0, $rule[2] ); $out['fields'][ count( $out['fields'] ) - 1 ]['contact_role'] = $target; }
         }
     }
     $out['fields'] = wp_json_encode( $out['fields'] );
@@ -286,7 +302,7 @@ function xw_appt_complete( $record, $handler ) {
     global $wpdb;
     $where = array( 'id' => $hold['id'], 'owner_token' => $hold['owner'], 'status' => 'holding' );
     if ( $handler->is_success && empty( $handler->errors ) && empty( $handler->messages['error'] ) && empty( $handler->messages['admin_error'] ) ) {
-        $saved = $wpdb->update( xw_appt_table(), array( 'status' => 'pending', 'hold_expires' => null, 'owner_token' => null ), $where );
+        $saved = $wpdb->update( xw_appt_table(), array( 'status' => 'pending', 'status_changed_at' => gmdate( 'Y-m-d H:i:s' ), 'hold_expires' => null, 'owner_token' => null ), $where );
         if ( 1 !== $saved ) { $handler->add_error_message( xw_t( 'No se pudo confirmar el registro de la cita. Contacta con el sitio antes de repetir el envío.', 'Could not finalize the appointment record. Contact the site before submitting again.' ) ); return; }
         $handler->add_response_data( 'xw_appointment', array( 'saved' => true ) );
     } else { $wpdb->delete( xw_appt_table(), $where ); }
@@ -342,4 +358,7 @@ add_action( 'admin_init', static function() {
 } );
 
 require_once __DIR__ . '/appointments-admin.php';
+require_once __DIR__ . '/appointments-records.php';
+require_once __DIR__ . '/appointments-messages.php';
+require_once __DIR__ . '/appointments-cards.php';
 require_once __DIR__ . '/appointments-privacy.php';
