@@ -1,10 +1,10 @@
 /* WooCommerce cart and mini-cart layout. Loaded only when the feature is enabled. */
 
-/* Elementor already exposes section padding. Remove its extra mobile row inset
- * without changing that setting, row spacing, or more specific custom styles. */
+/* Elementor already exposes section padding and product-cell spacing. Remove
+ * its extra mobile row padding without changing those configured values. */
 @media (max-width: 767px) {
     .elementor-widget-woocommerce-cart .woocommerce table.cart tr {
-        padding-inline: 0;
+        padding: 0;
     }
 }
 

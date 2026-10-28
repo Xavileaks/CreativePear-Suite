@@ -1,5 +1,9 @@
 # Creative Pear Suite
 
+## WooCommerce Cart CSS: padding completo de la fila móvil (1.0.83)
+
+Amplía el ajuste anterior a los cuatro lados: elimina los 16 px verticales y los 28 px laterales que Elementor añade a cada fila del carrito en móvil (hasta 767 px). Se conservan el padding y los márgenes de la sección elegidos en Elementor y la separación configurada en las celdas del producto. Solo se aplica con WooCommerce Cart CSS activo, sin cambiar escritorio, mini carrito ni checkout.
+
 ## WooCommerce Cart CSS: espacio adicional en móvil (1.0.82)
 
 Elimina los 28 px laterales que Elementor añade a las filas del carrito hasta 767 px, además del padding configurado en la sección. Conserva el padding y los márgenes elegidos en Elementor, el espacio vertical de los productos y el diseño de escritorio. La regla solo afecta al widget Carrito de Elementor cuando WooCommerce Cart CSS está activo; no cambia el carrito clásico, el mini carrito ni el checkout. Sin `!important`, para permitir estilos propios más específicos.
