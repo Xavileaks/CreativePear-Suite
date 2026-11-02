@@ -34,12 +34,13 @@
         }
 
         input.dataset.xwPhoneValid = isValid ? '1' : '0';
-        var hasInvalidPhone = form.querySelector('[data-xw-phone-valid="0"]');
+        var hasInvalidField = form.querySelector('[data-xw-phone-valid="0"], [data-xw-message-valid="0"]');
         var submit = form.querySelector('button.elementor-button[type="submit"]');
 
         if (submit) {
-            submit.disabled = Boolean(hasInvalidPhone);
-            submit.classList.toggle('xw-submit-disabled', Boolean(hasInvalidPhone));
+            submit.disabled = Boolean(hasInvalidField);
+            submit.classList.toggle('xw-submit-disabled', Boolean(hasInvalidField));
+            submit.classList.toggle('xl-submit-disabled', Boolean(hasInvalidField));
         }
     }
 

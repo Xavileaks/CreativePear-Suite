@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.83
+Version: 1.0.84
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.83' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.84' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -406,7 +406,7 @@ function xw_enqueue_international_phone_assets() {
         'xw-intl-tel-input',
         $vendor_url . 'js/intlTelInputWithUtils.min.js',
         array(),
-        '29.1.2',
+        filemtime( $vendor_path . 'js/intlTelInputWithUtils.min.js' ),
         true
     );
     wp_enqueue_script(
@@ -459,11 +459,11 @@ jQuery(function($){
     function toggleSubmitState(f,isValid){
         var form=f.closest('form');
         var submit=form.find('button.elementor-button[type="submit"]');
-        if(!isValid){
-            submit.prop('disabled',true).addClass('xl-submit-disabled').css('pointer-events','none');
-        }else{
-            submit.prop('disabled',false).removeClass('xl-submit-disabled').css('pointer-events','auto');
-        }
+        f.attr('data-xw-phone-valid',isValid?'1':'0');
+        var invalid=form.find('[data-xw-phone-valid="0"],[data-xw-message-valid="0"]').length>0;
+        submit.prop('disabled',invalid)
+            .toggleClass('xl-submit-disabled',invalid)
+            .toggleClass('xw-submit-disabled',invalid);
     }
     cleanPhoneConstraints(document);
     $(document).on('focus','form.elementor-form input[type="tel"],form.elementor-form .elementor-field-group-phone input',function(){
@@ -491,6 +491,7 @@ jQuery(function($){
 button.elementor-button.xl-submit-disabled{
     opacity:.5 !important;
     cursor:not-allowed !important;
+    pointer-events:none !important;
 }
 </style>
 <?php });
@@ -518,65 +519,7 @@ jQuery(function($){
 
 
 // MASCARA DE MENSAJE PARA ELEMENTOR FORM
-
-add_action('wp_footer','xl_lock_message_invalid');
-function xl_lock_message_invalid(){
-if ( ! xw_feature_enabled( 'elementor_message_mask' ) ) return;
-?>
-<script>
-jQuery(function($){
-    var allowed=/^[a-zA-Z0-9 áéíóúÁÉÍÓÚñÑ¿?¡!.,:;()\-\n\r]*$/;
-    var forbiddenUrl=/(?:\b(?:https?|ftp):|\bwww\.|\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{2,63}|xn--[a-z0-9-]{2,59})\b|(?:^|\s)\.(?:[a-z]{2,63}|xn--[a-z0-9-]{2,59})\b)/i;
-    var selector='.elementor-field-type-textarea textarea';
-
-    function updateSubmitState(form){
-        var invalid=form.find('[data-xw-message-valid="0"],[data-xw-phone-valid="0"]').length>0;
-        form.find('button.elementor-button[type="submit"]')
-            .prop('disabled',invalid)
-            .toggleClass('xl-submit-disabled',invalid);
-    }
-
-    function validateMessageField(field){
-        var val=field.val()||'';
-        var valid=allowed.test(val)&&!forbiddenUrl.test(val);
-        var form=field.closest('form.elementor-form');
-
-        field.toggleClass('xl-invalid',!valid).attr('data-xw-message-valid',valid?'1':'0');
-        updateSubmitState(form);
-        return valid;
-    }
-
-    $(document).on('input',selector,function(){
-        validateMessageField($(this));
-    });
-
-    $(document).on('submit','form.elementor-form',function(event){
-        var valid=true;
-        $(this).find(selector).each(function(){
-            if(!validateMessageField($(this))){valid=false;}
-        });
-        if(!valid){
-            event.preventDefault();
-            event.stopImmediatePropagation();
-        }
-    });
-
-    $(selector).each(function(){validateMessageField($(this));});
-});
-</script>
-<style>
-.elementor-field-type-textarea textarea.xl-invalid{
-    border-color: red !important;
-}
-button.elementor-button.xl-submit-disabled{
-    opacity:.5 !important;
-    cursor:not-allowed !important;
-    pointer-events:none !important;
-}
-</style>
-<?php }
-
-
+require_once plugin_dir_path( __FILE__ ) . 'includes/elementor-message-validation.php';
 
 
 // WOOCOMMERCE: CAMBIAR A LA PRIMERA IMAGEN DE LA GALERÍA EN LOS LISTADOS

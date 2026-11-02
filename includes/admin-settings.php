@@ -126,7 +126,7 @@ function xw_get_feature_definitions() {
         ),
         'elementor_message_mask' => array(
             'title'       => xw_t( 'Form Elementor: validación de mensajes', 'Form Elementor: message validation' ),
-            'description' => xw_t( 'Limita los caracteres admitidos en áreas de texto de Elementor.', 'Limits the characters allowed in Elementor text areas.' ),
+            'description' => xw_t( 'Acepta letras del español e inglés y bloquea enlaces y otros alfabetos en los mensajes, también en el servidor.', 'Accepts Spanish and English letters and blocks links and other alphabets in messages, including server validation.' ),
         ),
         'woocommerce_product_price' => array(
             'title'       => xw_t( 'Precio en oferta', 'Sale price' ),

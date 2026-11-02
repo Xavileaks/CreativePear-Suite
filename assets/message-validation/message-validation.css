@@ -1,0 +1,4 @@
+form.elementor-form textarea.xl-invalid { border-color: #d63638 !important; }
+form.elementor-form .xw-message-error { display: block; margin-top: 6px; color: #d63638; font-size: 12px; line-height: 1.4; }
+form.elementor-form .xw-message-error[hidden] { display: none; }
+form.elementor-form button.elementor-button.xl-submit-disabled { opacity: .5 !important; cursor: not-allowed !important; pointer-events: none !important; }

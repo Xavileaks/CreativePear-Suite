@@ -1,5 +1,13 @@
 # Creative Pear Suite
 
+## Validación de mensajes: español e inglés sin enlaces
+
+Con la caja activa, los campos textarea se validan tanto al escribir como en el servidor antes de ejecutar las acciones del formulario Elementor. Acepta A–Z, tildes españolas, ñ, ü, números y puntuación habitual. Rechaza cirílico, árabe, chino y otras letras fuera de ese conjunto, además de URLs con protocolo, www, dominios sin protocolo, IP y enlaces codificados habituales. Muestra un aviso junto al campo sin borrar lo que la persona escribió. Los campos de correo y URL independientes no se filtran con esta regla. La protección no depende de JavaScript y se desactiva con la caja.
+
+## Máscara de teléfono: buscar países sin foco automático (1.0.84)
+
+Al abrir el selector internacional, el foco va al país seleccionado en lugar del buscador. Así se puede recorrer la lista sin activar automáticamente el teclado del móvil; tocar Buscar permite escribir y filtrar con normalidad. Se conserva la navegación con flechas, Enter y Escape y la selección de países. Ajuste local documentado en la biblioteca intl-tel-input 29.1.2 incluida; su caché JavaScript usa la fecha del archivo para servir la corrección al actualizar.
+
 ## WooCommerce Cart CSS: padding completo de la fila móvil (1.0.83)
 
 Amplía el ajuste anterior a los cuatro lados: elimina los 16 px verticales y los 28 px laterales que Elementor añade a cada fila del carrito en móvil (hasta 767 px). Se conservan el padding y los márgenes de la sección elegidos en Elementor y la separación configurada en las celdas del producto. Solo se aplica con WooCommerce Cart CSS activo, sin cambiar escritorio, mini carrito ni checkout.
