@@ -1,5 +1,9 @@
 # Creative Pear Suite
 
+## Elementor Form: mensajes flotantes (1.0.85)
+
+El aviso aparece abajo y centrado, con fondo blanco translúcido y el texto original de Elementor en negro. La barra indica los cinco segundos restantes y se pausa al pasar el cursor por el aviso o al enfocar un control con el teclado. La × permite cerrarlo al instante.
+
 ## Validación de mensajes: español e inglés sin enlaces
 
 Con la caja activa, los campos textarea se validan tanto al escribir como en el servidor antes de ejecutar las acciones del formulario Elementor. Acepta A–Z, tildes españolas, ñ, ü, números y puntuación habitual. Rechaza cirílico, árabe, chino y otras letras fuera de ese conjunto, además de URLs con protocolo, www, dominios sin protocolo, IP y enlaces codificados habituales. Muestra un aviso junto al campo sin borrar lo que la persona escribió. Los campos de correo y URL independientes no se filtran con esta regla. La protección no depende de JavaScript y se desactiva con la caja.

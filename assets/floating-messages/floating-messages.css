@@ -1,0 +1,93 @@
+.elementor-form .elementor-message.xw-floating-message {
+    position: fixed !important;
+    inset: auto 0 calc(20px + env(safe-area-inset-bottom, 0px));
+    z-index: 99999;
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) 32px;
+    gap: 12px;
+    align-items: center;
+    box-sizing: border-box;
+    width: max-content;
+    max-width: min(40rem, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 16px 14px 18px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, .09);
+    border-radius: 16px;
+    background: #f5f3f0;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, .19), 0 2px 6px rgba(0, 0, 0, .08);
+    color: #000 !important;
+    font: 500 16px/1.45 system-ui, sans-serif;
+    text-align: start;
+    text-transform: none;
+    letter-spacing: normal;
+    --xw-notice-icon: #e5eaf2;
+    --xw-notice-progress: #64748b;
+}
+
+@supports (backdrop-filter: blur(12px)) {
+    .elementor-form .elementor-message.xw-floating-message {
+        background: rgba(245, 243, 240, .96);
+        backdrop-filter: blur(12px);
+    }
+}
+
+.elementor-form .elementor-message.xw-floating-message[hidden] { display: none !important; }
+.elementor-form .elementor-message.xw-floating-message::before { content: none; }
+.xw-floating-message[popover]::backdrop { background: transparent; pointer-events: none; }
+.elementor-form .elementor-message.xw-floating-message[data-xw-notice="success"] { --xw-notice-icon: #cdd9c2; --xw-notice-progress: #52816a; }
+.elementor-form .elementor-message.xw-floating-message[data-xw-notice="error"] { --xw-notice-icon: #edbcbc; --xw-notice-progress: #b65359; }
+
+.xw-floating-message .xw-floating-message__text {
+    max-height: min(55vh, 24rem);
+    overflow: auto;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.xw-floating-message .xw-floating-message__icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--xw-notice-icon);
+    color: #000;
+    font-size: 19px;
+    line-height: 1;
+}
+
+.elementor-form .xw-floating-message button.xw-floating-message__close {
+    display: grid;
+    place-items: center;
+    align-self: start;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #000 !important;
+    font: 400 23px/1 system-ui, sans-serif;
+    cursor: pointer;
+}
+
+.elementor-form .xw-floating-message button.xw-floating-message__close:hover { background: rgba(0, 0, 0, .07); }
+.xw-floating-message__close:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+
+.xw-floating-message .xw-floating-message__progress {
+    position: absolute;
+    inset: auto 0 0;
+    height: 3px;
+    background: var(--xw-notice-progress);
+    transform-origin: left center;
+    animation: xw-floating-message-countdown 5s linear forwards;
+}
+
+@keyframes xw-floating-message-countdown { to { transform: scaleX(0); } }
+
+@media (hover: hover) {
+    .xw-floating-message:hover .xw-floating-message__progress { animation-play-state: paused; }
+}
+.xw-floating-message:focus-within .xw-floating-message__progress { animation-play-state: paused; }

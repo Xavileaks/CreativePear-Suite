@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.84
+Version: 1.0.85
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,7 +14,7 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.84' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.85' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
@@ -288,90 +288,14 @@ function xw_custom_admin_footer_text( $default_text ) {
 
 // MENSAJE FLOTANTE DE ELEMENTOR FORM
 
-add_action('wp_footer', function() {
-    if ( ! xw_feature_enabled( 'elementor_messages' ) ) return;
-    ?>
-    <style>
-    .elementor-message {
-        position: fixed !important;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 9999;
-        background: #f5f5f5;
-        border-radius: 8px;
-        padding: 15px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        border: 2px solid transparent;
-        opacity: 0;
-        transition: opacity 0.5s ease;
-        width: 700px;
-        max-width: 90%;
-        text-align: center;
-        overflow: hidden;
-        box-sizing: border-box;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .elementor-message > *{
-        margin: 0 !important;
-        display: inline;
-    }
-    @media (max-width: 767px) {
-        .elementor-message {
-            width: 80%;
-        }
-    }
-    </style>
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                mutation.addedNodes.forEach(function(node) {
-                    if (node.classList && node.classList.contains('elementor-message')) {
-                        if (node.classList.contains('elementor-message-success')) {
-                            node.style.borderColor = 'green';
-                        } else if (node.classList.contains('elementor-message-danger')) {
-                            node.style.borderColor = 'red';
-                        } else if (node.classList.contains('elementor-message-info')) {
-                            node.style.borderColor = 'yellow';
-                        }
-                        let firstChild = node.firstChild;
-                        while (firstChild && firstChild.nodeType !== 1 && firstChild.nodeType !== 3) {
-                            firstChild = firstChild.nextSibling;
-                        }
-                        if (firstChild) {
-                            node.innerHTML = '';
-                            node.appendChild(firstChild);
-                        }
-                        requestAnimationFrame(() => {
-                            node.style.opacity = '1';
-                        });
-                        let hideTimeout;
-                        const startHideTimer = () => {
-                            hideTimeout = setTimeout(() => {
-                                node.style.opacity = '0';
-                                setTimeout(() => {
-                                    node.style.display = 'none';
-                                }, 500);
-                            }, 5000);
-                        };
-                        const clearHideTimer = () => {
-                            clearTimeout(hideTimeout);
-                        };
-                        startHideTimer();
-                        node.addEventListener('mouseenter', clearHideTimer);
-                        node.addEventListener('mouseleave', startHideTimer);
-                    }
-                });
-            });
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-    });
-    </script>
-    <?php
-});
+add_action( 'wp_enqueue_scripts', static function() {
+    if ( ! xw_feature_enabled( 'elementor_messages' ) ) { return; }
+    $path = plugin_dir_path( XW_FUNCTIONS_FILE ) . 'assets/floating-messages/';
+    $url = plugin_dir_url( XW_FUNCTIONS_FILE ) . 'assets/floating-messages/';
+    wp_enqueue_style( 'xw-floating-messages', $url . 'floating-messages.css', array(), filemtime( $path . 'floating-messages.css' ) );
+    wp_enqueue_script( 'xw-floating-messages', $url . 'floating-messages.js', array(), filemtime( $path . 'floating-messages.js' ), true );
+    wp_localize_script( 'xw-floating-messages', 'xwFloatingMessages', array( 'closeLabel' => xw_t( 'Cerrar aviso', 'Close notice' ) ) );
+} );
 
 
 // MASCARA DE TELEFONO PARA ELEMENTOR FORM
