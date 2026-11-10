@@ -1,5 +1,13 @@
 # Creative Pear Suite
 
+## WooCommerce Smart Filter (1.0.86)
+
+1. Activa **WooCommerce → Smart Filter** en la suite. En **Smart Filter** del menú de WordPress, crea y publica un grupo.
+2. En Elementor, añade **Smart Filter** junto a tu **Loop Grid** con una plantilla de Productos. Selecciona el mismo grupo en el widget y en **Loop Grid → Consulta → Smart Filter**.
+3. Configura en el widget los textos, la aplicación inmediata o por botón y los estilos. Para la paginación de Elementor, usa números o anterior/siguiente con **Recargar página**.
+
+Los grupos admiten categorías, etiquetas, marcas registradas, atributos globales, búsqueda de texto, precio, disponibilidad, ofertas, valoración y orden. El precio filtra los valores de catálogo de WooCommerce. El widget guarda la selección en la URL y actualiza la cuadrícula conservando su plantilla. Requiere WooCommerce y un Elementor con Loop Grid de productos.
+
 ## Elementor Form: mensajes flotantes (1.0.85)
 
 El aviso aparece abajo y centrado, con fondo blanco translúcido y el texto original de Elementor en negro. La barra indica los cinco segundos restantes y se pausa al pasar el cursor por el aviso o al enfocar un control con el teclado. La × permite cerrarlo al instante.

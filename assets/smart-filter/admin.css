@@ -1,0 +1,82 @@
+body.post-type-xw_smart_filter { background-color: #f8f9fb; }
+
+.post-type-xw_smart_filter #xw-sf-builder {
+    border: 1px solid #dce2ea;
+    border-radius: 10px;
+    box-shadow: none;
+}
+
+.xw-sf-builder { padding: 8px 4px; container-type: inline-size; }
+.xw-sf-rows {
+    display: grid;
+    gap: 8px;
+    margin: 16px 0;
+    list-style: none;
+    counter-reset: xw-sf-row;
+}
+
+.xw-sf-row {
+    display: grid;
+    grid-template-columns: auto repeat(3, minmax(0, 1fr)) auto;
+    align-items: end;
+    gap: 12px;
+    margin: 0;
+    padding: 14px;
+    border: 1px solid #e0e5ec;
+    border-radius: 8px;
+    background: #fcfcfd;
+    counter-increment: xw-sf-row;
+}
+
+.xw-sf-row-number {
+    display: grid;
+    align-self: center;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #eef2f7;
+    color: #334155;
+    font-weight: 600;
+}
+.xw-sf-row-number::before { content: counter(xw-sf-row); }
+.xw-sf-row label { display: grid; gap: 5px; font-weight: 500; }
+.xw-sf-row input,
+.xw-sf-row select {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    min-height: 40px;
+    border-color: #ccd5e0;
+    border-radius: 5px;
+    font-weight: 400;
+}
+.xw-sf-row select:disabled { opacity: 1; color: #526074; background-color: #eef2f7; }
+.xw-sf-row-actions { display: flex; gap: 4px; }
+.xw-sf-row-actions .button { display: grid; place-items: center; width: 34px; min-height: 40px; padding: 0; }
+.xw-sf-row-actions button[data-xw-sf-action="remove"] { border-color: #ddbbb7; }
+.xw-sf-row-actions button[data-xw-sf-action="remove"] .dashicons { color: #a52822; }
+.xw-sf-connection {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    padding: 16px;
+    border: 1px solid #d9e5f3;
+    border-radius: 8px;
+    background: #f3f7fc;
+}
+.xw-sf-connection > .dashicons { color: #2271b1; }
+.xw-sf-connection h3 { margin: 0 0 6px; font-size: 14px; }
+.xw-sf-connection ol { margin: 0; padding-inline-start: 17px; }
+.xw-sf-connection li:last-child { margin-bottom: 0; }
+
+@container (max-width: 690px) {
+    .xw-sf-row { grid-template-columns: auto repeat(3, minmax(0, 1fr)); }
+    .xw-sf-row-actions { grid-column: 2 / -1; justify-content: end; }
+}
+
+@container (max-width: 460px) {
+    .xw-sf-row { grid-template-columns: auto minmax(0, 1fr); gap: 8px; }
+    .xw-sf-row label { grid-column: 2; }
+    .xw-sf-row-number { grid-row: 1; }
+}

@@ -1,5 +1,9 @@
 # Historial de cambios
 
+## 1.0.86
+
+- Smart Filter para WooCommerce con grupos reutilizables en WordPress, un widget editable en Elementor y filtrado sin recarga del Loop Grid de productos.
+
 ## 1.0.37
 
 - Añade un interruptor, apagado por defecto, para no cobrar Extra Fees cuando todos los productos o variaciones del carrito están marcados como Virtual.

@@ -128,6 +128,11 @@ function xw_get_feature_definitions() {
             'title'       => xw_t( 'Form Elementor: validación de mensajes', 'Form Elementor: message validation' ),
             'description' => xw_t( 'Acepta letras del español e inglés y bloquea enlaces y otros alfabetos en los mensajes, también en el servidor.', 'Accepts Spanish and English letters and blocks links and other alphabets in messages, including server validation.' ),
         ),
+        'woocommerce_smart_filter' => array(
+            'title'       => 'Smart Filter',
+            'description' => xw_t( 'Crea grupos de filtros de WooCommerce y conéctalos a tu Loop Grid de productos en Elementor.', 'Build WooCommerce filter groups and connect them to your Elementor product Loop Grid.' ),
+            'settings'    => true,
+        ),
         'woocommerce_product_price' => array(
             'title'       => xw_t( 'Precio en oferta', 'Sale price' ),
             'description' => xw_t( 'Añade un widget de precios de WooCommerce con estilos independientes para el precio actual y el original tachado.', 'Adds a WooCommerce price widget with independent styles for the current and crossed-out original price.' ),
@@ -249,6 +254,7 @@ function xw_get_feature_groups() {
             'features'    => array(
                 'woocommerce_product_savings',
                 'woocommerce_product_price',
+                'woocommerce_smart_filter',
                 'woocommerce_quantity_buttons',
                 'woocommerce_orders_menu',
                 'woocommerce_auto_cart',
@@ -1295,6 +1301,15 @@ function xw_render_settings_page() {
                                             </label>
                                         </div>
                                         <div class="xw-country-code-grid" data-xw-country-grid></div>
+                                    </div>
+                                <?php elseif ( 'woocommerce_smart_filter' === $key ) : ?>
+                                    <div class="xw-field-row xw-field-full">
+                                        <p><?php echo esc_html( xw_t( 'Activa y guarda para abrir Smart Filter en el menú de WordPress. Crea un grupo, publícalo y selecciónalo en el widget Smart Filter y en la consulta de tu Loop Grid de productos.', 'Enable and save to open Smart Filter in the WordPress menu. Create and publish a group, then select it in the Smart Filter widget and in your product Loop Grid query.' ) ); ?></p>
+                                        <?php if ( class_exists( 'WooCommerce' ) && current_user_can( 'manage_woocommerce' ) ) : ?>
+                                            <p data-xw-saved-feature-link="woocommerce_smart_filter"<?php echo $enabled ? '' : ' hidden'; ?>>
+                                                <a class="button" href="<?php echo esc_url( admin_url( 'edit.php?post_type=xw_smart_filter' ) ); ?>"><?php echo esc_html( xw_t( 'Abrir Smart Filter', 'Open Smart Filter' ) ); ?></a>
+                                            </p>
+                                        <?php endif; ?>
                                     </div>
                                 <?php elseif ( 'woocommerce_product_price' === $key ) : ?>
                                     <div class="xw-field-row xw-field-full">

@@ -133,6 +133,9 @@
                     saveError.isSaveError = true;
                     throw saveError;
                 }
+                form.querySelectorAll('[data-xw-saved-feature-link]').forEach(function (link) {
+                    link.hidden = !Number((result.data.settings.features || {})[link.dataset.xwSavedFeatureLink]);
+                });
                 // Edits made while the request was pending are never overwritten or marked saved.
                 if (snapshot(form) === sent) {
                     applySaved(form, result.data.settings);

@@ -3,7 +3,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 function xw_suite_widgets_enabled() {
-    return class_exists( 'WooCommerce' ) && did_action( 'elementor/loaded' ) && ( xw_feature_enabled( 'woocommerce_product_savings' ) || xw_feature_enabled( 'woocommerce_product_price' ) );
+    return class_exists( 'WooCommerce' ) && did_action( 'elementor/loaded' ) && ( xw_feature_enabled( 'woocommerce_product_savings' ) || xw_feature_enabled( 'woocommerce_product_price' ) || xw_feature_enabled( 'woocommerce_smart_filter' ) );
 }
 
 add_action( 'elementor/elements/categories_registered', static function( $manager ) {
