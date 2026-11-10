@@ -74,6 +74,7 @@ function xw_sf_modes() {
         'radio'    => xw_t( 'Selección única', 'Radio buttons' ),
         'text'     => xw_t( 'Campo de búsqueda', 'Search field' ),
         'range'    => xw_t( 'Mínimo y máximo', 'Minimum and maximum' ),
+        'slider'   => xw_t( 'Barra de precio', 'Price slider' ),
         'toggle'   => xw_t( 'Casilla única', 'Single checkbox' ),
     );
 }
@@ -81,7 +82,7 @@ function xw_sf_modes() {
 function xw_sf_source_modes( $source ) {
     $specific = array(
         'search' => array( 'text' ),
-        'price'  => array( 'range' ),
+        'price'  => array( 'range', 'slider' ),
         'sale'   => array( 'toggle' ),
         'sort'   => array( 'select', 'radio' ),
         'rating' => array( 'select', 'radio' ),
@@ -93,19 +94,44 @@ function xw_sf_source_modes( $source ) {
 function xw_sf_rows( $input, $keep_missing = false ) {
     $rows = array();
     $sources = xw_sf_sources();
-    foreach ( array_slice( (array) $input, 0, 20 ) as $row ) {
+    $single = array();
+    foreach ( array_slice( (array) $input, 0, 20, true ) as $index => $row ) {
         if ( ! is_array( $row ) || ! is_string( $row['source'] ?? null ) ) { continue; }
         $source = sanitize_key( $row['source'] );
-        if ( '' === $source || isset( $rows[ $source ] ) || ( ! isset( $sources[ $source ] ) && ! $keep_missing ) ) { continue; }
+        if ( '' === $source || isset( $single[ $source ] ) || ( ! isset( $sources[ $source ] ) && ! $keep_missing ) ) { continue; }
+        if ( ! xw_sf_is_terms( $source ) && isset( $sources[ $source ] ) ) { $single[ $source ] = true; }
+        $key = $row['key'] ?? $index;
+        if ( ! is_string( $key ) || ( $key !== $source && ! preg_match( '/^f_[a-f0-9]{32}$/D', $key ) ) || isset( $rows[ $key ] ) ) {
+            $key = isset( $rows[ $source ] ) ? 'f_' . str_replace( '-', '', wp_generate_uuid4() ) : $source;
+        }
         $modes = xw_sf_source_modes( $source );
         $mode = $row['mode'] ?? '';
-        $rows[ $source ] = array(
+        $terms = $row['terms'] ?? array();
+        if ( is_string( $terms ) ) { $terms = json_decode( $terms, true ); }
+        $rows[ $key ] = array(
+            'key'    => $key,
             'source' => $source,
             'label'  => is_string( $row['label'] ?? null ) ? sanitize_text_field( $row['label'] ) : '',
             'mode'   => in_array( $mode, $modes, true ) ? $mode : $modes[0],
+            'terms'  => ! empty( $row['limit_terms'] ) ? xw_sf_term_ids( $terms ) : array(),
+            'limit_terms' => ! empty( $row['limit_terms'] ),
         );
     }
     return $rows;
+}
+
+function xw_sf_is_terms( $source ) {
+    return ! in_array( $source, array( 'search', 'price', 'stock', 'sale', 'rating', 'sort' ), true ) && taxonomy_exists( $source );
+}
+
+function xw_sf_term_ids( $input, $limit = 100 ) {
+    $ids = array();
+    foreach ( array_slice( (array) $input, 0, $limit ) as $term ) {
+        if ( ( is_string( $term ) || is_int( $term ) ) && preg_match( '/^[1-9][0-9]{0,17}$/D', (string) $term ) ) {
+            $ids[] = (int) $term;
+        }
+    }
+    return array_values( array_unique( $ids ) );
 }
 
 function xw_sf_group_options( $query_ids = false ) {
@@ -121,12 +147,12 @@ function xw_sf_group_options( $query_ids = false ) {
     return $options;
 }
 
-function xw_sf_asset( $file, $script = false ) {
+function xw_sf_asset( $file, $script = false, $dependencies = array() ) {
     $path = 'assets/smart-filter/' . $file;
     $url = plugin_dir_url( XW_FUNCTIONS_FILE ) . $path;
     $version = filemtime( plugin_dir_path( XW_FUNCTIONS_FILE ) . $path );
     if ( $script ) {
-        wp_register_script( 'xw-sf-' . $file, $url, array(), $version, true );
+        wp_register_script( 'xw-sf-' . $file, $url, $dependencies, $version, true );
     } else {
         wp_register_style( 'xw-sf-' . $file, $url, array(), $version );
     }

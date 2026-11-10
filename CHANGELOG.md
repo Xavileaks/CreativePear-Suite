@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.87
+
+- Smart Filter permite indicar el ID del Loop Grid y actualizarlo automáticamente o con Aplicar, siempre con AJAX. Incluye filtros activos, contador y paginación AJAX.
+- Añade barra de precio con límites de WooCommerce y selección de términos por filtro, con categorías, etiquetas y atributos repetibles.
+
 ## 1.0.86
 
 - Smart Filter para WooCommerce con grupos reutilizables en WordPress, un widget editable en Elementor y filtrado sin recarga del Loop Grid de productos.

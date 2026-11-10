@@ -5,10 +5,26 @@ function xw_sf_query_id( $id ) {
     return 'xw_smart_filter_' . $id;
 }
 
+function xw_sf_grid_id( $value ) {
+    return is_string( $value ) && preg_match( '/^[A-Za-z0-9_-]{1,80}$/D', $value ) ? $value : '';
+}
+
+function xw_sf_grid_targets() {
+    $targets = $_GET['xwsf_grid'] ?? array();
+    return is_array( $targets ) ? array_filter( array_map( 'xw_sf_grid_id', array_slice( $targets, 0, 20, true ) ) ) : array();
+}
+
 function xw_sf_grid_group( $widget ) {
-    if ( 'loop-grid' !== $widget->get_name() || 'product' !== $widget->get_settings( '_skin' ) ) { return 0; }
+    if ( 'loop-grid' !== $widget->get_name() || ! in_array( $widget->get_settings( '_skin' ), array( 'product', 'post' ), true ) ) { return 0; }
+    $targets = xw_sf_grid_targets();
+    $target = xw_sf_grid_id( $widget->get_settings_for_display( '_element_id' ) );
+    if ( $target && ( $id = array_search( $target, $targets, true ) ) && is_int( $id ) && $id > 0 && xw_sf_group( $id ) ) {
+        return $id;
+    }
+    if ( 'product' !== $widget->get_settings( '_skin' ) ) { return 0; }
     $query_id = $widget->get_settings( 'product_query_query_id' );
-    return is_string( $query_id ) && preg_match( '/^xw_smart_filter_([1-9][0-9]*)$/D', $query_id, $match ) ? absint( $match[1] ) : 0;
+    $id = is_string( $query_id ) && preg_match( '/^xw_smart_filter_([1-9][0-9]*)$/D', $query_id, $match ) ? absint( $match[1] ) : 0;
+    return isset( $targets[ $id ] ) ? 0 : $id;
 }
 
 function xw_sf_choices( $source ) {
@@ -35,7 +51,7 @@ function xw_sf_choices( $source ) {
 }
 
 function xw_sf_amount( $value ) {
-    if ( ! is_string( $value ) || ! preg_match( '/^\d{1,8}(?:[.,]\d{1,6})?$/D', $value ) ) { return ''; }
+    if ( ! is_string( $value ) || ! preg_match( '/^\d{1,15}(?:[.,]\d{1,6})?$/D', $value ) ) { return ''; }
     return str_replace( ',', '.', $value );
 }
 
@@ -43,40 +59,45 @@ function xw_sf_values( $id, $rows ) {
     $raw = $_GET['xwsf'][ $id ] ?? array();
     $raw = is_array( $raw ) ? wp_unslash( $raw ) : array();
     $values = array();
-    foreach ( $rows as $source => $row ) {
-        $input = $raw[ $source ] ?? '';
+    foreach ( $rows as $key => $row ) {
+        $source = $row['source'];
+        $input = $raw[ $key ] ?? '';
         if ( 'price' === $source ) {
-            $values[ $source ] = array(
+            $range = array(
                 'min' => xw_sf_amount( $input['min'] ?? '' ),
                 'max' => xw_sf_amount( $input['max'] ?? '' ),
             );
-        } elseif ( taxonomy_exists( $source ) && ! in_array( $source, array( 'search', 'sale', 'stock', 'sort', 'rating' ), true ) ) {
-            $terms = array();
-            $limit = 'checkbox' === $row['mode'] ? 100 : 1;
-            foreach ( array_slice( (array) $input, 0, $limit ) as $term ) {
-                if ( is_string( $term ) && preg_match( '/^[1-9][0-9]{0,17}$/D', $term ) ) {
-                    $terms[] = (int) $term;
+            if ( 'slider' === $row['mode'] && array_filter( $range, 'strlen' ) && ( $bounds = xw_sf_price_bounds() ) ) {
+                foreach ( $range as &$amount ) {
+                    if ( '' === $amount ) { continue; }
+                    if ( (float) $amount < (float) $bounds['min'] ) { $amount = $bounds['min']; }
+                    if ( (float) $amount > (float) $bounds['max'] ) { $amount = $bounds['max']; }
                 }
+                unset( $amount );
             }
-            $values[ $source ] = array_values( array_unique( $terms ) );
+            $values[ $key ] = $range;
+        } elseif ( xw_sf_is_terms( $source ) ) {
+            $terms = xw_sf_term_ids( $input, 'checkbox' === $row['mode'] ? 100 : 1 );
+            $values[ $key ] = $row['limit_terms'] ? array_values( array_intersect( $terms, $row['terms'] ) ) : $terms;
         } elseif ( is_string( $input ) ) {
             if ( 'search' === $source ) {
-                $values[ $source ] = wp_html_excerpt( sanitize_text_field( $input ), 120 );
+                $values[ $key ] = wp_html_excerpt( sanitize_text_field( $input ), 120 );
             } elseif ( 'sale' === $source && '1' === $input ) {
-                $values[ $source ] = '1';
+                $values[ $key ] = '1';
             } elseif ( array_key_exists( $input, xw_sf_choices( $source ) ) ) {
-                $values[ $source ] = $input;
+                $values[ $key ] = $input;
             }
         }
     }
     return $values;
 }
 
-function xw_sf_filter_query( $query, $values ) {
+function xw_sf_filter_query( $query, $values, $rows ) {
     $tax = array();
     $lookup = array();
-    foreach ( $values as $source => $value ) {
+    foreach ( $values as $key => $value ) {
         if ( '' === $value || array() === $value ) { continue; }
+        $source = $rows[ $key ]['source'];
         switch ( $source ) {
             case 'search':
                 $query->set( 's', trim( $query->get( 's' ) . ' ' . $value ) );
@@ -153,20 +174,44 @@ add_action( 'elementor/element/loop-grid/section_query/before_section_end', stat
     ) );
 } );
 
+// Product Loop Grid queries have two entry points in Elementor. Both keep the original query.
 add_action( 'elementor/frontend/widget/before_render', static function( $widget ) {
     if ( ! xw_sf_enabled() ) { return; }
     $id = xw_sf_grid_group( $widget );
-    if ( ! $id || ! ( $rows = xw_sf_group( $id ) ) ) { return; }
-    $widget->add_render_attribute( '_wrapper', 'data-xw-sf-grid', $id );
-    $hook = 'elementor/query/' . xw_sf_query_id( $id );
-    if ( ! has_action( $hook, 'xw_sf_elementor_query' ) ) { add_action( $hook, 'xw_sf_elementor_query', 20, 2 ); }
+    if ( $id && xw_sf_group( $id ) ) {
+        $widget->add_render_attribute( '_wrapper', 'data-xw-sf-grid', $id );
+    }
 } );
 
-function xw_sf_elementor_query( $query, $widget ) {
+function xw_sf_elementor_args( $args, $widget ) {
+    if ( ! $widget || ! xw_sf_enabled() || ! in_array( 'product', (array) ( $args['post_type'] ?? '' ), true ) ) { return $args; }
     $id = xw_sf_grid_group( $widget );
-    if ( ! $id || ! in_array( 'product', (array) $query->get( 'post_type' ), true ) ) { return; }
-    xw_sf_filter_query( $query, xw_sf_values( $id, xw_sf_group( $id ) ) );
+    if ( ! $id || ! ( $rows = xw_sf_group( $id ) ) ) { return $args; }
+    $query = new WP_Query();
+    $query->query_vars = $args;
+    xw_sf_filter_query( $query, xw_sf_values( $id, $rows ), $rows );
+    return $query->query_vars;
 }
+add_filter( 'elementor/query/query_args', 'xw_sf_elementor_args', 100, 2 );
+
+// The Current Query hook lacks a widget argument, so use the widget currently rendering.
+function xw_sf_current_widget( $widget = null, $done = false ) {
+    static $widgets = array();
+    if ( $done ) { unset( $widgets[ spl_object_id( $widget ) ] ); }
+    elseif ( $widget && xw_sf_enabled() ) { $widgets[ spl_object_id( $widget ) ] = $widget; }
+    return end( $widgets );
+}
+add_action( 'elementor/frontend/widget/before_render', 'xw_sf_current_widget', 1 );
+add_action( 'elementor/frontend/widget/after_render', static function( $widget ) { xw_sf_current_widget( $widget, true ); } );
+add_filter( 'elementor/query/get_query_args/current_query', static function( $args ) {
+    return xw_sf_elementor_args( $args, xw_sf_current_widget() );
+}, 100 );
+
+add_action( 'elementor/query/query_results', static function( $query, $widget ) {
+    if ( ! xw_sf_enabled() || 'loop-grid' !== $widget->get_name() ||
+        ! in_array( 'product', (array) $query->get( 'post_type' ), true ) ) { return; }
+    $widget->add_render_attribute( '_wrapper', 'data-xw-sf-count', max( $query->found_posts, $query->post_count ), true );
+}, 100, 2 );
 
 add_filter( 'elementor/frontend/widget/should_render', static function( $render, $widget ) {
     return $render || ( xw_sf_enabled() && xw_sf_group( xw_sf_grid_group( $widget ) ) );
@@ -175,7 +220,7 @@ add_filter( 'elementor/frontend/widget/should_render', static function( $render,
 // Elementor's previous/next links do not copy custom filter parameters.
 add_filter( 'elementor/posts/wp_link_page', static function( $url ) {
     $groups = $_GET['xwsf'] ?? array();
-    if ( ! is_array( $groups ) || ! $groups || ! xw_sf_enabled() ) { return $url; }
+    if ( ! is_array( $groups ) || ! xw_sf_enabled() ) { return $url; }
     $state = array();
     foreach ( array_slice( array_keys( $groups ), 0, 20 ) as $id ) {
         if ( ! is_int( $id ) || $id < 1 ) { continue; }
@@ -186,5 +231,6 @@ add_filter( 'elementor/posts/wp_link_page', static function( $url ) {
             if ( '' !== $value && array() !== $value ) { $state[ $id ][ $source ] = $value; }
         }
     }
-    return $state ? add_query_arg( 'xwsf', urlencode_deep( $state ), $url ) : $url;
+    $params = array_filter( array( 'xwsf' => $state, 'xwsf_grid' => xw_sf_grid_targets() ) );
+    return $params ? add_query_arg( urlencode_deep( $params ), $url ) : $url;
 } );

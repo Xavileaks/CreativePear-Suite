@@ -24,14 +24,26 @@ class XW_Smart_Filter_Widget extends Widget_Base {
             'label' => xw_t( 'Grupo de filtros', 'Filter group' ),
             'type' => Controls::SELECT,
             'options' => xw_sf_group_options(),
-            'description' => xw_t( 'Elige el mismo grupo en Loop Grid → Consulta → Smart Filter.', 'Choose the same group in Loop Grid → Query → Smart Filter.' ),
+        ) );
+        $this->add_control( 'grid_id', array(
+            'label' => xw_t( 'ID del Loop Grid', 'Loop Grid ID' ),
+            'type' => Controls::TEXT,
+            'placeholder' => 'shop-products',
+            'description' => xw_t( 'Escribe el ID de CSS de Loop Grid → Avanzado, sin #. Si lo dejas vacío, se usa el grupo conectado en la consulta del Loop Grid.', 'Enter the CSS ID from Loop Grid → Advanced, without #. If empty, the group connected in the Loop Grid query is used.' ),
         ) );
         $this->add_control( 'apply_mode', array(
             'label' => xw_t( 'Aplicar filtros', 'Apply filters' ),
             'type' => Controls::SELECT,
             'default' => 'live',
-            'options' => array( 'live' => xw_t( 'Al cambiar una opción', 'When an option changes' ), 'manual' => xw_t( 'Al pulsar Aplicar', 'When Apply is pressed' ) ),
+            'options' => array( 'live' => xw_t( 'Automáticamente (AJAX)', 'Automatically (AJAX)' ), 'manual' => xw_t( 'Con el botón Aplicar (AJAX)', 'With the Apply button (AJAX)' ) ),
         ) );
+        foreach ( array(
+            'active_filters' => xw_t( 'Mostrar filtros activos', 'Show active filters' ),
+            'result_count' => xw_t( 'Mostrar contador de resultados', 'Show results count' ),
+            'ajax_pagination' => xw_t( 'Paginar el Loop Grid con AJAX', 'Paginate the Loop Grid with AJAX' ),
+        ) as $key => $label ) {
+            $this->add_control( $key, array( 'label' => $label, 'type' => Controls::SWITCHER, 'return_value' => 'yes', 'default' => 'yes' ) );
+        }
         foreach ( array(
             'filter_heading' => array( xw_t( 'Título del panel', 'Panel heading' ), xw_t( 'Filtrar productos', 'Filter products' ) ),
             'all_label' => array( xw_t( 'Etiqueta sin selección', 'No selection label' ), xw_t( 'Todas las opciones', 'All options' ) ),
@@ -71,6 +83,13 @@ class XW_Smart_Filter_Widget extends Widget_Base {
         $this->surface( 'input', '.xw-sf__input' );
         $this->end_controls_section();
 
+        $this->style_section( 'slider', xw_t( 'Barra de precio', 'Price slider' ) );
+        $this->color( 'slider_track', xw_t( 'Color del carril', 'Track color' ), '.xw-sf__slider', '--xw-sf-track' );
+        $this->color( 'slider_active', xw_t( 'Color del tramo seleccionado', 'Selected range color' ), '.xw-sf__slider', '--xw-sf-track-active' );
+        $this->color( 'slider_thumb', xw_t( 'Color de los tiradores', 'Thumb color' ), '.xw-sf__slider', '--xw-sf-thumb' );
+        $this->color( 'slider_thumb_border', xw_t( 'Borde de los tiradores', 'Thumb border' ), '.xw-sf__slider', '--xw-sf-thumb-border' );
+        $this->end_controls_section();
+
         $this->style_section( 'choices', xw_t( 'Casillas y selección única', 'Checkboxes and radio buttons' ) );
         $this->text_style( 'choice', xw_t( 'Texto de la opción', 'Option text' ), '.xw-sf__choice' );
         $this->color( 'choice_active', xw_t( 'Texto seleccionado', 'Selected text' ), '.xw-sf__choice input:checked + span', 'color' );
@@ -88,6 +107,9 @@ class XW_Smart_Filter_Widget extends Widget_Base {
 
         $this->style_section( 'status', xw_t( 'Avisos', 'Notices' ) );
         $this->text_style( 'status', xw_t( 'Texto del aviso', 'Notice text' ), '.xw-sf__status' );
+        $this->text_style( 'count', xw_t( 'Texto del contador', 'Results count text' ), '.xw-sf__count' );
+        $this->text_style( 'chips', xw_t( 'Texto de filtros activos', 'Active filter text' ), '.xw-sf__chip' );
+        $this->color( 'chips_bg', xw_t( 'Fondo de filtros activos', 'Active filter background' ), '.xw-sf__chip', 'background-color' );
         $this->end_controls_section();
     }
 

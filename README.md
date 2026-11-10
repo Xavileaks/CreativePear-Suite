@@ -1,12 +1,12 @@
 # Creative Pear Suite
 
-## WooCommerce Smart Filter (1.0.86)
+## WooCommerce Smart Filter (1.0.87)
 
 1. Activa **WooCommerce → Smart Filter** en la suite. En **Smart Filter** del menú de WordPress, crea y publica un grupo.
-2. En Elementor, añade **Smart Filter** junto a tu **Loop Grid** con una plantilla de Productos. Selecciona el mismo grupo en el widget y en **Loop Grid → Consulta → Smart Filter**.
-3. Configura en el widget los textos, la aplicación inmediata o por botón y los estilos. Para la paginación de Elementor, usa números o anterior/siguiente con **Recargar página**.
+2. En Elementor, asigna un **ID de CSS** en **Loop Grid → Avanzado**. En el widget **Smart Filter**, selecciona tu grupo y escribe ese mismo ID en **ID del Loop Grid**. Los enlaces anteriores mediante **Loop Grid → Consulta → Smart Filter** siguen funcionando.
+3. Elige aplicación automática o con botón, estilos, filtros activos, contador y paginación AJAX en el widget. Para la paginación, configura el Loop Grid con números o anterior/siguiente y el tipo de carga **Recargar página**.
 
-Los grupos admiten categorías, etiquetas, marcas registradas, atributos globales, búsqueda de texto, precio, disponibilidad, ofertas, valoración y orden. El precio filtra los valores de catálogo de WooCommerce. El widget guarda la selección en la URL y actualiza la cuadrícula conservando su plantilla. Requiere WooCommerce y un Elementor con Loop Grid de productos.
+Los grupos admiten categorías, etiquetas, marcas registradas, atributos globales, búsqueda de texto, precio, disponibilidad, ofertas, valoración y orden. Puedes repetir una taxonomía y elegir términos distintos para cada filtro. Para el precio puedes usar campos de importe o una barra con dos tiradores cuyos límites se calculan con los precios de catálogo de los productos visibles en WooCommerce. Requiere WooCommerce y un Elementor con Loop Grid de productos.
 
 ## Elementor Form: mensajes flotantes (1.0.85)
 
