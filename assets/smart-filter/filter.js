@@ -234,7 +234,7 @@
                 const target = gridTarget(form, grid);
                 if (target) requestUrl.searchParams.set(targetKey(form.dataset.xwSfForm), target);
             }
-            const response = await fetch(requestUrl, { signal: controller.signal, cache: 'no-store' });
+            const response = await fetch(requestUrl.href, { signal: controller.signal, cache: 'no-store' });
             if (!response.ok) throw new Error('Could not fetch results');
             const html = new DOMParser().parseFromString(await response.text(), 'text/html');
             if (controller.signal.aborted) return;
