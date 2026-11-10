@@ -18,6 +18,15 @@ function xw_sf_grid_targets() {
     return is_array( $targets ) ? array_filter( array_map( 'xw_sf_target', array_slice( $targets, 0, 20, true ) ) ) : array();
 }
 
+function xw_sf_loop_template_id( $widget ) {
+    if ( 'loop-grid' !== $widget->get_name() ) { return 0; }
+    $skin = $widget->get_settings( '_skin' );
+    if ( 'product' !== $skin && ( 'post' !== $skin || ! in_array( $widget->get_settings( 'post_query_post_type' ), array( 'product', 'current_query' ), true ) ) ) {
+        return 0;
+    }
+    return absint( $widget->get_settings_for_display( 'template_id' ) );
+}
+
 function xw_sf_grid_group( $widget ) {
     if ( 'loop-grid' !== $widget->get_name() || ! in_array( $widget->get_settings( '_skin' ), array( 'product', 'post' ), true ) ) { return 0; }
     $targets = xw_sf_grid_targets();
@@ -183,6 +192,8 @@ add_action( 'elementor/element/loop-grid/section_query/before_section_end', stat
 // Product Loop Grid queries have two entry points in Elementor. Both keep the original query.
 add_action( 'elementor/frontend/widget/before_render', static function( $widget ) {
     if ( ! xw_sf_enabled() ) { return; }
+    $template = xw_sf_loop_template_id( $widget );
+    if ( $template ) { $widget->add_render_attribute( '_wrapper', 'data-xw-sf-template', $template ); }
     $id = xw_sf_grid_group( $widget );
     if ( $id && xw_sf_group( $id ) ) {
         $widget->add_render_attribute( '_wrapper', 'data-xw-sf-grid', $id );
@@ -220,7 +231,7 @@ add_action( 'elementor/query/query_results', static function( $query, $widget ) 
 }, 100, 2 );
 
 add_filter( 'elementor/frontend/widget/should_render', static function( $render, $widget ) {
-    return $render || ( xw_sf_enabled() && xw_sf_group( xw_sf_grid_group( $widget ) ) );
+    return $render || ( xw_sf_enabled() && ( xw_sf_loop_template_id( $widget ) || xw_sf_group( xw_sf_grid_group( $widget ) ) ) );
 }, 1, 2 );
 
 // Elementor's previous/next links do not copy custom filter parameters.

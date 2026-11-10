@@ -12,9 +12,18 @@
     const status = (form, text) => { form.querySelector('.xw-sf__status').textContent = text; };
     const targetKey = group => 'xwsf_grid[' + group + ']';
     const groupKey = group => 'xwsf[' + group + ']';
+    const sameBinding = (a, b) => a?.dataset.gridId === b.dataset.gridId && a?.dataset.loopTemplate === b.dataset.loopTemplate;
+    const gridTarget = (form, grid) => form.dataset.loopTemplate ? 'elementor:' + grid.dataset.id : form.dataset.gridId;
 
     function findGrid(root, form) {
         const id = form.dataset.gridId;
+        const template = form.dataset.loopTemplate;
+        if (template) {
+            const matches = [...root.querySelectorAll('.elementor-widget-loop-grid[data-xw-sf-template="' + CSS.escape(template) + '"]')];
+            if (matches.length === 1) return matches[0];
+            const selected = matches.filter(grid => 'elementor:' + grid.dataset.id === id);
+            return selected.length === 1 ? selected[0] : null;
+        }
         if (id) {
             const grid = id.startsWith('elementor:')
                 ? root.querySelector('.elementor-widget-loop-grid[data-id="' + CSS.escape(id.slice(10)) + '"]')
@@ -206,7 +215,7 @@
         busyGrids.clear();
         const controller = new AbortController();
         request = controller;
-        const activeForms = forms().filter(form => pendingGroups.get(form.dataset.xwSfForm)?.dataset.gridId === form.dataset.gridId);
+        const activeForms = forms().filter(form => sameBinding(pendingGroups.get(form.dataset.xwSfForm), form));
         const current = new Map();
         activeForms.forEach(form => status(form, ''));
         for (const form of activeForms) {
@@ -221,8 +230,9 @@
             if (!current.size) return;
             const requestUrl = new URL(url);
             requestUrl.searchParams.set('xwsf_refresh', '1');
-            for (const form of activeForms) {
-                if (form.dataset.gridId) requestUrl.searchParams.set(targetKey(form.dataset.xwSfForm), form.dataset.gridId);
+            for (const [grid, form] of current) {
+                const target = gridTarget(form, grid);
+                if (target) requestUrl.searchParams.set(targetKey(form.dataset.xwSfForm), target);
             }
             const response = await fetch(requestUrl, { signal: controller.signal, cache: 'no-store' });
             if (!response.ok) throw new Error('Could not fetch results');
@@ -244,7 +254,7 @@
             if (pushHistory && location.href !== url.href) history.pushState({ ...history.state, xwSfPage: pageGroup }, '', url);
             document.title = html.title || document.title;
             for (const form of forms()) {
-                const fresh = [...html.querySelectorAll(formSelector)].find(item => item.dataset.xwSfForm === form.dataset.xwSfForm && item.dataset.gridId === form.dataset.gridId);
+                const fresh = [...html.querySelectorAll(formSelector)].find(item => item.dataset.xwSfForm === form.dataset.xwSfForm && sameBinding(item, form));
                 if (fresh) form.querySelector('.xw-sf__reset').href = fresh.querySelector('.xw-sf__reset').href;
             }
             activeForms.forEach(form => {
@@ -288,7 +298,8 @@
             if (key.startsWith(prefix)) url.searchParams.delete(key);
         }
         url.searchParams.delete('e-page-' + grid.dataset.id);
-        if (form.dataset.gridId) url.searchParams.set(targetKey(group), form.dataset.gridId);
+        const target = gridTarget(form, grid);
+        if (target) url.searchParams.set(targetKey(group), target);
         else url.searchParams.delete(targetKey(group));
         if (!reset) {
             for (const [key, value] of new FormData(form)) {
@@ -297,7 +308,7 @@
         }
         if (reset) setFormValues(form, url);
         for (const other of forms()) {
-            if (other !== form && other.dataset.xwSfForm === group && other.dataset.gridId === form.dataset.gridId) setFormValues(other, url);
+            if (other !== form && other.dataset.xwSfForm === group && sameBinding(other, form)) setFormValues(other, url);
         }
         pendingGroups.set(group, form);
         wanted = url;
@@ -340,7 +351,8 @@
             url.searchParams.delete(key);
             for (const value of wanted.searchParams.getAll(key)) url.searchParams.append(key, value);
         }
-        if (form.dataset.gridId) url.searchParams.set(targetKey(group), form.dataset.gridId);
+        const target = gridTarget(form, grid);
+        if (target) url.searchParams.set(targetKey(group), target);
         event.preventDefault();
         event.stopPropagation();
         pageGroup = group;
@@ -372,7 +384,7 @@
             const group = form.dataset.xwSfForm;
             const grid = findGrid(document, form);
             const target = wanted.searchParams.get(targetKey(group)) || previous.searchParams.get(targetKey(group));
-            if (target && form.dataset.gridId !== target) return;
+            if (target && (!grid || gridTarget(form, grid) !== target)) return;
             const keys = url => [...url.searchParams].filter(([key]) =>
                 key.startsWith(groupKey(group)) || key === targetKey(group) || (grid && key === 'e-page-' + grid.dataset.id)
             );

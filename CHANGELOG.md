@@ -1,5 +1,9 @@
 # Historial de cambios
 
+## 1.0.89
+
+- Smart Filter busca las plantillas de Loop guardadas por nombre con el selector de Elementor. Si varias cuadrículas del documento usan la plantilla elegida, permite indicar cuál filtrar.
+
 ## 1.0.88
 
 - Smart Filter permite elegir el Loop Grid del documento desde un desplegable en Elementor.

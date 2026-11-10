@@ -18,8 +18,7 @@ add_action( 'elementor/editor/after_enqueue_scripts', static function() {
     xw_sf_asset( 'editor.js', true, array( 'elementor-editor' ) );
     wp_enqueue_script( 'xw-sf-editor.js' );
     wp_localize_script( 'xw-sf-editor.js', 'xwSmartFilterEditor', array(
-        'automatic' => xw_t( 'Automático por grupo', 'Automatic by group' ),
-        'saved' => xw_t( 'Conexión guardada', 'Saved connection' ),
+        'choose' => xw_t( 'Selecciona una cuadrícula', 'Select a grid' ),
         'missing' => xw_t( 'Loop Grid guardado no disponible', 'Saved Loop Grid unavailable' ),
     ) );
 } );
@@ -83,8 +82,9 @@ function xw_sf_form( $id, $rows, $settings ) {
     if ( isset( $query['xwsf'] ) && ! is_array( $query['xwsf'] ) ) { unset( $query['xwsf'] ); }
     unset( $query['xwsf'][ $id ] );
     if ( isset( $query['xwsf_grid'] ) && ! is_array( $query['xwsf_grid'] ) ) { unset( $query['xwsf_grid'] ); }
-    $target = xw_sf_target( $settings['grid_target'] ?? '' );
-    if ( '' === ( $settings['grid_target'] ?? '' ) ) {
+    $template = absint( $settings['loop_template'] ?? 0 );
+    $target = xw_sf_target( $template ? ( $settings['grid_instance'] ?? '' ) : ( $settings['grid_target'] ?? '' ) );
+    if ( ! $template && '' === ( $settings['grid_target'] ?? '' ) ) {
         $target = xw_sf_grid_id( ltrim( trim( (string) ( $settings['grid_id'] ?? '' ) ), '#' ) );
     }
     unset( $query['xwsf_grid'][ $id ] );
@@ -94,13 +94,16 @@ function xw_sf_form( $id, $rows, $settings ) {
     }
     $reset = $base[0] . ( $query ? '?' . http_build_query( $query, '', '&', PHP_QUERY_RFC3986 ) : '' );
     $label = $settings['filter_heading'] ?: xw_t( 'Filtrar productos', 'Filter products' );
+    $unlinked = $template
+        ? xw_t( 'Asigna la plantilla seleccionada a un Loop Grid de productos en esta página. Si la usan varias cuadrículas, elige cuál filtrar en Smart Filter.', 'Assign the selected template to a product Loop Grid on this page. If several grids use it, choose which grid to filter in Smart Filter.' )
+        : xw_t( 'Conecta un Loop Grid de productos en Smart Filter.', 'Connect a product Loop Grid in Smart Filter.' );
     ?>
     <form method="get" action="<?php echo esc_url( $base[0] ); ?>" class="xw-sf" aria-label="<?php echo esc_attr( $label ); ?>"
-        data-xw-sf-form="<?php echo esc_attr( $id ); ?>" data-mode="<?php echo esc_attr( $settings['apply_mode'] ); ?>" data-grid-id="<?php echo esc_attr( $target ); ?>"
+        data-xw-sf-form="<?php echo esc_attr( $id ); ?>" data-mode="<?php echo esc_attr( $settings['apply_mode'] ); ?>" data-grid-id="<?php echo esc_attr( $target ); ?>" data-loop-template="<?php echo esc_attr( $template ?: '' ); ?>"
         data-pagination="<?php echo esc_attr( $settings['ajax_pagination'] ?? '' ); ?>"
         data-updated="<?php echo esc_attr( xw_t( 'Resultados actualizados.', 'Results updated.' ) ); ?>"
         data-error="<?php echo esc_attr( xw_t( 'No se pudo actualizar el listado. Vuelve a pulsar Aplicar.', 'The listing could not be updated. Press Apply again.' ) ); ?>"
-        data-unlinked="<?php echo esc_attr( xw_t( 'No se encontró una cuadrícula conectada. Revisa el ID del Loop Grid en Elementor.', 'A connected grid was not found. Check the Loop Grid ID in Elementor.' ) ); ?>"
+        data-unlinked="<?php echo esc_attr( $unlinked ); ?>"
         data-empty="<?php echo esc_attr( xw_t( 'No hay productos que coincidan con estos filtros.', 'No products match these filters.' ) ); ?>">
         <?php echo wc_query_string_form_fields( $query, array(), '', true ); ?>
         <?php if ( $settings['filter_heading'] ) : ?><div class="xw-sf__heading"><?php echo esc_html( $settings['filter_heading'] ); ?></div><?php endif; ?>

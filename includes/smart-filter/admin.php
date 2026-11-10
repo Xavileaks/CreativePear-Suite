@@ -105,7 +105,7 @@ function xw_sf_render_builder( $post ) {
                 <h3><?php echo esc_html( xw_t( 'Conecta el grupo en Elementor', 'Connect the group in Elementor' ) ); ?></h3>
                 <ol>
                     <li><?php echo esc_html( xw_t( 'Publica el grupo y añade el widget Smart Filter en la página de tu Loop Grid.', 'Publish the group and add the Smart Filter widget to your Loop Grid page.' ) ); ?></li>
-                    <li><?php echo esc_html( xw_t( 'En el widget Smart Filter, elige este grupo y selecciona la cuadrícula en el desplegable Loop Grid. También puedes conectar el grupo desde Consulta → Smart Filter.', 'In the Smart Filter widget, choose this group and pick the grid from the Loop Grid dropdown. You can also connect the group from Query → Smart Filter.' ) ); ?></li>
+                    <li><?php echo esc_html( xw_t( 'En el widget Smart Filter, elige este grupo y busca la plantilla que usa tu cuadrícula en Plantilla de Loop. Si la usan varias cuadrículas, elige cuál filtrar.', 'In the Smart Filter widget, choose this group and search for the template your grid uses in Loop template. If several grids use it, choose which grid to filter.' ) ); ?></li>
                     <li><?php echo esc_html( xw_t( 'Para paginar con AJAX, usa números o anterior/siguiente y Recargar página en el Loop Grid. Activa Paginar el Loop Grid con AJAX en Smart Filter.', 'For AJAX pagination, use numbers or previous/next and Page Reload in the Loop Grid. Enable Paginate the Loop Grid with AJAX in Smart Filter.' ) ); ?></li>
                 </ol>
             </div>

@@ -29,11 +29,33 @@ class XW_Smart_Filter_Widget extends Widget_Base {
             'type' => Controls::HIDDEN,
         ) );
         $this->add_control( 'grid_target', array(
-            'label' => 'Loop Grid',
-            'type' => 'xw_sf_loop',
-            'options' => array( '' => xw_t( 'Automático por grupo', 'Automatic by group' ) ),
-            'description' => xw_t( 'Elige un Loop Grid de productos de este documento.', 'Choose a product Loop Grid from this document.' ),
+            'type' => Controls::HIDDEN,
         ) );
+        if ( class_exists( '\ElementorPro\Modules\QueryControl\Controls\Template_Query' ) ) {
+            $this->add_control( 'loop_template', array(
+                'label' => xw_t( 'Plantilla de Loop', 'Loop template' ),
+                'type' => \ElementorPro\Modules\QueryControl\Controls\Template_Query::CONTROL_ID,
+                'label_block' => true,
+                'autocomplete' => array(
+                    'object' => \ElementorPro\Modules\QueryControl\Module::QUERY_OBJECT_LIBRARY_TEMPLATE,
+                    'query' => array(
+                        'post_status' => 'publish',
+                        'meta_query' => array( array(
+                            'key' => \Elementor\Core\Base\Document::TYPE_META_KEY,
+                            'value' => \ElementorPro\Modules\LoopBuilder\Documents\Loop::get_type(),
+                            'compare' => 'IN',
+                        ) ),
+                    ),
+                ),
+                'description' => xw_t( 'Busca una plantilla guardada en Elementor. El filtro se conecta al Loop Grid de productos que la usa.', 'Search for a saved Elementor template. The filter connects to the product Loop Grid using it.' ),
+            ) );
+            $this->add_control( 'grid_instance', array(
+                'label' => xw_t( 'Cuadrícula que se filtrará', 'Grid to filter' ),
+                'type' => 'xw_sf_loop',
+                'options' => array( '' => xw_t( 'Selecciona una cuadrícula', 'Select a grid' ) ),
+                'condition' => array( 'loop_template!' => '' ),
+            ) );
+        }
         $this->add_control( 'apply_mode', array(
             'label' => xw_t( 'Aplicar filtros', 'Apply filters' ),
             'type' => Controls::SELECT,
