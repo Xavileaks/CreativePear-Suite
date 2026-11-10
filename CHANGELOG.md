@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.88
+
+- Smart Filter permite elegir el Loop Grid del documento desde un desplegable en Elementor.
+- Separa los campos de precio de la barra con importes en vivo. Añade botones de texto y muestras de color con orden, orientación, selección múltiple y etiquetas editables por filtro.
+
 ## 1.0.87
 
 - Smart Filter permite indicar el ID del Loop Grid y actualizarlo automáticamente o con Aplicar, siempre con AJAX. Incluye filtros activos, contador y paginación AJAX.

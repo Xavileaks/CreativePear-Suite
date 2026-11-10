@@ -16,22 +16,32 @@
     function findGrid(root, form) {
         const id = form.dataset.gridId;
         if (id) {
-            const grid = root.getElementById(id);
+            const grid = id.startsWith('elementor:')
+                ? root.querySelector('.elementor-widget-loop-grid[data-id="' + CSS.escape(id.slice(10)) + '"]')
+                : root.getElementById(id);
             return grid?.classList.contains('elementor-widget-loop-grid') ? grid : null;
         }
         const matches = [...root.querySelectorAll(gridSelector)].filter(grid => grid.dataset.xwSfGrid === form.dataset.xwSfForm);
         return matches.length === 1 ? matches[0] : null;
     }
 
-    function syncPrice(container, input) {
-        const slider = container.querySelector('.xw-sf__slider');
-        const [low, high] = slider.querySelectorAll('input');
-        const [minInput, maxInput] = container.querySelectorAll('input[type="number"]');
+    function formatPrice(slider, value) {
+        const fractionLength = (String(value).split('.')[1] || '').length;
+        const decimals = Math.max(Number(slider.dataset.decimals), Math.min(6, fractionLength));
+        const [integer, fraction] = Number(value).toFixed(decimals).split('.');
+        const formatted = integer.replace(/\B(?=(\d{3})+(?!\d))/g, () => slider.dataset.thousands)
+            + (fraction ? slider.dataset.decimal + fraction : '');
+        return slider.dataset.priceFormat.replace(/%[12]\$s/g, token => token === '%1$s' ? slider.dataset.currency : formatted);
+    }
+
+    function syncPrice(slider, input) {
+        const [low, high] = slider.querySelectorAll('input[type="range"]');
+        const [minInput, maxInput] = slider.querySelectorAll('[data-price-bound]');
         const min = Number(low.min);
         const max = Number(low.max);
         const clamp = value => Math.min(max, Math.max(min, value));
-        let from = clamp(minInput.value === '' ? min : minInput.valueAsNumber);
-        let to = clamp(maxInput.value === '' ? max : maxInput.valueAsNumber);
+        let from = clamp(minInput.value === '' ? min : Number(minInput.value));
+        let to = clamp(maxInput.value === '' ? max : Number(maxInput.value));
         if (input === low) {
             from = Math.min(low.valueAsNumber, to);
             minInput.value = from;
@@ -43,15 +53,24 @@
         low.value = from;
         high.value = to;
         low.style.zIndex = from === to && to === max ? '3' : '1';
-        slider.style.setProperty('--xw-sf-low', ((from - min) / (max - min) * 100) + '%');
-        slider.style.setProperty('--xw-sf-high', ((to - min) / (max - min) * 100) + '%');
         slider.hidden = false;
+        const labels = [...slider.querySelectorAll('.xw-sf__slider-value')];
+        [low, high].forEach((thumb, index) => {
+            const value = formatPrice(slider, thumb.value);
+            const ratio = (thumb.valueAsNumber - min) / (max - min);
+            slider.style.setProperty(index ? '--xw-sf-high' : '--xw-sf-low', (ratio * 100) + '%');
+            labels[index].style.setProperty('--xw-sf-ratio', ratio);
+            labels[index].textContent = value;
+            labels[index].style.setProperty('--xw-sf-label-half', (labels[index].offsetWidth / 2) + 'px');
+            thumb.setAttribute('aria-valuetext', value);
+        });
+        slider.classList.toggle('has-overlap', labels[0].getBoundingClientRect().right + 4 > labels[1].getBoundingClientRect().left);
     }
 
     function valueKeys(url, name) {
         if (!name.endsWith('[]')) return [name];
         const stem = name.slice(0, -2);
-        return [...new Set([name, ...[...url.searchParams.keys()].filter(key =>
+        return [...new Set([name, stem, ...[...url.searchParams.keys()].filter(key =>
             key.startsWith(stem + '[') && /^\[\d+\]$/.test(key.slice(stem.length))
         )])];
     }
@@ -67,6 +86,8 @@
             const values = valuesFor(url, field.name);
             if (field.type === 'checkbox' || field.type === 'radio') {
                 field.checked = values.includes(field.value) || (field.type === 'radio' && !values.length && !field.value);
+            } else if (field.multiple) {
+                for (const option of field.options) option.selected = values.includes(option.value);
             } else {
                 field.value = values[0] || '';
             }
@@ -100,11 +121,12 @@
         for (const fieldset of form.querySelectorAll('.xw-sf__field')) {
             const title = fieldset.querySelector('legend').textContent.trim();
             const fields = [...fieldset.querySelectorAll('input[name], select[name]')];
-            const range = fields.filter(field => field.type === 'number');
+            const range = fields.filter(field => field.type === 'number' || field.hasAttribute('data-price-bound'));
             if (range.length) {
                 const bounds = range.map(field => {
                     const value = valuesFor(url, field.name)[0];
-                    return value ? field.closest('label').textContent.trim() + ' ' + value : '';
+                    const slider = field.closest('[data-xw-sf-price]');
+                    return value ? (slider ? field.dataset.priceBound + ' ' + formatPrice(slider, value) : field.closest('label').textContent.trim() + ' ' + value) : '';
                 }).filter(Boolean);
                 if (bounds.length) chip(title + ': ' + bounds.join(' – '), range.map(field => ({ name: field.name })));
                 continue;
@@ -113,7 +135,11 @@
                 const values = valuesFor(url, field.name);
                 if (field.type === 'checkbox' || field.type === 'radio') {
                     if (field.value && values.includes(field.value)) {
-                        chip(title + ': ' + field.closest('label').textContent.trim(), [{ name: field.name, value: field.value }]);
+                        chip(title + ': ' + field.closest('label').querySelector('.xw-sf__choice-text').textContent.trim(), [{ name: field.name, value: field.value }]);
+                    }
+                } else if (field.multiple) {
+                    for (const option of field.options) {
+                        if (values.includes(option.value)) chip(title + ': ' + option.text, [{ name: field.name, value: option.value }]);
                     }
                 } else if (values[0]) {
                     const label = field.options ? [...field.options].find(option => option.value === values[0])?.text : values[0];
@@ -371,6 +397,7 @@
     }
 
     prepare();
+    window.addEventListener('resize', () => document.querySelectorAll('[data-xw-sf-price]').forEach(slider => syncPrice(slider)));
     function bindEditor() {
         window.elementorFrontend?.hooks?.addAction('frontend/element_ready/xw-smart-filter.default', $scope => prepare($scope[0]));
     }

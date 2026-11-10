@@ -7,6 +7,23 @@ add_action( 'elementor/widgets/register', static function( $manager ) {
     $manager->register( new XW_Smart_Filter_Widget() );
 } );
 
+add_action( 'elementor/controls/register', static function( $manager ) {
+    if ( ! xw_sf_enabled() ) { return; }
+    require_once __DIR__ . '/loop-control.php';
+    $manager->register( new XW_Smart_Filter_Loop_Control() );
+} );
+
+add_action( 'elementor/editor/after_enqueue_scripts', static function() {
+    if ( ! xw_sf_enabled() ) { return; }
+    xw_sf_asset( 'editor.js', true, array( 'elementor-editor' ) );
+    wp_enqueue_script( 'xw-sf-editor.js' );
+    wp_localize_script( 'xw-sf-editor.js', 'xwSmartFilterEditor', array(
+        'automatic' => xw_t( 'Automático por grupo', 'Automatic by group' ),
+        'saved' => xw_t( 'Conexión guardada', 'Saved connection' ),
+        'missing' => xw_t( 'Loop Grid guardado no disponible', 'Saved Loop Grid unavailable' ),
+    ) );
+} );
+
 function xw_sf_register_assets() {
     if ( ! xw_sf_enabled() ) { return; }
     xw_sf_asset( 'filter.css' );
@@ -66,7 +83,10 @@ function xw_sf_form( $id, $rows, $settings ) {
     if ( isset( $query['xwsf'] ) && ! is_array( $query['xwsf'] ) ) { unset( $query['xwsf'] ); }
     unset( $query['xwsf'][ $id ] );
     if ( isset( $query['xwsf_grid'] ) && ! is_array( $query['xwsf_grid'] ) ) { unset( $query['xwsf_grid'] ); }
-    $target = xw_sf_grid_id( ltrim( trim( (string) ( $settings['grid_id'] ?? '' ) ), '#' ) );
+    $target = xw_sf_target( $settings['grid_target'] ?? '' );
+    if ( '' === ( $settings['grid_target'] ?? '' ) ) {
+        $target = xw_sf_grid_id( ltrim( trim( (string) ( $settings['grid_id'] ?? '' ) ), '#' ) );
+    }
     unset( $query['xwsf_grid'][ $id ] );
     if ( $target ) { $query['xwsf_grid'][ $id ] = $target; }
     foreach ( array_keys( $query ) as $key ) {
@@ -107,12 +127,14 @@ function xw_sf_form( $id, $rows, $settings ) {
                     }
                     $terms = get_terms( $args );
                     if ( is_wp_error( $terms ) || ! $terms ) { continue; }
-                    foreach ( $terms as $term ) { $choices[ $term->term_id ] = $term->name; }
+                    foreach ( $terms as $term ) {
+                        $choices[ $term->term_id ] = ( $row['term_custom'][ $term->term_id ]['label'] ?? '' ) ?: $term->name;
+                    }
                 }
                 ?>
                 <fieldset class="xw-sf__field">
                     <legend><?php echo esc_html( $title ); ?></legend>
-                    <?php xw_sf_render_field( $row['mode'], $name, $title, $value, $choices, $settings ); ?>
+                    <?php xw_sf_render_field( $row, $name, $title, $value, $choices, $settings ); ?>
                 </fieldset>
             <?php endforeach; ?>
         </div>
@@ -125,61 +147,79 @@ function xw_sf_form( $id, $rows, $settings ) {
     <?php
 }
 
-function xw_sf_render_field( $mode, $name, $title, $value, $choices, $settings ) {
+function xw_sf_render_field( $row, $name, $title, $value, $choices, $settings ) {
+    $mode = $row['mode'];
+    $multiple = xw_sf_is_terms( $row['source'] ) && $row['multiple'];
+    $selected = array_map( 'strval', (array) $value );
     if ( 'text' === $mode ) : ?>
         <input class="xw-sf__input" type="search" name="<?php echo esc_attr( $name ); ?>" value="<?php echo esc_attr( $value ); ?>"
             aria-label="<?php echo esc_attr( $title ); ?>" placeholder="<?php echo esc_attr( $settings['search_placeholder'] ); ?>" maxlength="120">
-    <?php elseif ( 'range' === $mode || 'slider' === $mode ) :
-        $bounds = 'slider' === $mode ? xw_sf_price_bounds() : array();
-        $sliders = $bounds && (float) $bounds['min'] < (float) $bounds['max'];
-        $precision = $sliders ? max( wc_get_price_decimals(), 2, strlen( explode( '.', $bounds['min'], 2 )[1] ?? '' ), strlen( explode( '.', $bounds['max'], 2 )[1] ?? '' ) ) : 2;
-        $labels = array( 'min' => xw_t( 'Desde', 'From' ), 'max' => xw_t( 'Hasta', 'To' ) );
+    <?php elseif ( 'slider' === $mode ) :
+        xw_sf_render_slider( $name, $value );
+    elseif ( 'range' === $mode ) :
         ?>
-        <div <?php echo $sliders ? 'data-xw-sf-price' : ''; ?>>
-            <?php if ( $sliders ) : ?>
-                <div class="xw-sf__slider" dir="ltr" hidden>
-                    <span class="xw-sf__track" aria-hidden="true"></span>
-                    <?php foreach ( array( 'min' => xw_t( 'Precio mínimo', 'Minimum price' ), 'max' => xw_t( 'Precio máximo', 'Maximum price' ) ) as $bound => $label ) : ?>
-                        <input type="range" aria-label="<?php echo esc_attr( $label ); ?>" data-bound="<?php echo esc_attr( $bound ); ?>"
-                            min="<?php echo esc_attr( $bounds['min'] ); ?>" max="<?php echo esc_attr( $bounds['max'] ); ?>"
-                            step="<?php echo esc_attr( wc_format_decimal( pow( 10, -min( 6, $precision ) ), 6, true ) ); ?>"
-                            value="<?php echo esc_attr( $bounds[ $bound ] ); ?>">
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-            <div class="xw-sf__range">
-                <?php foreach ( $labels as $bound => $label ) : ?>
+        <div class="xw-sf__range">
+                <?php foreach ( array( 'min' => xw_t( 'Desde', 'From' ), 'max' => xw_t( 'Hasta', 'To' ) ) as $bound => $label ) : ?>
                     <label>
                         <span><?php echo esc_html( $label . ' (' . get_woocommerce_currency_symbol() . ')' ); ?></span>
-                        <input class="xw-sf__input" type="number" min="<?php echo esc_attr( $bounds['min'] ?? '0' ); ?>" <?php if ( $bounds ) : ?>max="<?php echo esc_attr( $bounds['max'] ); ?>"<?php endif; ?> step="any" inputmode="decimal"
-                            placeholder="<?php echo esc_attr( $bounds[ $bound ] ?? '' ); ?>"
+                        <input class="xw-sf__input" type="number" min="0" step="any" inputmode="decimal"
                             name="<?php echo esc_attr( $name . '[' . $bound . ']' ); ?>" value="<?php echo esc_attr( $value[ $bound ] ?? '' ); ?>">
                     </label>
                 <?php endforeach; ?>
-            </div>
         </div>
     <?php elseif ( 'select' === $mode ) : ?>
-        <select class="xw-sf__input" name="<?php echo esc_attr( $name ); ?>" aria-label="<?php echo esc_attr( $title ); ?>">
-            <option value=""><?php echo esc_html( $settings['all_label'] ); ?></option>
+        <select class="xw-sf__input" name="<?php echo esc_attr( $name . ( $multiple ? '[]' : '' ) ); ?>" aria-label="<?php echo esc_attr( $title ); ?>" <?php if ( $multiple ) : ?>multiple size="<?php echo esc_attr( min( 5, count( $choices ) ) ); ?>"<?php endif; ?>>
+            <?php if ( ! $multiple ) : ?><option value=""><?php echo esc_html( $settings['all_label'] ); ?></option><?php endif; ?>
             <?php foreach ( $choices as $key => $label ) : ?>
-                <option value="<?php echo esc_attr( $key ); ?>" <?php selected( (string) ( is_array( $value ) ? ( $value[0] ?? '' ) : $value ), (string) $key ); ?>><?php echo esc_html( $label ); ?></option>
+                <option value="<?php echo esc_attr( $key ); ?>" <?php selected( in_array( (string) $key, $selected, true ) ); ?>><?php echo esc_html( $label ); ?></option>
             <?php endforeach; ?>
         </select>
     <?php else :
-        $type = 'radio' === $mode ? 'radio' : 'checkbox';
+        $type = $multiple || 'toggle' === $mode ? 'checkbox' : 'radio';
+        $swatches = 'swatches' === $mode;
         if ( 'toggle' === $mode ) { $choices = array( 1 => $title ); }
-        if ( 'radio' === $mode ) { $choices = array( '' => $settings['all_label'] ) + $choices; }
-        $name .= 'checkbox' === $mode ? '[]' : '';
-        $selected = array_map( 'strval', (array) $value );
+        if ( 'radio' === $type && in_array( $mode, array( 'radio', 'checkbox' ), true ) ) { $choices = array( '' => $settings['all_label'] ) + $choices; }
+        $name .= $multiple ? '[]' : '';
+        $layout = $row['term_layout'] ?: ( in_array( $mode, array( 'swatches', 'buttons' ), true ) ? 'horizontal' : '' );
         ?>
-        <div class="xw-sf__choices">
+        <div class="xw-sf__choices <?php echo esc_attr( 'is-' . $mode . ( $layout ? ' is-' . $layout : '' ) ); ?>"
+            <?php if ( $swatches && $row['columns'] ) : ?>style="--xw-sf-columns:<?php echo esc_attr( $row['columns'] ); ?>"<?php endif; ?>>
             <?php foreach ( $choices as $key => $label ) : ?>
-                <label class="xw-sf__choice">
+                <label class="xw-sf__choice<?php echo $swatches ? ' is-label-' . esc_attr( $row['label_position'] ) : ''; ?>"
+                    <?php if ( $swatches ) : ?>style="--xw-sf-swatch:<?php echo esc_attr( ( $row['term_custom'][ $key ]['color'] ?? '' ) ?: '#d7dce5' ); ?>"<?php else : ?>title="<?php echo esc_attr( $label ); ?>"<?php endif; ?>>
                     <input type="<?php echo esc_attr( $type ); ?>" name="<?php echo esc_attr( $name ); ?>" value="<?php echo esc_attr( $key ); ?>"
                         <?php checked( in_array( (string) $key, $selected, true ) || ( '' === $key && ! $selected ) ); ?>>
-                    <span><?php echo esc_html( $label ); ?></span>
+                    <?php if ( $swatches ) : ?><span class="xw-sf__swatch" aria-hidden="true"></span><?php endif; ?>
+                    <span class="xw-sf__choice-text"><?php echo esc_html( $label ); ?></span>
+                    <?php if ( $swatches ) : ?><span class="xw-sf__tooltip" aria-hidden="true"><?php echo esc_html( $label ); ?></span><?php endif; ?>
                 </label>
             <?php endforeach; ?>
         </div>
     <?php endif;
+}
+
+function xw_sf_render_slider( $name, $value ) {
+    $bounds = xw_sf_price_bounds();
+    if ( ! $bounds ) { return; }
+    if ( (float) $bounds['min'] === (float) $bounds['max'] ) {
+        echo wp_kses_post( wc_price( $bounds['min'] ) );
+        return;
+    }
+    $precision = max( wc_get_price_decimals(), 2, strlen( explode( '.', $bounds['min'], 2 )[1] ?? '' ), strlen( explode( '.', $bounds['max'], 2 )[1] ?? '' ) );
+    $step = wc_format_decimal( pow( 10, -min( 6, $precision ) ), 6, true );
+    ?>
+    <div class="xw-sf__slider" data-xw-sf-price dir="ltr" hidden data-currency="<?php echo esc_attr( html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ) ); ?>"
+        data-price-format="<?php echo esc_attr( html_entity_decode( wp_strip_all_tags( get_woocommerce_price_format() ), ENT_QUOTES, 'UTF-8' ) ); ?>"
+        data-decimals="<?php echo esc_attr( min( 6, wc_get_price_decimals() ) ); ?>" data-decimal="<?php echo esc_attr( wc_get_price_decimal_separator() ); ?>"
+        data-thousands="<?php echo esc_attr( wc_get_price_thousand_separator() ); ?>">
+        <span class="xw-sf__track" aria-hidden="true"></span>
+        <?php foreach ( array( 'min' => xw_t( 'Precio mínimo', 'Minimum price' ), 'max' => xw_t( 'Precio máximo', 'Maximum price' ) ) as $bound => $label ) : ?>
+            <input type="range" aria-label="<?php echo esc_attr( $label ); ?>" data-bound="<?php echo esc_attr( $bound ); ?>"
+                min="<?php echo esc_attr( $bounds['min'] ); ?>" max="<?php echo esc_attr( $bounds['max'] ); ?>"
+                step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( ( $value[ $bound ] ?? '' ) !== '' ? $value[ $bound ] : $bounds[ $bound ] ); ?>">
+            <input type="hidden" name="<?php echo esc_attr( $name . '[' . $bound . ']' ); ?>" data-price-bound="<?php echo esc_attr( $label ); ?>" value="<?php echo esc_attr( $value[ $bound ] ?? '' ); ?>">
+            <span class="xw-sf__slider-value is-<?php echo esc_attr( $bound ); ?>" aria-hidden="true"></span>
+        <?php endforeach; ?>
+    </div>
+    <?php
 }

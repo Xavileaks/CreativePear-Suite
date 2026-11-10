@@ -26,10 +26,13 @@ class XW_Smart_Filter_Widget extends Widget_Base {
             'options' => xw_sf_group_options(),
         ) );
         $this->add_control( 'grid_id', array(
-            'label' => xw_t( 'ID del Loop Grid', 'Loop Grid ID' ),
-            'type' => Controls::TEXT,
-            'placeholder' => 'shop-products',
-            'description' => xw_t( 'Escribe el ID de CSS de Loop Grid → Avanzado, sin #. Si lo dejas vacío, se usa el grupo conectado en la consulta del Loop Grid.', 'Enter the CSS ID from Loop Grid → Advanced, without #. If empty, the group connected in the Loop Grid query is used.' ),
+            'type' => Controls::HIDDEN,
+        ) );
+        $this->add_control( 'grid_target', array(
+            'label' => 'Loop Grid',
+            'type' => 'xw_sf_loop',
+            'options' => array( '' => xw_t( 'Automático por grupo', 'Automatic by group' ) ),
+            'description' => xw_t( 'Elige un Loop Grid de productos de este documento.', 'Choose a product Loop Grid from this document.' ),
         ) );
         $this->add_control( 'apply_mode', array(
             'label' => xw_t( 'Aplicar filtros', 'Apply filters' ),
@@ -88,18 +91,37 @@ class XW_Smart_Filter_Widget extends Widget_Base {
         $this->color( 'slider_active', xw_t( 'Color del tramo seleccionado', 'Selected range color' ), '.xw-sf__slider', '--xw-sf-track-active' );
         $this->color( 'slider_thumb', xw_t( 'Color de los tiradores', 'Thumb color' ), '.xw-sf__slider', '--xw-sf-thumb' );
         $this->color( 'slider_thumb_border', xw_t( 'Borde de los tiradores', 'Thumb border' ), '.xw-sf__slider', '--xw-sf-thumb-border' );
+        $this->size_control( 'slider_thumb_size', xw_t( 'Tamaño de los tiradores', 'Thumb size' ), '.xw-sf__slider', '--xw-sf-thumb-size' );
+        $this->text_style( 'slider_value', xw_t( 'Importes de la barra', 'Slider prices' ), '.xw-sf__slider-value' );
         $this->end_controls_section();
 
         $this->style_section( 'choices', xw_t( 'Casillas y selección única', 'Checkboxes and radio buttons' ) );
         $this->text_style( 'choice', xw_t( 'Texto de la opción', 'Option text' ), '.xw-sf__choice' );
-        $this->color( 'choice_active', xw_t( 'Texto seleccionado', 'Selected text' ), '.xw-sf__choice input:checked + span', 'color' );
+        $this->color( 'choice_active', xw_t( 'Texto seleccionado', 'Selected text' ), '.xw-sf__choice input:checked ~ .xw-sf__choice-text', 'color' );
         $this->color( 'choice_accent', xw_t( 'Color de selección', 'Selection color' ), '.xw-sf__choice input', 'accent-color' );
-        $this->size_control( 'choice_gap', xw_t( 'Espacio entre opciones', 'Space between options' ), '.xw-sf__choices', 'gap' );
+        $this->size_control( 'choice_gap', xw_t( 'Espacio entre opciones', 'Space between options' ), '.xw-sf__choices', '--xw-sf-choice-gap' );
         $this->add_responsive_control( 'choice_layout', array(
             'label' => xw_t( 'Distribución', 'Layout' ), 'type' => Controls::SELECT,
             'options' => array( 'column' => xw_t( 'Vertical', 'Vertical' ), 'row' => xw_t( 'En línea', 'Inline' ) ),
-            'selectors' => array( '{{WRAPPER}} .xw-sf__choices' => 'flex-direction: {{VALUE}};' ),
+            'selectors' => array( '{{WRAPPER}} .xw-sf__choices:not(.is-horizontal):not(.is-vertical)' => 'flex-direction: {{VALUE}};' ),
         ) );
+        $this->end_controls_section();
+
+        $this->style_section( 'term_buttons', xw_t( 'Botones de términos', 'Term buttons' ) );
+        $button = '.xw-sf__choices.is-buttons .xw-sf__choice-text';
+        $this->text_style( 'term_button', xw_t( 'Texto del botón', 'Button text' ), $button );
+        $this->dimensions( 'term_button_padding', xw_t( 'Relleno', 'Padding' ), $button, 'padding' );
+        $this->surface( 'term_button', $button );
+        $this->color( 'term_button_selected_text', xw_t( 'Texto seleccionado', 'Selected text' ), '.xw-sf__choices.is-buttons input:checked ~ .xw-sf__choice-text', 'color' );
+        $this->color( 'term_button_selected_bg', xw_t( 'Fondo seleccionado', 'Selected background' ), '.xw-sf__choices.is-buttons input:checked ~ .xw-sf__choice-text', 'background' );
+        $this->color( 'term_button_selected_border', xw_t( 'Borde seleccionado', 'Selected border' ), '.xw-sf__choices.is-buttons input:checked ~ .xw-sf__choice-text', 'border-color' );
+        $this->end_controls_section();
+
+        $this->style_section( 'swatches', xw_t( 'Muestras de color', 'Color swatches' ) );
+        $this->size_control( 'swatch_size', xw_t( 'Tamaño de la muestra', 'Swatch size' ), '.xw-sf__choices.is-swatches', '--xw-sf-swatch-size' );
+        $this->color( 'swatch_selected', xw_t( 'Borde seleccionado', 'Selected outline' ), '.xw-sf__choices.is-swatches input:checked ~ .xw-sf__swatch', 'outline-color' );
+        $this->text_style( 'swatch_tooltip', xw_t( 'Texto del tooltip', 'Tooltip text' ), '.xw-sf__tooltip' );
+        $this->color( 'swatch_tooltip_bg', xw_t( 'Fondo del tooltip', 'Tooltip background' ), '.xw-sf__tooltip', 'background' );
         $this->end_controls_section();
 
         $this->button_style( 'apply', xw_t( 'Botón Aplicar', 'Apply button' ) );

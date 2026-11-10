@@ -72,6 +72,8 @@ function xw_sf_modes() {
         'checkbox' => xw_t( 'Casillas', 'Checkboxes' ),
         'select'   => xw_t( 'Desplegable', 'Dropdown' ),
         'radio'    => xw_t( 'Selección única', 'Radio buttons' ),
+        'buttons'  => xw_t( 'Botones de texto', 'Text buttons' ),
+        'swatches' => xw_t( 'Muestras de color', 'Color swatches' ),
         'text'     => xw_t( 'Campo de búsqueda', 'Search field' ),
         'range'    => xw_t( 'Mínimo y máximo', 'Minimum and maximum' ),
         'slider'   => xw_t( 'Barra de precio', 'Price slider' ),
@@ -88,7 +90,7 @@ function xw_sf_source_modes( $source ) {
         'rating' => array( 'select', 'radio' ),
         'stock'  => array( 'select', 'radio' ),
     );
-    return $specific[ $source ] ?? array( 'checkbox', 'select', 'radio' );
+    return $specific[ $source ] ?? array( 'checkbox', 'select', 'radio', 'buttons', 'swatches' );
 }
 
 function xw_sf_rows( $input, $keep_missing = false ) {
@@ -105,16 +107,35 @@ function xw_sf_rows( $input, $keep_missing = false ) {
             $key = isset( $rows[ $source ] ) ? 'f_' . str_replace( '-', '', wp_generate_uuid4() ) : $source;
         }
         $modes = xw_sf_source_modes( $source );
-        $mode = $row['mode'] ?? '';
+        $mode = in_array( $row['mode'] ?? '', $modes, true ) ? $row['mode'] : $modes[0];
         $terms = $row['terms'] ?? array();
         if ( is_string( $terms ) ) { $terms = json_decode( $terms, true ); }
+        $terms = empty( $row['limit_terms'] ) ? array() : xw_sf_term_ids( $terms );
+        $custom = $row['term_custom'] ?? array();
+        if ( is_string( $custom ) ) { $custom = json_decode( $custom, true ); }
+        $custom = is_array( $custom ) ? $custom : array();
+        $term_custom = array();
+        foreach ( $terms as $term_id ) {
+            $option = $custom[ $term_id ] ?? null;
+            if ( ! is_array( $option ) ) { continue; }
+            $label = is_string( $option['label'] ?? null ) ? sanitize_text_field( $option['label'] ) : '';
+            $color = is_string( $option['color'] ?? null ) ? sanitize_hex_color( $option['color'] ) : '';
+            if ( '' !== $label || $color ) { $term_custom[ $term_id ] = array( 'label' => $label, 'color' => $color ?: '' ); }
+        }
+        $layout = $row['term_layout'] ?? '';
+        $placement = $row['label_position'] ?? 'below';
         $rows[ $key ] = array(
             'key'    => $key,
             'source' => $source,
             'label'  => is_string( $row['label'] ?? null ) ? sanitize_text_field( $row['label'] ) : '',
-            'mode'   => in_array( $mode, $modes, true ) ? $mode : $modes[0],
-            'terms'  => ! empty( $row['limit_terms'] ) ? xw_sf_term_ids( $terms ) : array(),
+            'mode'   => $mode,
+            'terms'  => $terms,
             'limit_terms' => ! empty( $row['limit_terms'] ),
+            'term_custom' => $term_custom,
+            'term_layout' => in_array( $layout, array( 'vertical', 'horizontal' ), true ) ? $layout : '',
+            'multiple' => 'auto' === ( $row['multiple'] ?? 'auto' ) ? 'checkbox' === $mode : ! empty( $row['multiple'] ),
+            'columns' => min( 12, max( 0, is_numeric( $row['columns'] ?? null ) ? (int) $row['columns'] : 0 ) ),
+            'label_position' => in_array( $placement, array( 'below', 'right', 'hidden' ), true ) ? $placement : 'below',
         );
     }
     return $rows;

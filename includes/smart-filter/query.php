@@ -9,16 +9,22 @@ function xw_sf_grid_id( $value ) {
     return is_string( $value ) && preg_match( '/^[A-Za-z0-9_-]{1,80}$/D', $value ) ? $value : '';
 }
 
+function xw_sf_target( $value ) {
+    return is_string( $value ) && preg_match( '/^elementor:[a-z0-9]{1,40}$/D', $value ) ? $value : xw_sf_grid_id( $value );
+}
+
 function xw_sf_grid_targets() {
     $targets = $_GET['xwsf_grid'] ?? array();
-    return is_array( $targets ) ? array_filter( array_map( 'xw_sf_grid_id', array_slice( $targets, 0, 20, true ) ) ) : array();
+    return is_array( $targets ) ? array_filter( array_map( 'xw_sf_target', array_slice( $targets, 0, 20, true ) ) ) : array();
 }
 
 function xw_sf_grid_group( $widget ) {
     if ( 'loop-grid' !== $widget->get_name() || ! in_array( $widget->get_settings( '_skin' ), array( 'product', 'post' ), true ) ) { return 0; }
     $targets = xw_sf_grid_targets();
     $target = xw_sf_grid_id( $widget->get_settings_for_display( '_element_id' ) );
-    if ( $target && ( $id = array_search( $target, $targets, true ) ) && is_int( $id ) && $id > 0 && xw_sf_group( $id ) ) {
+    $id = array_search( 'elementor:' . $widget->get_id(), $targets, true );
+    if ( false === $id && $target ) { $id = array_search( $target, $targets, true ); }
+    if ( is_int( $id ) && $id > 0 && xw_sf_group( $id ) ) {
         return $id;
     }
     if ( 'product' !== $widget->get_settings( '_skin' ) ) { return 0; }
@@ -77,7 +83,7 @@ function xw_sf_values( $id, $rows ) {
             }
             $values[ $key ] = $range;
         } elseif ( xw_sf_is_terms( $source ) ) {
-            $terms = xw_sf_term_ids( $input, 'checkbox' === $row['mode'] ? 100 : 1 );
+            $terms = xw_sf_term_ids( $input, $row['multiple'] ? 100 : 1 );
             $values[ $key ] = $row['limit_terms'] ? array_values( array_intersect( $terms, $row['terms'] ) ) : $terms;
         } elseif ( is_string( $input ) ) {
             if ( 'search' === $source ) {

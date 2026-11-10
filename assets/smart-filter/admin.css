@@ -65,6 +65,31 @@ body.post-type-xw_smart_filter { background-color: #f8f9fb; }
 }
 .xw-sf-term-settings[hidden], .xw-sf-term-settings label[hidden] { display: none; }
 .xw-sf-term-settings .select2-selection { min-height: 40px; }
+.xw-sf-term-display,
+.xw-sf-term-custom { grid-column: 1 / -1; }
+.xw-sf-term-display,
+.xw-sf-term-custom ol {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+    gap: 10px;
+    margin: 0;
+}
+.xw-sf-term-custom ol { margin-top: 8px; list-style: none; }
+.xw-sf-term-card {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    min-width: 0;
+    margin: 0;
+    padding: 10px;
+    border: 1px solid #e0e5ec;
+    border-radius: 6px;
+    background: #fff;
+}
+.xw-sf-term-card-header { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.xw-sf-term-card-header strong { overflow-wrap: anywhere; }
+.xw-sf-term-order { display: flex; gap: 4px; }
+.xw-sf-term-order .button { min-width: 28px; padding: 0 5px; }
 .xw-sf-connection {
     display: flex;
     gap: 10px;
@@ -87,6 +112,6 @@ body.post-type-xw_smart_filter { background-color: #f8f9fb; }
 @container (max-width: 460px) {
     .xw-sf-term-settings { grid-template-columns: minmax(0, 1fr); }
     .xw-sf-row { grid-template-columns: auto minmax(0, 1fr); gap: 8px; }
-    .xw-sf-row label { grid-column: 2; }
+    .xw-sf-row > label { grid-column: 2; }
     .xw-sf-row-number { grid-row: 1; }
 }

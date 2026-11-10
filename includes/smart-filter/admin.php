@@ -80,13 +80,32 @@ function xw_sf_render_builder( $post ) {
         </ol>
         <button class="button" type="button" data-xw-sf-add>+ <?php echo esc_html( xw_t( 'Añadir filtro', 'Add filter' ) ); ?></button>
         <template data-xw-sf-template><?php xw_sf_render_builder_row( 'INDEX', array(), $sources ); ?></template>
+        <template data-xw-sf-term-template>
+            <li class="xw-sf-term-card">
+                <div class="xw-sf-term-card-header">
+                    <strong data-term-name></strong>
+                    <div class="xw-sf-term-order">
+                        <button type="button" class="button" data-term-move="-1" aria-label="<?php echo esc_attr( xw_t( 'Mover antes', 'Move earlier' ) ); ?>">↑</button>
+                        <button type="button" class="button" data-term-move="1" aria-label="<?php echo esc_attr( xw_t( 'Mover después', 'Move later' ) ); ?>">↓</button>
+                    </div>
+                </div>
+                <label>
+                    <?php echo esc_html( xw_t( 'Etiqueta', 'Label' ) ); ?>
+                    <input type="text" maxlength="100" data-term-label>
+                </label>
+                <label data-term-color-field>
+                    <?php echo esc_html( xw_t( 'Color hexadecimal', 'Hex color' ) ); ?>
+                    <input type="text" maxlength="7" placeholder="#FF0000" pattern="#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})" data-term-color>
+                </label>
+            </li>
+        </template>
         <aside class="xw-sf-connection">
             <span class="dashicons dashicons-info-outline" aria-hidden="true"></span>
             <div>
                 <h3><?php echo esc_html( xw_t( 'Conecta el grupo en Elementor', 'Connect the group in Elementor' ) ); ?></h3>
                 <ol>
                     <li><?php echo esc_html( xw_t( 'Publica el grupo y añade el widget Smart Filter en la página de tu Loop Grid.', 'Publish the group and add the Smart Filter widget to your Loop Grid page.' ) ); ?></li>
-                    <li><?php echo esc_html( xw_t( 'En Loop Grid → Avanzado, pon un ID de CSS. En el widget Smart Filter, elige este grupo e indica el mismo ID. También puedes conectar el grupo desde Consulta → Smart Filter.', 'Set a CSS ID in Loop Grid → Advanced. In the Smart Filter widget, choose this group and enter the same ID. You can also connect the group from Query → Smart Filter.' ) ); ?></li>
+                    <li><?php echo esc_html( xw_t( 'En el widget Smart Filter, elige este grupo y selecciona la cuadrícula en el desplegable Loop Grid. También puedes conectar el grupo desde Consulta → Smart Filter.', 'In the Smart Filter widget, choose this group and pick the grid from the Loop Grid dropdown. You can also connect the group from Query → Smart Filter.' ) ); ?></li>
                     <li><?php echo esc_html( xw_t( 'Para paginar con AJAX, usa números o anterior/siguiente y Recargar página en el Loop Grid. Activa Paginar el Loop Grid con AJAX en Smart Filter.', 'For AJAX pagination, use numbers or previous/next and Page Reload in the Loop Grid. Enable Paginate the Loop Grid with AJAX in Smart Filter.' ) ); ?></li>
                 </ol>
             </div>
@@ -153,6 +172,42 @@ function xw_sf_render_builder_row( $index, $row, $sources ) {
                 </select>
                 <input type="hidden" name="<?php echo esc_attr( $name . '[terms]' ); ?>" value="<?php echo esc_attr( wp_json_encode( $row['terms'] ?? array() ) ); ?>" data-xw-sf-term-ids>
             </label>
+            <div class="xw-sf-term-display">
+                <label data-xw-sf-layout-field>
+                    <?php echo esc_html( xw_t( 'Orientación', 'Orientation' ) ); ?>
+                    <select name="<?php echo esc_attr( $name . '[term_layout]' ); ?>">
+                        <option value=""><?php echo esc_html( xw_t( 'Según el diseño', 'By design' ) ); ?></option>
+                        <option value="vertical" <?php selected( $row['term_layout'] ?? '', 'vertical' ); ?>><?php echo esc_html( xw_t( 'Vertical', 'Vertical' ) ); ?></option>
+                        <option value="horizontal" <?php selected( $row['term_layout'] ?? '', 'horizontal' ); ?>><?php echo esc_html( xw_t( 'Horizontal', 'Horizontal' ) ); ?></option>
+                    </select>
+                </label>
+                <label>
+                    <?php echo esc_html( xw_t( 'Permitir selección múltiple', 'Allow multiple selection' ) ); ?>
+                    <select name="<?php echo esc_attr( $name . '[multiple]' ); ?>">
+                        <option value="auto" <?php selected( ! array_key_exists( 'multiple', $row ) ); ?>><?php echo esc_html( xw_t( 'Según el diseño', 'By design' ) ); ?></option>
+                        <option value="1" <?php selected( $row['multiple'] ?? null, true ); ?>><?php echo esc_html( xw_t( 'Sí', 'Yes' ) ); ?></option>
+                        <option value="0" <?php selected( array_key_exists( 'multiple', $row ) && ! $row['multiple'] ); ?>><?php echo esc_html( xw_t( 'No', 'No' ) ); ?></option>
+                    </select>
+                </label>
+                <label data-xw-sf-swatch-field>
+                    <?php echo esc_html( xw_t( 'Columnas de colores', 'Swatch columns' ) ); ?>
+                    <input type="number" min="0" max="12" name="<?php echo esc_attr( $name . '[columns]' ); ?>" value="<?php echo esc_attr( $row['columns'] ?? 0 ); ?>">
+                    <small><?php echo esc_html( xw_t( 'Usa 0 para ajustar al ancho disponible.', 'Use 0 to fit the available width.' ) ); ?></small>
+                </label>
+                <label data-xw-sf-swatch-field>
+                    <?php echo esc_html( xw_t( 'Etiquetas de los colores', 'Swatch labels' ) ); ?>
+                    <select name="<?php echo esc_attr( $name . '[label_position]' ); ?>">
+                        <?php foreach ( array( 'below' => xw_t( 'Debajo', 'Below' ), 'right' => xw_t( 'Al lado', 'Beside' ), 'hidden' => xw_t( 'Ocultas', 'Hidden' ) ) as $position => $text ) : ?>
+                            <option value="<?php echo esc_attr( $position ); ?>" <?php selected( $row['label_position'] ?? 'below', $position ); ?>><?php echo esc_html( $text ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+            </div>
+            <div class="xw-sf-term-custom" data-xw-sf-term-custom hidden>
+                <strong><?php echo esc_html( xw_t( 'Personalizar y ordenar términos', 'Customize and order terms' ) ); ?></strong>
+                <ol data-xw-sf-term-cards></ol>
+            </div>
+            <input type="hidden" name="<?php echo esc_attr( $name . '[term_custom]' ); ?>" value="<?php echo esc_attr( wp_json_encode( (object) ( $row['term_custom'] ?? array() ) ) ); ?>" data-xw-sf-custom-values>
         </div>
     </li>
     <?php
