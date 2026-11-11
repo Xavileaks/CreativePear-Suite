@@ -1,5 +1,9 @@
 # Historial de cambios
 
+## 1.0.94
+
+- Alinea las muestras de color al borde inicial y mantiene las columnas en las filas incompletas, evitando que los últimos colores se separen hacia los extremos.
+
 ## 1.0.93
 
 - Añade guardado AJAX con barra inferior para grupos de Smart Filter, detección de cambios y comprobación de conflictos.
