@@ -88,6 +88,19 @@
         return valueKeys(url, name).flatMap(key => url.searchParams.getAll(key));
     }
 
+    function syncActions(form) {
+        const reset = form.querySelector('.xw-sf__reset');
+        if (reset) {
+            const prefix = groupKey(form.dataset.xwSfForm) + '[';
+            reset.hidden = ![...new FormData(form)].some(([name, value]) => name.startsWith(prefix) && value !== '');
+            if (reset.hidden && document.activeElement === reset) {
+                form.querySelector('.xw-sf__fields input:not([type="hidden"]), .xw-sf__fields select, .xw-sf__apply')?.focus();
+            }
+        }
+        const actions = form.querySelector('.xw-sf__actions');
+        actions.hidden = !actions.querySelector('.xw-sf__apply, .xw-sf__reset:not([hidden])');
+    }
+
     function setFormValues(form, url) {
         const prefix = groupKey(form.dataset.xwSfForm);
         for (const field of form.elements) {
@@ -102,6 +115,7 @@
             }
         }
         form.querySelectorAll('[data-xw-sf-price]').forEach(container => syncPrice(container));
+        syncActions(form);
     }
 
     function renderChips(form, url) {
@@ -255,7 +269,9 @@
             document.title = html.title || document.title;
             for (const form of forms()) {
                 const fresh = [...html.querySelectorAll(formSelector)].find(item => item.dataset.xwSfForm === form.dataset.xwSfForm && sameBinding(item, form));
-                if (fresh) form.querySelector('.xw-sf__reset').href = fresh.querySelector('.xw-sf__reset').href;
+                const reset = form.querySelector('.xw-sf__reset');
+                const freshReset = fresh?.querySelector('.xw-sf__reset');
+                if (reset && freshReset) reset.href = freshReset.href;
             }
             activeForms.forEach(form => {
                 renderChips(form, url);
@@ -366,6 +382,7 @@
         const form = field.closest(formSelector);
         const price = field.closest('[data-xw-sf-price]');
         if (price) syncPrice(price, field);
+        if (form) syncActions(form);
         if (!form || form.dataset.mode !== 'live' || document.body.classList.contains('elementor-editor-active')) return;
         clearTimeout(timer);
         timer = setTimeout(() => {
@@ -399,6 +416,7 @@
 
     function prepare(root = document) {
         root.querySelectorAll('[data-xw-sf-price]').forEach(container => syncPrice(container));
+        root.querySelectorAll(formSelector).forEach(syncActions);
         if (document.body.classList.contains('elementor-editor-active')) return;
         forms().forEach(form => {
             const grid = findGrid(document, form);

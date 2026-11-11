@@ -62,6 +62,20 @@ class XW_Smart_Filter_Widget extends Widget_Base {
             'default' => 'live',
             'options' => array( 'live' => xw_t( 'Automáticamente (AJAX)', 'Automatically (AJAX)' ), 'manual' => xw_t( 'Con el botón Aplicar (AJAX)', 'With the Apply button (AJAX)' ) ),
         ) );
+        $this->add_control( 'show_apply', array(
+            'label' => xw_t( 'Mostrar botón Aplicar', 'Show Apply button' ),
+            'type' => Controls::SWITCHER, 'return_value' => 'yes', 'default' => 'yes',
+            'condition' => array( 'apply_mode' => 'live' ),
+        ) );
+        $this->add_control( 'show_reset', array(
+            'label' => xw_t( 'Mostrar botón Limpiar', 'Show Clear button' ),
+            'type' => Controls::SWITCHER, 'return_value' => 'yes', 'default' => 'yes',
+            'description' => xw_t( 'Aparece cuando hay algún filtro seleccionado.', 'Appears when a filter is selected.' ),
+        ) );
+        $this->add_control( 'show_heading', array(
+            'label' => xw_t( 'Mostrar título del panel', 'Show panel heading' ),
+            'type' => Controls::SWITCHER, 'return_value' => 'yes', 'default' => 'yes',
+        ) );
         foreach ( array(
             'active_filters' => xw_t( 'Mostrar filtros activos', 'Show active filters' ),
             'result_count' => xw_t( 'Mostrar contador de resultados', 'Show results count' ),
@@ -88,6 +102,20 @@ class XW_Smart_Filter_Widget extends Widget_Base {
         ) );
         $this->size_control( 'field_gap', xw_t( 'Espacio entre filtros', 'Space between filters' ), '.xw-sf__fields', 'gap' );
         $this->size_control( 'action_gap', xw_t( 'Espacio entre botones', 'Space between buttons' ), '.xw-sf__actions', 'gap' );
+        $this->add_responsive_control( 'action_alignment', array(
+            'label' => xw_t( 'Alineación de botones', 'Button alignment' ), 'type' => Controls::SELECT,
+            'options' => array(
+                'left' => xw_t( 'Izquierda', 'Left' ), 'center' => xw_t( 'Centro', 'Center' ),
+                'right' => xw_t( 'Derecha', 'Right' ), 'stretch' => xw_t( 'Ancho completo', 'Full width' ),
+            ),
+            'selectors_dictionary' => array(
+                'left' => 'justify-content: flex-start; --xw-sf-action-flex: 0 1 auto;',
+                'center' => 'justify-content: center; --xw-sf-action-flex: 0 1 auto;',
+                'right' => 'justify-content: flex-end; --xw-sf-action-flex: 0 1 auto;',
+                'stretch' => 'justify-content: flex-start; --xw-sf-action-flex: 1 1 0;',
+            ),
+            'selectors' => array( '{{WRAPPER}} .xw-sf__actions' => '{{VALUE}}' ),
+        ) );
         $this->dimensions( 'panel_padding', xw_t( 'Relleno', 'Padding' ), '.xw-sf', 'padding' );
         $this->surface( 'panel', '.xw-sf' );
         $this->end_controls_section();
@@ -130,6 +158,8 @@ class XW_Smart_Filter_Widget extends Widget_Base {
         $this->end_controls_section();
 
         $this->style_section( 'term_buttons', xw_t( 'Botones de términos', 'Term buttons' ) );
+        $this->size_control( 'term_button_column_gap', xw_t( 'Separación horizontal', 'Horizontal gap' ), '.xw-sf__choices.is-buttons', 'column-gap' );
+        $this->size_control( 'term_button_row_gap', xw_t( 'Separación vertical', 'Vertical gap' ), '.xw-sf__choices.is-buttons', 'row-gap' );
         $button = '.xw-sf__choices.is-buttons .xw-sf__choice-text';
         $this->text_style( 'term_button', xw_t( 'Texto del botón', 'Button text' ), $button );
         $this->dimensions( 'term_button_padding', xw_t( 'Relleno', 'Padding' ), $button, 'padding' );
@@ -140,6 +170,8 @@ class XW_Smart_Filter_Widget extends Widget_Base {
         $this->end_controls_section();
 
         $this->style_section( 'swatches', xw_t( 'Muestras de color', 'Color swatches' ) );
+        $this->size_control( 'swatch_column_gap', xw_t( 'Separación horizontal', 'Horizontal gap' ), '.xw-sf__choices.is-swatches', '--xw-sf-swatch-column-gap' );
+        $this->size_control( 'swatch_row_gap', xw_t( 'Separación vertical', 'Vertical gap' ), '.xw-sf__choices.is-swatches', 'row-gap' );
         $this->size_control( 'swatch_size', xw_t( 'Tamaño de la muestra', 'Swatch size' ), '.xw-sf__choices.is-swatches', '--xw-sf-swatch-size' );
         $this->color( 'swatch_selected', xw_t( 'Borde seleccionado', 'Selected outline' ), '.xw-sf__choices.is-swatches input:checked ~ .xw-sf__swatch', 'outline-color' );
         $this->text_style( 'swatch_tooltip', xw_t( 'Texto del tooltip', 'Tooltip text' ), '.xw-sf__tooltip' );
@@ -189,7 +221,10 @@ class XW_Smart_Filter_Widget extends Widget_Base {
 
     private function surface( $key, $selector ) {
         $args = array( 'selector' => '{{WRAPPER}} ' . $selector );
-        $this->add_group_control( Group_Control_Background::get_type(), $args + array( 'name' => $key . '_background', 'types' => array( 'classic', 'gradient' ) ) );
+        $this->add_group_control( Group_Control_Background::get_type(), $args + array(
+            'name' => $key . '_background', 'types' => array( 'classic', 'gradient' ),
+            'include' => array( 'background', 'color', 'gradient_notice', 'color_stop', 'color_b', 'color_b_stop', 'gradient_type', 'gradient_angle', 'gradient_position' ),
+        ) );
         $this->add_group_control( Group_Control_Border::get_type(), $args + array( 'name' => $key . '_border' ) );
         $this->dimensions( $key . '_radius', xw_t( 'Radio del borde', 'Border radius' ), $selector, 'border-radius' );
         $this->add_group_control( Group_Control_Box_Shadow::get_type(), $args + array( 'name' => $key . '_shadow' ) );

@@ -1,5 +1,9 @@
 # Historial de cambios
 
+## 1.0.91
+
+- Smart Filter permite ocultar el título y los botones, alinear las acciones y configurar separaciones horizontales y verticales para términos y colores. Limpiar aparece al seleccionar filtros. Los fondos del widget admiten color y degradado.
+
 ## 1.0.90
 
 - Corrige la actualización AJAX de Smart Filter cuando EasyPost intercepta las solicitudes de la tienda.

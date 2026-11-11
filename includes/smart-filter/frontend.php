@@ -94,6 +94,12 @@ function xw_sf_form( $id, $rows, $settings ) {
     }
     $reset = $base[0] . ( $query ? '?' . http_build_query( $query, '', '&', PHP_QUERY_RFC3986 ) : '' );
     $label = $settings['filter_heading'] ?: xw_t( 'Filtrar productos', 'Filter products' );
+    $show_apply = 'manual' === $settings['apply_mode'] || 'yes' === ( $settings['show_apply'] ?? 'yes' );
+    $show_reset = 'yes' === ( $settings['show_reset'] ?? 'yes' );
+    $has_filters = false;
+    foreach ( $values as $value ) {
+        if ( array_filter( (array) $value, 'strlen' ) ) { $has_filters = true; break; }
+    }
     $unlinked = $template
         ? xw_t( 'Asigna la plantilla seleccionada a un Loop Grid de productos en esta página. Si la usan varias cuadrículas, elige cuál filtrar en Smart Filter.', 'Assign the selected template to a product Loop Grid on this page. If several grids use it, choose which grid to filter in Smart Filter.' )
         : xw_t( 'Conecta un Loop Grid de productos en Smart Filter.', 'Connect a product Loop Grid in Smart Filter.' );
@@ -106,7 +112,7 @@ function xw_sf_form( $id, $rows, $settings ) {
         data-unlinked="<?php echo esc_attr( $unlinked ); ?>"
         data-empty="<?php echo esc_attr( xw_t( 'No hay productos que coincidan con estos filtros.', 'No products match these filters.' ) ); ?>">
         <?php echo wc_query_string_form_fields( $query, array(), '', true ); ?>
-        <?php if ( $settings['filter_heading'] ) : ?><div class="xw-sf__heading"><?php echo esc_html( $settings['filter_heading'] ); ?></div><?php endif; ?>
+        <?php if ( 'yes' === ( $settings['show_heading'] ?? 'yes' ) && $settings['filter_heading'] ) : ?><div class="xw-sf__heading"><?php echo esc_html( $settings['filter_heading'] ); ?></div><?php endif; ?>
         <?php if ( 'yes' === ( $settings['result_count'] ?? '' ) ) : ?>
             <p class="xw-sf__count" hidden data-one="<?php echo esc_attr( xw_t( '%s producto', '%s product' ) ); ?>"
                 data-many="<?php echo esc_attr( xw_t( '%s productos', '%s products' ) ); ?>"></p>
@@ -141,9 +147,9 @@ function xw_sf_form( $id, $rows, $settings ) {
                 </fieldset>
             <?php endforeach; ?>
         </div>
-        <div class="xw-sf__actions">
-            <button class="xw-sf__apply" type="submit"><?php echo esc_html( $settings['apply_label'] ); ?></button>
-            <a class="xw-sf__reset" href="<?php echo esc_url( $reset ); ?>"><?php echo esc_html( $settings['reset_label'] ); ?></a>
+        <div class="xw-sf__actions"<?php if ( ! $show_apply && ! ( $show_reset && $has_filters ) ) { echo ' hidden'; } ?>>
+            <?php if ( $show_apply ) : ?><button class="xw-sf__apply" type="submit"><?php echo esc_html( $settings['apply_label'] ); ?></button><?php endif; ?>
+            <?php if ( $show_reset ) : ?><a class="xw-sf__reset" href="<?php echo esc_url( $reset ); ?>"<?php if ( ! $has_filters ) { echo ' hidden'; } ?>><?php echo esc_html( $settings['reset_label'] ); ?></a><?php endif; ?>
         </div>
         <p class="xw-sf__status" role="status"></p>
     </form>
