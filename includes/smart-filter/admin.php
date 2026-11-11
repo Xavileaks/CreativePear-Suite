@@ -258,10 +258,6 @@ function xw_sf_render_builder_row( $index, $row, $sources ) {
                     </select>
                 </label>
                 <label data-xw-sf-swatch-field>
-                    <?php echo esc_html( xw_t( 'Columnas de colores', 'Swatch columns' ) ); ?>
-                    <input type="number" min="0" max="12" name="<?php echo esc_attr( $name . '[columns]' ); ?>" value="<?php echo esc_attr( $row['columns'] ?? 0 ); ?>">
-                </label>
-                <label data-xw-sf-swatch-field>
                     <?php echo esc_html( xw_t( 'Etiquetas de los colores', 'Swatch labels' ) ); ?>
                     <select name="<?php echo esc_attr( $name . '[label_position]' ); ?>">
                         <?php foreach ( array( 'below' => xw_t( 'Debajo', 'Below' ), 'right' => xw_t( 'Al lado', 'Beside' ), 'hidden' => xw_t( 'Ocultas', 'Hidden' ) ) as $position => $text ) : ?>

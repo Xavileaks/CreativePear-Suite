@@ -191,8 +191,7 @@ function xw_sf_render_field( $row, $name, $title, $value, $choices, $settings ) 
         $name .= $multiple ? '[]' : '';
         $layout = $row['term_layout'] ?: ( in_array( $mode, array( 'swatches', 'buttons' ), true ) ? 'horizontal' : '' );
         ?>
-        <div class="xw-sf__choices <?php echo esc_attr( 'is-' . $mode . ( $layout ? ' is-' . $layout : '' ) ); ?>"
-            <?php if ( $swatches && $row['columns'] ) : ?>style="--xw-sf-columns:<?php echo esc_attr( $row['columns'] ); ?>"<?php endif; ?>>
+        <div class="xw-sf__choices <?php echo esc_attr( 'is-' . $mode . ( $layout ? ' is-' . $layout : '' ) ); ?>">
             <?php foreach ( $choices as $key => $label ) : ?>
                 <label class="xw-sf__choice<?php echo $swatches ? ' is-label-' . esc_attr( $row['label_position'] ) : ''; ?>"
                     <?php if ( $swatches ) : ?>style="--xw-sf-swatch:<?php echo esc_attr( ( $row['term_custom'][ $key ]['color'] ?? '' ) ?: '#d7dce5' ); ?>"<?php else : ?>title="<?php echo esc_attr( $label ); ?>"<?php endif; ?>>

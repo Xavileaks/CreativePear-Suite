@@ -81,8 +81,7 @@ body.xw-sf-ajax-save .xw-save-bar button { flex-shrink: 0; }
 }
 .xw-sf-term-custom ol { margin-top: 8px; list-style: none; }
 .xw-sf-term-display { align-items: end; }
-.xw-sf-term-display select,
-.xw-sf-term-display input[type="number"] { height: 40px; min-height: 40px; box-sizing: border-box; }
+.xw-sf-term-display select { height: 40px; min-height: 40px; box-sizing: border-box; }
 .xw-sf-term-card {
     display: grid;
     align-content: start;

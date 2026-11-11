@@ -134,7 +134,6 @@ function xw_sf_rows( $input, $keep_missing = false ) {
             'term_custom' => $term_custom,
             'term_layout' => in_array( $layout, array( 'vertical', 'horizontal' ), true ) ? $layout : '',
             'multiple' => 'auto' === ( $row['multiple'] ?? 'auto' ) ? 'checkbox' === $mode : ! empty( $row['multiple'] ),
-            'columns' => min( 12, max( 0, is_numeric( $row['columns'] ?? null ) ? (int) $row['columns'] : 0 ) ),
             'label_position' => in_array( $placement, array( 'below', 'right', 'hidden' ), true ) ? $placement : 'below',
         );
     }
