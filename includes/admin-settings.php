@@ -813,11 +813,21 @@ function xw_add_settings_page() {
 }
 
 add_action( 'admin_enqueue_scripts', 'xw_settings_assets' );
+function xw_admin_save_bar_assets() {
+    wp_enqueue_style(
+        'xw-admin-save-bar',
+        plugin_dir_url( XW_FUNCTIONS_FILE ) . 'assets/css/admin-save-bar.css',
+        array(),
+        filemtime( plugin_dir_path( XW_FUNCTIONS_FILE ) . 'assets/css/admin-save-bar.css' )
+    );
+}
+
 function xw_settings_assets( $hook_suffix ) {
     if ( 'settings_page_creativepear-suite' !== $hook_suffix ) {
         return;
     }
 
+    xw_admin_save_bar_assets();
     wp_enqueue_media();
     wp_enqueue_script(
         'xw-country-data',

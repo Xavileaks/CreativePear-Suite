@@ -25,15 +25,83 @@ add_action( 'admin_enqueue_scripts', static function() {
     $screen = get_current_screen();
     if ( ! $screen || 'post' !== $screen->base || 'xw_smart_filter' !== $screen->post_type || ! xw_sf_enabled() ) { return; }
     xw_sf_asset( 'admin.css' );
-    xw_sf_asset( 'admin.js', true, array( 'jquery', 'selectWoo' ) );
+    xw_admin_save_bar_assets();
+    xw_sf_asset( 'admin.js', true, array( 'jquery', 'selectWoo', 'post' ) );
     wp_localize_script( 'xw-sf-admin.js', 'xwSmartFilterAdmin', array(
         'ajax' => admin_url( 'admin-ajax.php' ),
         'nonce' => wp_create_nonce( 'xw_sf_terms' ),
         'placeholder' => xw_t( 'Buscar y seleccionar términos…', 'Search and select terms…' ),
+        'revision' => xw_sf_group_revision( get_post() ),
+        'save' => array(
+            'idle' => xw_t( 'Sin cambios pendientes.', 'No unsaved changes.' ),
+            'pending' => xw_t( 'Hay cambios pendientes de guardar.', 'You have unsaved changes.' ),
+            'saving' => xw_t( 'Guardando…', 'Saving…' ),
+            'saved' => xw_t( 'Cambios guardados.', 'Changes saved.' ),
+            'error' => xw_t( 'No se pudo confirmar el guardado. Reinténtalo.', 'Saving could not be confirmed. Please try again.' ),
+            'button' => xw_t( 'Guardar cambios', 'Save changes' ),
+        ),
     ) );
     wp_enqueue_style( 'woocommerce_admin_styles' );
     wp_enqueue_style( 'xw-sf-admin.css' );
     wp_enqueue_script( 'xw-sf-admin.js' );
+} );
+
+function xw_sf_group_revision( $post ) {
+    return hash( 'sha256', wp_json_encode( array(
+        'auto-draft' === $post->post_status ? '' : $post->post_title, $post->post_status, $post->post_password,
+        get_post_meta( $post->ID, '_xw_sf_rows', true ),
+    ) ) );
+}
+
+add_action( 'dbx_post_sidebar', static function( $post ) {
+    if ( 'xw_smart_filter' !== $post->post_type || ! xw_sf_enabled() ) { return; }
+    ?>
+    <div class="xw-save-bar" data-xw-sf-save-bar hidden>
+        <p role="status" aria-live="polite" aria-atomic="true"><?php echo esc_html( xw_t( 'Sin cambios pendientes.', 'No unsaved changes.' ) ); ?></p>
+        <button type="submit" class="button button-primary" disabled><?php echo esc_html( in_array( $post->post_status, array( 'auto-draft', 'draft', 'pending' ), true ) ? xw_t( 'Publicar grupo', 'Publish group' ) : xw_t( 'Guardar cambios', 'Save changes' ) ); ?></button>
+    </div>
+    <?php
+} );
+
+add_action( 'wp_ajax_xw_sf_save_group', static function() {
+    check_ajax_referer( 'xw_sf_save', 'nonce' );
+    $post = get_post( absint( $_POST['post_id'] ?? 0 ) );
+    if ( ! xw_sf_enabled() || ! $post || 'xw_smart_filter' !== $post->post_type ||
+        ! current_user_can( 'edit_post', $post->ID ) || ! current_user_can( 'manage_woocommerce' ) ) {
+        wp_send_json_error( null, 403 );
+    }
+    $revision = $_POST['revision'] ?? '';
+    if ( ! is_string( $revision ) || ! hash_equals( xw_sf_group_revision( $post ), wp_unslash( $revision ) ) || wp_check_post_lock( $post->ID ) ) {
+        wp_send_json_error( array( 'message' => xw_t( 'Este grupo ha cambiado en otra sesión. Recarga la página antes de guardar.', 'This group has changed in another session. Reload the page before saving.' ) ), 409 );
+    }
+    if ( in_array( $post->post_status, array( 'trash', 'future' ), true ) ) {
+        wp_send_json_error( null, 409 );
+    }
+    $input = $_POST['rows'] ?? null;
+    $title = $_POST['title'] ?? null;
+    $input = is_string( $input ) ? json_decode( wp_unslash( $input ), true ) : null;
+    if ( ! is_array( $input ) || ! is_string( $title ) ) { wp_send_json_error( null, 400 ); }
+    $rows = xw_sf_rows( $input, true );
+    $title = sanitize_text_field( wp_unslash( $title ) );
+    $status = in_array( $post->post_status, array( 'auto-draft', 'draft', 'pending' ), true ) ? 'publish' : $post->post_status;
+    $saved = wp_update_post( wp_slash( array(
+        'ID' => $post->ID, 'post_title' => $title, 'post_status' => $status,
+        'meta_input' => array( '_xw_sf_rows' => $rows ),
+    ) ), true );
+    $post = get_post( $post->ID );
+    if ( is_wp_error( $saved ) || ! $saved || $post->post_title !== $title ||
+        $post->post_status !== $status || get_post_meta( $post->ID, '_xw_sf_rows', true ) !== $rows ) {
+        wp_send_json_error( array( 'message' => xw_t( 'No se pudo confirmar el guardado. Reinténtalo.', 'Saving could not be confirmed. Please try again.' ) ), 500 );
+    }
+    ob_start();
+    $sources = xw_sf_sources();
+    foreach ( array_values( $rows ) as $index => $row ) { xw_sf_render_builder_row( $index, $row, $sources ); }
+    wp_send_json_success( array(
+        'html' => ob_get_clean(), 'title' => $post->post_title, 'status' => $post->post_status,
+        'statusLabel' => get_post_status_object( $post->post_status )->label,
+        'revision' => xw_sf_group_revision( $post ), 'nonce' => wp_create_nonce( 'xw_sf_save' ),
+        'editUrl' => get_edit_post_link( $post->ID, 'raw' ),
+    ) );
 } );
 
 add_action( 'wp_ajax_xw_sf_terms', static function() {

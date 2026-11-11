@@ -132,12 +132,20 @@
 }
 .xw-sf__choices.is-swatches { --xw-sf-swatch-size: 32px; column-gap: var(--xw-sf-swatch-column-gap, var(--xw-sf-choice-gap, 12px)); }
 .xw-sf__choices.is-swatches.is-horizontal {
+    justify-content: space-between;
+    column-gap: max(var(--xw-sf-swatch-column-gap, var(--xw-sf-choice-gap, 12px)), calc((100% - var(--xw-sf-columns, 100) * var(--xw-sf-swatch-size)) / max(1, var(--xw-sf-columns, 100) - 1)));
+}
+.xw-sf__choices.is-swatches .xw-sf__choice { justify-content: center; gap: 5px; padding: 0; min-width: 0; }
+.xw-sf__choices.is-swatches.is-horizontal .xw-sf__choice { flex: 0 0 var(--xw-sf-swatch-size); }
+.xw-sf__choices.is-swatches.is-horizontal .is-label-right { flex-basis: auto; }
+.xw-sf__choices.is-swatches.is-horizontal:has(.is-label-right) {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, max(calc(var(--xw-sf-swatch-size) + 12px), calc((100% - (var(--xw-sf-columns, 6) - 1) * var(--xw-sf-swatch-column-gap, var(--xw-sf-choice-gap, 12px))) / var(--xw-sf-columns, 6)))), 1fr));
+    column-gap: var(--xw-sf-swatch-column-gap, var(--xw-sf-choice-gap, 12px));
 }
-.xw-sf__choices.is-swatches .xw-sf__choice { justify-content: center; gap: 5px; padding: 3px; min-width: 0; }
 .xw-sf__choices.is-swatches.is-vertical .xw-sf__choice { justify-content: start; align-self: start; }
 .xw-sf__choices.is-swatches .is-label-below { flex-direction: column; }
+.xw-sf__choices.is-swatches .is-label-below .xw-sf__choice-text { max-width: 100%; text-align: center; }
 .xw-sf__choices.is-swatches .xw-sf__choice-text { overflow-wrap: anywhere; }
 .xw-sf__swatch {
     flex: 0 0 auto;

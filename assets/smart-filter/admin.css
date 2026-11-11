@@ -1,4 +1,9 @@
 body.post-type-xw_smart_filter { background-color: #f8f9fb; }
+body.xw-sf-ajax-save #poststuff #post-body { margin-right: 0; }
+body.xw-sf-ajax-save #postbox-container-1 { display: none; }
+body.xw-sf-ajax-save .xw-save-bar { clear: both; border-radius: 8px; }
+body.xw-sf-ajax-save .xw-save-bar p { overflow-wrap: anywhere; }
+body.xw-sf-ajax-save .xw-save-bar button { flex-shrink: 0; }
 
 .post-type-xw_smart_filter #xw-sf-builder {
     border: 1px solid #dce2ea;

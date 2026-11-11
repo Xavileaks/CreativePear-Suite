@@ -72,6 +72,20 @@ class XW_Smart_Filter_Widget extends Widget_Base {
             'type' => Controls::SWITCHER, 'return_value' => 'yes', 'default' => 'yes',
             'description' => xw_t( 'Aparece cuando hay algún filtro seleccionado.', 'Appears when a filter is selected.' ),
         ) );
+        $this->add_responsive_control( 'action_alignment', array(
+            'label' => xw_t( 'Alineación de botones', 'Button alignment' ), 'type' => Controls::SELECT,
+            'options' => array(
+                'left' => xw_t( 'Izquierda', 'Left' ), 'center' => xw_t( 'Centro', 'Center' ),
+                'right' => xw_t( 'Derecha', 'Right' ), 'stretch' => xw_t( 'Ancho completo', 'Full width' ),
+            ),
+            'selectors_dictionary' => array(
+                'left' => 'justify-content: flex-start; --xw-sf-action-flex: 0 1 auto;',
+                'center' => 'justify-content: center; --xw-sf-action-flex: 0 1 auto;',
+                'right' => 'justify-content: flex-end; --xw-sf-action-flex: 0 1 auto;',
+                'stretch' => 'justify-content: flex-start; --xw-sf-action-flex: 1 1 0;',
+            ),
+            'selectors' => array( '{{WRAPPER}} .xw-sf__actions' => '{{VALUE}}' ),
+        ) );
         $this->add_control( 'show_heading', array(
             'label' => xw_t( 'Mostrar título del panel', 'Show panel heading' ),
             'type' => Controls::SWITCHER, 'return_value' => 'yes', 'default' => 'yes',
@@ -102,20 +116,6 @@ class XW_Smart_Filter_Widget extends Widget_Base {
         ) );
         $this->size_control( 'field_gap', xw_t( 'Espacio entre filtros', 'Space between filters' ), '.xw-sf__fields', 'gap' );
         $this->size_control( 'action_gap', xw_t( 'Espacio entre botones', 'Space between buttons' ), '.xw-sf__actions', 'gap' );
-        $this->add_responsive_control( 'action_alignment', array(
-            'label' => xw_t( 'Alineación de botones', 'Button alignment' ), 'type' => Controls::SELECT,
-            'options' => array(
-                'left' => xw_t( 'Izquierda', 'Left' ), 'center' => xw_t( 'Centro', 'Center' ),
-                'right' => xw_t( 'Derecha', 'Right' ), 'stretch' => xw_t( 'Ancho completo', 'Full width' ),
-            ),
-            'selectors_dictionary' => array(
-                'left' => 'justify-content: flex-start; --xw-sf-action-flex: 0 1 auto;',
-                'center' => 'justify-content: center; --xw-sf-action-flex: 0 1 auto;',
-                'right' => 'justify-content: flex-end; --xw-sf-action-flex: 0 1 auto;',
-                'stretch' => 'justify-content: flex-start; --xw-sf-action-flex: 1 1 0;',
-            ),
-            'selectors' => array( '{{WRAPPER}} .xw-sf__actions' => '{{VALUE}}' ),
-        ) );
         $this->dimensions( 'panel_padding', xw_t( 'Relleno', 'Padding' ), '.xw-sf', 'padding' );
         $this->surface( 'panel', '.xw-sf' );
         $this->end_controls_section();
@@ -170,6 +170,16 @@ class XW_Smart_Filter_Widget extends Widget_Base {
         $this->end_controls_section();
 
         $this->style_section( 'swatches', xw_t( 'Muestras de color', 'Color swatches' ) );
+        $this->add_control( 'swatch_shape', array(
+            'label' => xw_t( 'Forma', 'Shape' ), 'type' => Controls::SELECT, 'default' => 'circle',
+            'options' => array(
+                'square' => xw_t( 'Cuadrada', 'Square' ),
+                'rounded' => xw_t( 'Redondeada', 'Rounded' ),
+                'circle' => xw_t( 'Circular', 'Circle' ),
+            ),
+            'selectors_dictionary' => array( 'square' => '0', 'rounded' => '6px', 'circle' => '50%' ),
+            'selectors' => array( '{{WRAPPER}} .xw-sf__swatch' => 'border-radius: {{VALUE}};' ),
+        ) );
         $this->size_control( 'swatch_column_gap', xw_t( 'Separación horizontal', 'Horizontal gap' ), '.xw-sf__choices.is-swatches', '--xw-sf-swatch-column-gap' );
         $this->size_control( 'swatch_row_gap', xw_t( 'Separación vertical', 'Vertical gap' ), '.xw-sf__choices.is-swatches', 'row-gap' );
         $this->size_control( 'swatch_size', xw_t( 'Tamaño de la muestra', 'Swatch size' ), '.xw-sf__choices.is-swatches', '--xw-sf-swatch-size' );

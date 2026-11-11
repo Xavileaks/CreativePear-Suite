@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.93
+
+- Añade guardado AJAX con barra inferior para grupos de Smart Filter, detección de cambios y comprobación de conflictos.
+- Añade formas cuadrada, redondeada y circular para muestras de color, alinea los extremos de cada fila y mueve la alineación de Aplicar y Limpiar a Contenido.
+
 ## 1.0.92
 
 - Iguala a 36 × 36 px los botones de orden de términos y alinea los controles de orientación, selección múltiple y colores. Elimina la ayuda bajo el número de columnas.
