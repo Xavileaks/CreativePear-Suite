@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.96
+
+- Muestra una etiqueta de filtro activo en el editor de Elementor para previsualizar sus estilos.
+- Elimina los contornos de foco y el control de color de foco de Smart Filter.
+
 ## 1.0.95
 
 - Elimina el ajuste de columnas de colores. Las muestras se distribuyen automáticamente según su tamaño, separación y ancho disponible, incluidos los grupos existentes.

@@ -96,6 +96,7 @@ function xw_sf_form( $id, $rows, $settings ) {
     $label = $settings['filter_heading'] ?: xw_t( 'Filtrar productos', 'Filter products' );
     $show_apply = 'manual' === $settings['apply_mode'] || 'yes' === ( $settings['show_apply'] ?? 'yes' );
     $show_reset = 'yes' === ( $settings['show_reset'] ?? 'yes' );
+    $editor_preview = \Elementor\Plugin::$instance->editor->is_edit_mode();
     $has_filters = false;
     foreach ( $values as $value ) {
         if ( array_filter( (array) $value, 'strlen' ) ) { $has_filters = true; break; }
@@ -118,8 +119,10 @@ function xw_sf_form( $id, $rows, $settings ) {
                 data-many="<?php echo esc_attr( xw_t( '%s productos', '%s products' ) ); ?>"></p>
         <?php endif; ?>
         <?php if ( 'yes' === ( $settings['active_filters'] ?? '' ) ) : ?>
-            <div class="xw-sf__chips" role="group" hidden aria-label="<?php echo esc_attr( xw_t( 'Filtros activos', 'Active filters' ) ); ?>"
-                data-remove="<?php echo esc_attr( xw_t( 'Quitar filtro: %s', 'Remove filter: %s' ) ); ?>"></div>
+            <div class="xw-sf__chips" role="group" <?php echo $editor_preview ? 'data-editor-preview' : 'hidden'; ?> aria-label="<?php echo esc_attr( xw_t( 'Filtros activos', 'Active filters' ) ); ?>"
+                data-remove="<?php echo esc_attr( xw_t( 'Quitar filtro: %s', 'Remove filter: %s' ) ); ?>">
+                <?php if ( $editor_preview ) : ?><button type="button" class="xw-sf__chip" tabindex="-1"><?php echo esc_html( xw_t( 'Filtro seleccionado', 'Selected filter' ) ); ?> ×</button><?php endif; ?>
+            </div>
         <?php endif; ?>
         <div class="xw-sf__fields">
             <?php foreach ( $rows as $key => $row ) :

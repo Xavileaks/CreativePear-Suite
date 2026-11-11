@@ -130,7 +130,6 @@ class XW_Smart_Filter_Widget extends Widget_Base {
         $this->style_section( 'fields', xw_t( 'Campos y desplegables', 'Inputs and dropdowns' ) );
         $this->text_style( 'input', xw_t( 'Texto del campo', 'Field text' ), '.xw-sf__input' );
         $this->color( 'placeholder', xw_t( 'Texto de ayuda', 'Placeholder text' ), '.xw-sf__input::placeholder, {{WRAPPER}} .xw-sf__range label', 'color' );
-        $this->color( 'focus', xw_t( 'Borde al enfocar', 'Focus outline' ), '.xw-sf__input:focus-visible', 'outline-color' );
         $this->size_control( 'input_height', xw_t( 'Altura mínima', 'Minimum height' ), '.xw-sf__input', 'min-height' );
         $this->dimensions( 'input_padding', xw_t( 'Relleno', 'Padding' ), '.xw-sf__input', 'padding' );
         $this->surface( 'input', '.xw-sf__input' );

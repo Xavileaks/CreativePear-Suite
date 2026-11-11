@@ -120,7 +120,7 @@
 
     function renderChips(form, url) {
         const chips = form.querySelector('.xw-sf__chips');
-        if (!chips) return;
+        if (!chips || chips.hasAttribute('data-editor-preview')) return;
         const focusIndex = [...chips.children].indexOf(document.activeElement);
         chips.replaceChildren();
         function chip(label, fields) {
