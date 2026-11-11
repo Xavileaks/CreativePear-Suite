@@ -1,5 +1,9 @@
 # Historial de cambios
 
+## 1.0.97
+
+- Añade colores de texto, fondo y borde para el hover de filtros activos en Elementor. Mantiene estable el borde de las etiquetas para evitar saltos causados por los estilos globales.
+
 ## 1.0.96
 
 - Muestra una etiqueta de filtro activo en el editor de Elementor para previsualizar sus estilos.

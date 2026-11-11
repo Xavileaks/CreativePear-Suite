@@ -193,8 +193,20 @@ class XW_Smart_Filter_Widget extends Widget_Base {
         $this->style_section( 'status', xw_t( 'Avisos', 'Notices' ) );
         $this->text_style( 'status', xw_t( 'Texto del aviso', 'Notice text' ), '.xw-sf__status' );
         $this->text_style( 'count', xw_t( 'Texto del contador', 'Results count text' ), '.xw-sf__count' );
+        $this->add_control( 'chips_heading', array(
+            'label' => xw_t( 'Filtros activos', 'Active filters' ), 'type' => Controls::HEADING, 'separator' => 'before',
+        ) );
+        $this->start_controls_tabs( 'chips_tabs' );
+        $this->start_controls_tab( 'chips_normal_tab', array( 'label' => xw_t( 'Normal', 'Normal' ) ) );
         $this->text_style( 'chips', xw_t( 'Texto de filtros activos', 'Active filter text' ), '.xw-sf__chip' );
         $this->color( 'chips_bg', xw_t( 'Fondo de filtros activos', 'Active filter background' ), '.xw-sf__chip', 'background-color' );
+        $this->end_controls_tab();
+        $this->start_controls_tab( 'chips_hover_tab', array( 'label' => 'Hover' ) );
+        $this->color( 'chips_hover_text', xw_t( 'Color del texto', 'Text color' ), '.xw-sf__chip:hover', 'color' );
+        $this->color( 'chips_hover_bg', xw_t( 'Color del fondo', 'Background color' ), '.xw-sf__chip:hover', 'background-color' );
+        $this->color( 'chips_hover_border', xw_t( 'Color del borde', 'Border color' ), '.xw-sf__chip:hover', 'border-color' );
+        $this->end_controls_tab();
+        $this->end_controls_tabs();
         $this->end_controls_section();
     }
 

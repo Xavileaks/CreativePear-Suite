@@ -200,7 +200,9 @@
 .xw-sf__count { margin: 0 0 12px; font-size: .875em; }
 .xw-sf__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-block-end: 14px; }
 .xw-sf__chips[hidden] { display: none; }
-.xw-sf .xw-sf__chip {
+.xw-sf .xw-sf__chip,
+.xw-sf .xw-sf__chip:hover,
+.xw-sf .xw-sf__chip:focus {
     max-width: 100%;
     border: 1px solid var(--xw-sf-line);
     border-radius: 999px;

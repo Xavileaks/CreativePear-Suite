@@ -1,12 +1,12 @@
 # Creative Pear Suite
 
-## WooCommerce Smart Filter (1.0.96)
+## WooCommerce Smart Filter (1.0.97)
 
 1. Activa **WooCommerce → Smart Filter** en la suite. En **Smart Filter** del menú de WordPress, crea y publica un grupo con la barra inferior de guardado AJAX. El botón se activa cuando hay cambios.
 2. En Elementor, abre el widget **Smart Filter**, selecciona tu grupo y busca por nombre la **Plantilla de Loop** que usa tu cuadrícula de productos. Si varias cuadrículas del documento usan esa plantilla, elige una en **Cuadrícula que se filtrará**.
 3. Elige aplicación automática o con botón, muestra u oculta el título y los botones, y configura su alineación, filtros activos, contador y paginación AJAX en el widget. Limpiar aparece cuando hay una selección. La alineación de Aplicar y Limpiar se configura en Contenido. En Estilo puedes ajustar por separado la separación horizontal y vertical de términos y muestras de color, y elegir fondos de color o degradado. Para la paginación, configura el Loop Grid con números o anterior/siguiente y el tipo de carga **Recargar página**.
 
-Para el precio puedes elegir **Mínimo y máximo** o **Barra de precio**, con el importe bajo cada tirador. Para categorías, etiquetas y atributos puedes elegir orientación y selección múltiple. Con **Solo los seleccionados**, ordena los términos y edita sus etiquetas. Las muestras de color permiten definir HEX, visibilidad del texto y forma cuadrada, redondeada o circular. Las muestras de color se distribuyen según su tamaño, la separación y el ancho disponible. Cada fila empieza en el borde izquierdo. Los colores de las etiquetas de filtros activos se editan en **Smart Filter → Estilo → Avisos**, con una muestra visible dentro del editor. El tooltip usa la misma etiqueta. Requiere WooCommerce y un Elementor con Loop Grid de productos.
+Para el precio puedes elegir **Mínimo y máximo** o **Barra de precio**, con el importe bajo cada tirador. Para categorías, etiquetas y atributos puedes elegir orientación y selección múltiple. Con **Solo los seleccionados**, ordena los términos y edita sus etiquetas. Las muestras de color permiten definir HEX, visibilidad del texto y forma cuadrada, redondeada o circular. Las muestras de color se distribuyen según su tamaño, la separación y el ancho disponible. Cada fila empieza en el borde izquierdo. Los colores de las etiquetas de filtros activos se editan en **Smart Filter → Estilo → Avisos → Filtros activos**, en las pestañas **Normal** y **Hover**, con una muestra visible dentro del editor. El tooltip usa la misma etiqueta. Requiere WooCommerce y un Elementor con Loop Grid de productos.
 
 ## Elementor Form: mensajes flotantes (1.0.85)
 
