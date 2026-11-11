@@ -1,5 +1,9 @@
 # Historial de cambios
 
+## 1.0.92
+
+- Iguala a 36 × 36 px los botones de orden de términos y alinea los controles de orientación, selección múltiple y colores. Elimina la ayuda bajo el número de columnas.
+
 ## 1.0.91
 
 - Smart Filter permite ocultar el título y los botones, alinear las acciones y configurar separaciones horizontales y verticales para términos y colores. Limpiar aparece al seleccionar filtros. Los fondos del widget admiten color y degradado.

@@ -192,7 +192,6 @@ function xw_sf_render_builder_row( $index, $row, $sources ) {
                 <label data-xw-sf-swatch-field>
                     <?php echo esc_html( xw_t( 'Columnas de colores', 'Swatch columns' ) ); ?>
                     <input type="number" min="0" max="12" name="<?php echo esc_attr( $name . '[columns]' ); ?>" value="<?php echo esc_attr( $row['columns'] ?? 0 ); ?>">
-                    <small><?php echo esc_html( xw_t( 'Usa 0 para ajustar al ancho disponible.', 'Use 0 to fit the available width.' ) ); ?></small>
                 </label>
                 <label data-xw-sf-swatch-field>
                     <?php echo esc_html( xw_t( 'Etiquetas de los colores', 'Swatch labels' ) ); ?>

@@ -75,6 +75,9 @@ body.post-type-xw_smart_filter { background-color: #f8f9fb; }
     margin: 0;
 }
 .xw-sf-term-custom ol { margin-top: 8px; list-style: none; }
+.xw-sf-term-display { align-items: end; }
+.xw-sf-term-display select,
+.xw-sf-term-display input[type="number"] { height: 40px; min-height: 40px; box-sizing: border-box; }
 .xw-sf-term-card {
     display: grid;
     align-content: start;
@@ -89,7 +92,19 @@ body.post-type-xw_smart_filter { background-color: #f8f9fb; }
 .xw-sf-term-card-header { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .xw-sf-term-card-header strong { overflow-wrap: anywhere; }
 .xw-sf-term-order { display: flex; gap: 4px; }
-.xw-sf-term-order .button { min-width: 28px; padding: 0 5px; }
+.xw-sf-term-order .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 36px;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    min-height: 36px;
+    box-sizing: border-box;
+    padding: 0;
+    line-height: 1;
+}
 .xw-sf-connection {
     display: flex;
     gap: 10px;

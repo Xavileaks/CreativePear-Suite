@@ -1,6 +1,6 @@
 # Creative Pear Suite
 
-## WooCommerce Smart Filter (1.0.91)
+## WooCommerce Smart Filter (1.0.92)
 
 1. Activa **WooCommerce → Smart Filter** en la suite. En **Smart Filter** del menú de WordPress, crea y publica un grupo.
 2. En Elementor, abre el widget **Smart Filter**, selecciona tu grupo y busca por nombre la **Plantilla de Loop** que usa tu cuadrícula de productos. Si varias cuadrículas del documento usan esa plantilla, elige una en **Cuadrícula que se filtrará**.
