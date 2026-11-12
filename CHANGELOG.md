@@ -1,5 +1,9 @@
 # Historial de cambios
 
+## 1.0.98
+
+- Corrige Duplicar para conservar el tipo original de las plantillas Elementor, incluidos Loop Item, cabeceras, pies y plantillas individuales. Inicializa el tipo antes de los eventos de guardado y evita metadatos de tipo duplicados.
+
 ## 1.0.97
 
 - Añade colores de texto, fondo y borde para el hover de filtros activos en Elementor. Mantiene estable el borde de las etiquetas para evitar saltos causados por los estilos globales.

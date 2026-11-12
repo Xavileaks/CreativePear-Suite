@@ -56,6 +56,14 @@ function xw_duplicate_post( $post_id ) {
     $type = get_post_type_object( $source->post_type );
     $status = $settings['status'];
     if ( in_array( $status, array( 'publish', 'private' ), true ) && ! current_user_can( $type->cap->publish_posts ) ) { $status = 'draft'; }
+    $template_meta = array();
+    if ( 'elementor_library' === $source->post_type ) {
+        $template_type = get_post_meta( $source->ID, '_elementor_template_type', true );
+        if ( is_string( $template_type ) && '' !== $template_type && xw_duplicate_safe_meta( $template_type ) ) {
+            // Elementor's save_post callback defaults untyped library entries to pages.
+            $template_meta['_elementor_template_type'] = $template_type;
+        }
+    }
     // Build privately first; only publish after all terms and metadata are copied.
     $new_id = wp_insert_post( wp_slash( array(
         'post_type' => $source->post_type, 'post_status' => 'draft', 'post_author' => get_current_user_id(),
@@ -63,8 +71,15 @@ function xw_duplicate_post( $post_id ) {
         'post_content' => $source->post_content, 'post_excerpt' => $source->post_excerpt,
         'post_parent' => $source->post_parent, 'post_password' => $source->post_password,
         'comment_status' => $source->comment_status, 'ping_status' => $source->ping_status, 'menu_order' => $source->menu_order,
+        'meta_input' => $template_meta,
     ) ), true );
     if ( is_wp_error( $new_id ) || ! $new_id ) { return is_wp_error( $new_id ) ? $new_id : new WP_Error( 'xw_duplicate_failed', xw_t( 'No se pudo crear la copia.', 'The copy could not be created.' ) ); }
+    foreach ( $template_meta as $key => $value ) {
+        if ( get_post_meta( $new_id, $key, true ) !== $value ) {
+            wp_delete_post( $new_id, true );
+            return new WP_Error( 'xw_duplicate_meta_failed', xw_t( 'No se pudo conservar el tipo de plantilla.', 'The template type could not be preserved.' ) );
+        }
+    }
     foreach ( get_object_taxonomies( $source->post_type ) as $taxonomy ) {
         $terms = wp_get_object_terms( $source->ID, $taxonomy, array( 'fields' => 'ids' ) );
         $result = is_wp_error( $terms ) ? $terms : wp_set_object_terms( $new_id, array_map( 'intval', $terms ), $taxonomy );
@@ -72,7 +87,7 @@ function xw_duplicate_post( $post_id ) {
     }
     $skip = array( '_edit_lock', '_edit_last', '_wp_old_slug', '_wp_old_date', '_elementor_css', '_elementor_page_assets', '_elementor_element_cache', '_elementor_conditions' );
     foreach ( get_post_meta( $source->ID ) as $key => $values ) {
-        if ( in_array( $key, $skip, true ) ) { continue; }
+        if ( in_array( $key, $skip, true ) || isset( $template_meta[ $key ] ) ) { continue; }
         foreach ( get_post_meta( $source->ID, $key ) as $value ) {
             if ( ! xw_duplicate_safe_meta( $value ) ) { continue; }
             if ( ! add_post_meta( $new_id, $key, wp_slash( $value ) ) ) {

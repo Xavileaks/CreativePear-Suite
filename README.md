@@ -1,5 +1,9 @@
 # Creative Pear Suite
 
+## Duplicar plantillas Elementor (1.0.98)
+
+Duplicar conserva el tipo de plantilla original de Elementor, incluidos Loop Item, contenedores, cabeceras, pies y plantillas individuales.
+
 ## WooCommerce Smart Filter (1.0.97)
 
 1. Activa **WooCommerce → Smart Filter** en la suite. En **Smart Filter** del menú de WordPress, crea y publica un grupo con la barra inferior de guardado AJAX. El botón se activa cuando hay cambios.

@@ -1,6 +1,7 @@
 <?php
 /** Isolated local WordPress integration test; only test-owned content is removed. */
 if ( PHP_SAPI !== 'cli' || empty( $argv[1] ) ) { exit( "Supply the local WordPress directory.\n" ); }
+define( 'WP_ADMIN', true );
 require rtrim( $argv[1], '/\\' ) . '/wp-load.php';
 if ( 'local' !== wp_get_environment_type() ) { exit( "Local environment required.\n" ); }
 require_once ABSPATH . 'wp-admin/includes/user.php';
@@ -42,6 +43,31 @@ try {
     wp_set_object_terms( $post, array( (int) $term['term_id'] ), 'category' );
     $post_copy = xw_duplicate_post( $post ); if ( is_wp_error( $post_copy ) ) { throw new RuntimeException( $post_copy->get_error_message() ); } $ids[] = $post_copy;
     duplicate_check( wp_get_object_terms( $post_copy, 'category', array( 'fields' => 'ids' ) ) === wp_get_object_terms( $post, 'category', array( 'fields' => 'ids' ) ), 'taxonomies preserved by native APIs' );
+    if ( class_exists( '\Elementor\Plugin' ) && post_type_exists( 'elementor_library' ) ) {
+        foreach ( array( 'loop-item', 'container', 'header', 'footer', 'single-post', 'page' ) as $template_type ) {
+            $template = wp_insert_post( wp_slash( array(
+                'post_type' => 'elementor_library', 'post_status' => 'publish',
+                'post_title' => 'Local template QA ' . $template_type, 'post_author' => $admin,
+                'meta_input' => array( '_elementor_template_type' => $template_type, '_elementor_edit_mode' => 'builder', '_elementor_data' => $elementor ),
+            ) ), true );
+            if ( is_wp_error( $template ) ) { throw new RuntimeException( $template->get_error_message() ); }
+            $ids[] = $template;
+            wp_set_object_terms( $template, $template_type, 'elementor_library_type' );
+            foreach ( array( 'draft', 'publish' ) as $copy_status ) {
+                $settings['duplicate_page']['status'] = $copy_status; update_option( 'xw_settings', $settings );
+                $template_copy = xw_duplicate_request( $template, wp_create_nonce( 'xw_duplicate_page_' . $template ) );
+                if ( is_wp_error( $template_copy ) ) { throw new RuntimeException( $template_copy->get_error_message() ); }
+                $ids[] = $template_copy;
+                duplicate_check( get_post_type( $template_copy ) === 'elementor_library' && get_post_status( $template_copy ) === $copy_status &&
+                    get_post_meta( $template_copy, '_elementor_template_type' ) === array( $template_type ),
+                    "$template_type $copy_status copy has exactly one original template type" );
+                duplicate_check( get_class( Elementor\Plugin::$instance->documents->get( $template_copy ) ) === get_class( Elementor\Plugin::$instance->documents->get( $template ) ) &&
+                    wp_get_object_terms( $template_copy, 'elementor_library_type', array( 'fields' => 'slugs' ) ) === array( $template_type ),
+                    "$template_type $copy_status copy keeps its Elementor document class and template taxonomy" );
+            }
+        }
+        $settings['duplicate_page']['status'] = 'draft'; update_option( 'xw_settings', $settings );
+    }
     foreach ( array( 'editor', 'contributor', 'subscriber' ) as $role ) { $id = wp_insert_user( array( 'user_login' => 'duplicate_qa_' . $role . '_' . $source, 'user_pass' => wp_generate_password(), 'role' => $role ) ); if ( is_wp_error( $id ) ) { throw new RuntimeException( $id->get_error_message() ); } $users[ $role ] = $id; }
     wp_set_current_user( $users['subscriber'] ); duplicate_check( is_wp_error( xw_duplicate_post( $source ) ), 'subscriber cannot duplicate' );
     wp_set_current_user( $users['contributor'] ); duplicate_check( is_wp_error( xw_duplicate_post( $post ) ) && is_wp_error( xw_duplicate_post( $source ) ), 'contributor cannot copy another author or pages' );
