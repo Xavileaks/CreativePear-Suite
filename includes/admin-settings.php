@@ -128,6 +128,11 @@ function xw_get_feature_definitions() {
             'title'       => xw_t( 'Form Elementor: validación de mensajes', 'Form Elementor: message validation' ),
             'description' => xw_t( 'Acepta letras del español e inglés y bloquea enlaces y otros alfabetos en los mensajes, también en el servidor.', 'Accepts Spanish and English letters and blocks links and other alphabets in messages, including server validation.' ),
         ),
+        'elementor_form_security' => array(
+            'title'       => xw_t( 'Form Elementor: seguridad de formularios', 'Form Elementor: form security' ),
+            'description' => xw_t( 'Limita la frecuencia de envío por dirección IP en los formularios de Elementor del sitio.', 'Limits how often each IP address can submit Elementor forms on this site.' ),
+            'settings'    => true,
+        ),
         'woocommerce_smart_filter' => array(
             'title'       => 'Smart Filter',
             'description' => xw_t( 'Crea grupos de filtros de WooCommerce y conéctalos a tu Loop Grid de productos en Elementor.', 'Build WooCommerce filter groups and connect them to your Elementor product Loop Grid.' ),
@@ -246,6 +251,7 @@ function xw_get_feature_groups() {
                 'elementor_appointments',
                 'elementor_email_mask',
                 'elementor_message_mask',
+                'elementor_form_security',
             ),
         ),
         'woocommerce' => array(
@@ -345,6 +351,7 @@ function xw_get_default_settings() {
             'hide_desktop'      => 0,
         ),
         'elementor_emails' => array( 'customer_message' => '' ),
+        'form_security' => xw_form_security_sanitize( array() ),
         'phone' => array(
             'mode'              => 'area_code',
             'language'          => xw_interface_language(),
@@ -526,6 +533,7 @@ function xw_sanitize_settings( $input ) {
     $sanitized['duplicate_page'] = xw_duplicate_sanitize( $input['duplicate_page'] ?? array() );
     $customer_email_message = $input['elementor_emails']['customer_message'] ?? '';
     $sanitized['elementor_emails']['customer_message'] = is_scalar( $customer_email_message ) ? sanitize_textarea_field( (string) $customer_email_message ) : '';
+    $sanitized['form_security'] = xw_form_security_sanitize( $input['form_security'] ?? array() );
     $sanitized['quantity_buttons'] = xw_quantity_sanitize( $input['quantity_buttons'] ?? array() );
     $wishlist_page = absint( $input['wishlist']['page_id'] ?? 0 );
     $sanitized['wishlist']['page_id'] = $wishlist_page && 'page' === get_post_type( $wishlist_page ) && 'publish' === get_post_status( $wishlist_page ) ? $wishlist_page : 0;
@@ -1256,6 +1264,19 @@ function xw_render_settings_page() {
                                             <p><?php echo esc_html( xw_t( 'Vacío: mensaje genérico según el idioma de WordPress. El texto personalizado se muestra tal como lo escribas, sin códigos de campo.', 'Empty: generic message in the WordPress language. Custom text is displayed as written, without field shortcodes.' ) ); ?></p>
                                         <?php endif; ?>
                                     </div>
+                                <?php elseif ( 'elementor_form_security' === $key ) : ?>
+                                    <fieldset class="xw-field-full xw-form-security-settings" aria-describedby="xw-form-security-help">
+                                        <legend><?php echo esc_html( xw_t( 'Tiempo entre envíos', 'Time between submissions' ) ); ?></legend>
+                                        <div class="xw-form-security-fields">
+                                            <?php foreach ( xw_form_security_fields() as $unit => $field ) : ?>
+                                                <div class="xw-field-row">
+                                                    <label for="xw-form-security-<?php echo esc_attr( $unit ); ?>"><?php echo esc_html( $field['label'] ); ?></label>
+                                                    <input id="xw-form-security-<?php echo esc_attr( $unit ); ?>" type="number" name="xw_settings[form_security][<?php echo esc_attr( $unit ); ?>]" value="<?php echo esc_attr( $settings['form_security'][ $unit ] ); ?>" min="0" max="<?php echo esc_attr( $field['max'] ); ?>" step="1" inputmode="numeric">
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                        <p id="xw-form-security-help"><?php echo esc_html( xw_t( 'La espera comienza al completar un envío y se comparte entre los formularios del sitio. Pon los tres valores en 0 para permitir envíos sin espera.', 'The wait starts after a successful submission and is shared across the site’s forms. Set all three values to 0 to allow submissions without a wait.' ) ); ?></p>
+                                    </fieldset>
                                 <?php elseif ( 'elementor_appointments' === $key ) : ?>
                                     <div class="xw-field-row xw-field-full">
                                         <p><?php echo esc_html( xw_t( 'Guarda los cambios y abre la agenda para configurar horarios, días libres y reservas. Añade después un campo Cita al formulario de Elementor.', 'Save changes and open the calendar to configure working hours, days off and bookings. Then add an Appointment field to your Elementor form.' ) ); ?></p>

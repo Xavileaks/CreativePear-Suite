@@ -261,6 +261,36 @@
     grid-column: 1 / -1;
 }
 
+.xw-form-security-settings {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.xw-form-security-settings legend {
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.xw-form-security-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.xw-form-security-fields input[type="number"] {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+}
+
+.xw-form-security-settings p {
+    margin-bottom: 0;
+    color: #646970;
+}
+
 .xw-settings-wrap #xw-customer-email-message {
     display: block;
     box-sizing: border-box;
