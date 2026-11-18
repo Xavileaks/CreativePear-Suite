@@ -45,9 +45,24 @@ function xw_form_security_storage_ready( $table ) {
 }
 
 function xw_form_security_error( $handler, $message ) {
-    // Elementor checks its field errors to stop processing and uses the message for the global notice.
-    $handler->add_error( 'xw_form_security' );
-    $handler->add_error_message( $message );
+    // Complete the AJAX response here so Elementor doesn't append a generic validation error.
+    $handler->add_error_message( $message )->send();
+}
+
+function xw_form_security_wait_label( $seconds ) {
+    if ( $seconds < MINUTE_IN_SECONDS ) {
+        return xw_form_message_text( 'menos de un minuto', 'less than a minute' );
+    }
+    if ( $seconds >= DAY_IN_SECONDS ) {
+        $days = (int) round( $seconds / DAY_IN_SECONDS );
+        return sprintf( 1 === $days ? xw_form_message_text( '%d día', '%d day' ) : xw_form_message_text( '%d días', '%d days' ), $days );
+    }
+    if ( $seconds >= HOUR_IN_SECONDS ) {
+        $hours = (int) round( $seconds / HOUR_IN_SECONDS );
+        return sprintf( 1 === $hours ? xw_form_message_text( '%d hora', '%d hour' ) : xw_form_message_text( '%d horas', '%d hours' ), $hours );
+    }
+    $minutes = (int) round( $seconds / MINUTE_IN_SECONDS );
+    return sprintf( 1 === $minutes ? xw_form_message_text( '%d minuto', '%d minute' ) : xw_form_message_text( '%d minutos', '%d minutes' ), $minutes );
 }
 
 function xw_form_security_validate( $record, $handler ) {
@@ -65,7 +80,7 @@ function xw_form_security_validate( $record, $handler ) {
     // Trust the server's client address, never forwarding headers submitted by the visitor.
     $ip = $_SERVER['REMOTE_ADDR'] ?? '';
     $packed = is_string( $ip ) && filter_var( $ip, FILTER_VALIDATE_IP ) ? inet_pton( $ip ) : false;
-    $unavailable = xw_t( 'No se pudo comprobar el límite de envíos. Inténtalo de nuevo en unos minutos.', 'Could not check the submission limit. Please try again in a few minutes.' );
+    $unavailable = xw_form_message_text( 'No se pudo comprobar el límite de envíos. Inténtalo de nuevo en unos minutos.', 'Could not check the submission limit. Please try again in a few minutes.' );
     if ( false === $packed ) {
         xw_form_security_error( $handler, $unavailable );
         return;
@@ -93,13 +108,10 @@ function xw_form_security_validate( $record, $handler ) {
     if ( 1 !== $inserted ) {
         $existing = $wpdb->get_row( $wpdb->prepare( "SELECT owner, expires FROM $table WHERE ip_key = %s", $key ) );
         if ( $existing && '' === $existing->owner ) {
-            $remaining = (int) $existing->expires - $now;
-            $duration = $remaining < MINUTE_IN_SECONDS
-                ? xw_t( 'menos de un minuto', 'less than a minute' )
-                : human_time_diff( $now, (int) $existing->expires );
-            $unavailable = sprintf( xw_t( 'Ya se ha enviado un formulario desde esta conexión. Puedes volver a enviarlo en %s.', 'A form has already been sent from this connection. You can submit again in %s.' ), $duration );
+            $duration = xw_form_security_wait_label( (int) $existing->expires - $now );
+            $unavailable = sprintf( xw_form_message_text( 'Ya se ha enviado un formulario desde esta conexión. Puedes volver a enviarlo en %s.', 'A form has already been sent from this connection. You can submit again in %s.' ), $duration );
         } elseif ( $existing ) {
-            $unavailable = xw_t( 'Hay un envío en curso desde esta conexión. Espera un momento y vuelve a intentarlo.', 'A submission is in progress from this connection. Please wait a moment and try again.' );
+            $unavailable = xw_form_message_text( 'Hay un envío en curso desde esta conexión. Espera un momento y vuelve a intentarlo.', 'A submission is in progress from this connection. Please wait a moment and try again.' );
         }
         xw_form_security_error( $handler, $unavailable );
         return;

@@ -104,7 +104,7 @@ function xw_get_feature_definitions() {
         ),
         'elementor_messages' => array(
             'title'       => xw_t( 'Form Elementor: mensajes flotantes', 'Form Elementor: floating messages' ),
-            'description' => xw_t( 'Muestra las respuestas de formularios como avisos flotantes temporales.', 'Displays form responses as temporary floating notices.' ),
+            'description' => xw_t( 'Muestra avisos flotantes con los mensajes predeterminados en el idioma de WordPress. Respeta los textos personalizados en Elementor.', 'Shows floating notices with default messages in the WordPress site language. Keeps custom text set in Elementor.' ),
         ),
         'elementor_phone_mask' => array(
             'title'       => xw_t( 'Form Elementor: máscara de teléfono', 'Form Elementor: phone mask' ),

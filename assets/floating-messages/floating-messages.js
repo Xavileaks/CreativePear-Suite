@@ -1,12 +1,19 @@
 (() => {
     'use strict';
 
-    const selector = 'form.elementor-form .elementor-message:not(.elementor-help-inline)';
+    const selector = 'form.elementor-form .elementor-message';
     const closeLabel = window.xwFloatingMessages?.closeLabel || 'Close notice';
+    const defaultMessages = window.xwFloatingMessages?.defaultMessages || {};
     let activeMessage;
 
     function showMessage(message) {
-        if (message.classList.contains('xw-floating-message') || message.closest('.elementor-field-group') || !message.textContent.trim()) return;
+        const text = message.textContent.trim();
+        if (!text || message.classList.contains('xw-floating-message')) return;
+
+        if (!message.childElementCount && Object.prototype.hasOwnProperty.call(defaultMessages, text)) {
+            message.textContent = defaultMessages[text];
+        }
+        if (message.classList.contains('elementor-help-inline') || message.closest('.elementor-field-group')) return;
 
         activeMessage?.close();
         const form = message.closest('form');

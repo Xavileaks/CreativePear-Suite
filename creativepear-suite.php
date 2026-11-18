@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.99
+Version: 1.0.100
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,11 +14,12 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.99' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.100' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/elementor-form-security.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/elementor-form-messages.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/github-updater.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/back-to-top.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/whatsapp-button.php';
@@ -286,18 +287,6 @@ function xw_custom_admin_footer_text( $default_text ) {
         )
     );
 }
-
-
-// MENSAJE FLOTANTE DE ELEMENTOR FORM
-
-add_action( 'wp_enqueue_scripts', static function() {
-    if ( ! xw_feature_enabled( 'elementor_messages' ) ) { return; }
-    $path = plugin_dir_path( XW_FUNCTIONS_FILE ) . 'assets/floating-messages/';
-    $url = plugin_dir_url( XW_FUNCTIONS_FILE ) . 'assets/floating-messages/';
-    wp_enqueue_style( 'xw-floating-messages', $url . 'floating-messages.css', array(), filemtime( $path . 'floating-messages.css' ) );
-    wp_enqueue_script( 'xw-floating-messages', $url . 'floating-messages.js', array(), filemtime( $path . 'floating-messages.js' ), true );
-    wp_localize_script( 'xw-floating-messages', 'xwFloatingMessages', array( 'closeLabel' => xw_t( 'Cerrar aviso', 'Close notice' ) ) );
-} );
 
 
 // MASCARA DE TELEFONO PARA ELEMENTOR FORM

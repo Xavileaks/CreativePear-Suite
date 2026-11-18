@@ -1,5 +1,9 @@
 # Historial de cambios
 
+## 1.0.100
+
+- El bloqueo por IP muestra un solo aviso con el tiempo de espera. Traduce los avisos predeterminados de Elementor al español o al inglés según el idioma del sitio y conserva los textos personalizados.
+
 ## 1.0.99
 
 - Añade un límite opcional de envíos por IP para formularios de Elementor, con espera configurable en días, horas y minutos.
