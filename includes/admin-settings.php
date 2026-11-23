@@ -301,10 +301,10 @@ function xw_get_default_settings() {
         ),
         'styles'   => array(
             'primary_color'         => '',
-            'scrollbar_width'       => 5,
+            'scrollbar_width'       => '',
             'scrollbar_track_color' => '',
             'scrollbar_thumb_color' => '',
-            'scrollbar_radius'      => 0,
+            'scrollbar_radius'      => '',
             'rules'                 => array_fill_keys( array_keys( xw_global_style_files() ), 1 ),
         ),
         'admin_branding' => array(
@@ -468,6 +468,19 @@ function xw_get_settings() {
     }
 
     $settings = array_replace_recursive( xw_get_default_settings(), $saved );
+    // Preserve the off state of the removed switches as empty controls.
+    $rules = $settings['styles']['rules'] ?? null;
+    if ( is_array( $rules ) ) {
+        if ( array_key_exists( 'elementor-extra', $rules ) && ! $rules['elementor-extra'] ) {
+            $settings['styles']['primary_color'] = '';
+        }
+        if ( array_key_exists( 'global-scrollbar', $rules ) && ! $rules['global-scrollbar'] ) {
+            foreach ( array( 'scrollbar_width', 'scrollbar_track_color', 'scrollbar_thumb_color', 'scrollbar_radius' ) as $control ) {
+                $settings['styles'][ $control ] = '';
+            }
+        }
+        unset( $settings['styles']['rules']['elementor-extra'], $settings['styles']['rules']['global-scrollbar'] );
+    }
     if ( is_array( $settings['features'] ) ) { unset( $settings['features']['preloader'], $settings['features']['plugin_export'] ); }
     if ( isset( $saved['quantity_buttons'] ) && is_array( $saved['quantity_buttons'] ) && ! array_key_exists( 'button_shape', $saved['quantity_buttons'] ) ) {
         $settings['quantity_buttons']['button_shape'] = xw_quantity_sanitize( $saved['quantity_buttons'] )['button_shape'];
@@ -551,14 +564,12 @@ function xw_sanitize_settings( $input ) {
     $styles_primary = isset( $styles['primary_color'] ) ? sanitize_hex_color( $styles['primary_color'] ) : '';
     $track_color   = isset( $styles['scrollbar_track_color'] ) ? sanitize_hex_color( $styles['scrollbar_track_color'] ) : '';
     $thumb_color   = isset( $styles['scrollbar_thumb_color'] ) ? sanitize_hex_color( $styles['scrollbar_thumb_color'] ) : '';
-    $scroll_width  = isset( $styles['scrollbar_width'] ) ? absint( $styles['scrollbar_width'] ) : $defaults['styles']['scrollbar_width'];
-    $scroll_radius = isset( $styles['scrollbar_radius'] ) ? absint( $styles['scrollbar_radius'] ) : $defaults['styles']['scrollbar_radius'];
 
     $sanitized['styles']['primary_color']         = $styles_primary ? $styles_primary : '';
-    $sanitized['styles']['scrollbar_width']       = max( 0, min( 40, $scroll_width ) );
+    $sanitized['styles']['scrollbar_width']       = xw_global_optional_pixels( $styles['scrollbar_width'] ?? '', 40 );
     $sanitized['styles']['scrollbar_track_color'] = $track_color ? $track_color : '';
     $sanitized['styles']['scrollbar_thumb_color'] = $thumb_color ? $thumb_color : '';
-    $sanitized['styles']['scrollbar_radius']      = max( 0, min( 50, $scroll_radius ) );
+    $sanitized['styles']['scrollbar_radius']      = xw_global_optional_pixels( $styles['scrollbar_radius'] ?? '', 50 );
     foreach ( $defaults['styles']['rules'] as $rule => $default ) {
         $value = $styles['rules'][ $rule ] ?? $default;
         $sanitized['styles']['rules'][ $rule ] = '1' === $value || 1 === $value || true === $value ? 1 : 0;
@@ -980,7 +991,7 @@ function xw_render_settings_page() {
                                             <input id="xw-styles-primary-color" type="color" class="<?php echo empty( $settings['styles']['primary_color'] ) ? 'is-empty' : ''; ?>" value="<?php echo esc_attr( $settings['styles']['primary_color'] ?: '#000000' ); ?>" data-xw-color-picker>
                                             <input type="text" name="xw_settings[styles][primary_color]" class="xw-color-text" value="<?php echo esc_attr( $settings['styles']['primary_color'] ); ?>" maxlength="7" spellcheck="false" placeholder="#RRGGBB" aria-label="<?php echo esc_attr( xw_t( 'Código hexadecimal del color global', 'Global color hexadecimal code' ) ); ?>" data-xw-color-value>
                                         </div>
-                                        <p><?php echo esc_html( xw_t( 'Cambia el color de selección, checkboxes, radios y cualquier estilo que utilice esta variable.', 'Changes selection colors, checkboxes, radio buttons, and any style that uses this variable.' ) ); ?></p>
+                                        <p><?php echo esc_html( xw_t( 'Este valor se usa en los estilos de color activos. Déjalo vacío para conservar los colores del sitio.', 'Enabled color styles use this value. Leave it empty to keep the site colors.' ) ); ?></p>
                                     </div>
 
                                     <h3 class="xw-options-heading"><?php echo esc_html( xw_t( 'Barra de desplazamiento', 'Scrollbar' ) ); ?></h3>
@@ -1013,7 +1024,7 @@ function xw_render_settings_page() {
                                                 <span>px</span>
                                             </div>
                                         </div>
-                                        <p class="xw-scrollbar-hint"><?php echo esc_html( xw_t( 'Pon el ancho en 0 px para ocultar la barra.', 'Set the width to 0 px to hide the scrollbar.' ) ); ?></p>
+                                        <p class="xw-scrollbar-hint"><?php echo esc_html( xw_t( 'Deja los campos vacíos para usar la barra del sitio. Pon el ancho en 0 px para ocultarla.', 'Leave the fields empty to use the site scrollbar. Set the width to 0 px to hide it.' ) ); ?></p>
                                     </div>
 
                                     <h3 class="xw-options-heading" id="xw-global-rules-heading"><?php echo esc_html( xw_t( 'Estilos individuales', 'Individual styles' ) ); ?></h3>

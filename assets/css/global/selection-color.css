@@ -1,4 +1,4 @@
 ::selection {
     color: #FFF;
-    background: var(--color-web, #E52427);
+    background: var(--color-web);
 }
