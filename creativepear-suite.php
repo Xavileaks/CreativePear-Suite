@@ -3,7 +3,7 @@
 Plugin Name: Creative Pear Suite
 Plugin URI: https://github.com/Xavileaks/CreativePear-Suite
 Description: Modular WordPress features and global assets for Creative Pear Agency.
-Version: 1.0.100
+Version: 1.0.101
 Author: Creative Pear Agency
 Author URI: https://creativepearagency.com
 Update URI: https://github.com/Xavileaks/CreativePear-Suite
@@ -14,10 +14,11 @@ Text Domain: creativepear-suite
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'XW_FUNCTIONS_VERSION', '1.0.100' );
+define( 'XW_FUNCTIONS_VERSION', '1.0.101' );
 define( 'XW_FUNCTIONS_FILE', __FILE__ );
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/elementor-form-security.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/global-styles.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/elementor-form-messages.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/github-updater.php';
@@ -78,50 +79,6 @@ function xleon_suite_add_settings_link($links) {
 
 // LLAMADO A CSS
 
-function xleon_suite_enqueue_styles() {
-    $css_dir = plugin_dir_path(__FILE__) . 'assets/css/';
-    $last_handle = '';
-
-    foreach (glob($css_dir . '*.css') as $file) {
-        if ( in_array( basename( $file ), array( 'admin-settings.css', 'elementor-date.css', 'appointments.css', 'appointments-admin.css', 'woocommerce-cart.css', 'woocommerce-checkout.css' ), true ) ) {
-            continue;
-        }
-
-        $handle = 'xleon-' . sanitize_key( str_replace( ' ', '-', basename( $file, '.css' ) ) );
-
-        wp_enqueue_style(
-            $handle,
-            plugin_dir_url(__FILE__) . 'assets/css/' . basename($file),
-            array(),
-            filemtime($file)
-        );
-
-        $last_handle = $handle;
-    }
-
-    if ( $last_handle ) {
-        $settings    = xw_get_settings();
-        $styles      = $settings['styles'];
-        $primary     = sanitize_hex_color( $styles['primary_color'] );
-        $track       = sanitize_hex_color( $styles['scrollbar_track_color'] );
-        $thumb       = sanitize_hex_color( $styles['scrollbar_thumb_color'] );
-        $width       = absint( $styles['scrollbar_width'] );
-        $radius      = absint( $styles['scrollbar_radius'] );
-        $dynamic_css = '';
-
-        if ( $primary ) {
-            $dynamic_css .= ':root{--color-web:' . $primary . ';}';
-        }
-
-        $dynamic_css .= '::-webkit-scrollbar{width:' . $width . 'px;height:' . $width . 'px;}';
-        $dynamic_css .= '::-webkit-scrollbar-track{border-radius:' . $radius . 'px;';
-        $dynamic_css .= $track ? 'background:' . $track . ';}' : '}';
-        $dynamic_css .= '::-webkit-scrollbar-thumb{border-radius:' . $radius . 'px;';
-        $dynamic_css .= $thumb ? 'background:' . $thumb . ';}' : '}';
-
-        wp_add_inline_style( $last_handle, $dynamic_css );
-    }
-}
 if ( xw_feature_enabled( 'assets_styles' ) ) {
     add_action( 'wp_enqueue_scripts', 'xleon_suite_enqueue_styles', 20 );
 }

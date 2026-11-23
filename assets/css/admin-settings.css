@@ -261,6 +261,108 @@
     grid-column: 1 / -1;
 }
 
+#xw-options-assets_styles {
+    container: xw-global-styles / inline-size;
+}
+
+.xw-scrollbar-fields {
+    display: grid;
+    grid-template-columns: minmax(0, .75fr) repeat(2, minmax(0, 1.3fr)) minmax(0, .85fr);
+    align-items: end;
+    gap: 8px;
+}
+
+.xw-scrollbar-fields .xw-number-control,
+.xw-scrollbar-fields .xw-color-control {
+    gap: 6px;
+}
+
+.xw-scrollbar-fields .xw-number-control input[type="number"],
+.xw-scrollbar-fields .xw-color-control .xw-color-text {
+    box-sizing: border-box;
+    flex: 1 1 0;
+    width: 100%;
+    min-width: 0;
+    min-height: 36px;
+    height: 36px;
+    margin: 0;
+    padding-inline: 6px;
+}
+
+.xw-scrollbar-fields .xw-color-control input[type="color"] {
+    box-sizing: border-box;
+    flex: 0 0 32px;
+    width: 32px;
+    height: 36px;
+    margin: 0;
+}
+
+.xw-scrollbar-hint {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: #646970;
+    font-size: 12px;
+}
+
+.xw-global-rule-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.xw-global-rule-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 12px;
+}
+
+.xw-global-rule-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-height: 44px;
+    padding-block: 4px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.xw-global-rule-label {
+    overflow-wrap: anywhere;
+    line-height: 1.3;
+}
+
+.xw-global-rule-toggle .xw-switch-track {
+    flex: 0 0 32px;
+    width: 32px;
+    height: 18px;
+}
+
+.xw-global-rule-toggle .xw-switch-track span {
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+}
+
+.xw-global-rule-toggle input:checked + .xw-switch-track span {
+    transform: translateX(14px);
+}
+
+@container xw-global-styles (max-width: 380px) {
+    .xw-scrollbar-fields,
+    .xw-global-rule-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@container xw-global-styles (max-width: 240px) {
+    .xw-global-rule-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .xw-form-security-settings {
     min-width: 0;
     margin: 0;

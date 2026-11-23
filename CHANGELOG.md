@@ -1,5 +1,9 @@
 # Historial de cambios
 
+## 1.0.101
+
+- Organiza los cuatro ajustes de la barra de desplazamiento en una fila y permite activar o desactivar los estilos CSS globales por separado o en bloque.
+
 ## 1.0.100
 
 - El bloqueo por IP muestra un solo aviso con el tiempo de espera. Traduce los avisos predeterminados de Elementor al español o al inglés según el idioma del sitio y conserva los textos personalizados.

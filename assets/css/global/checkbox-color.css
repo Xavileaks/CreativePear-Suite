@@ -1,0 +1,3 @@
+input[type=checkbox] {
+    accent-color: var(--color-web, #E52427);
+}

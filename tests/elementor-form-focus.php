@@ -1,7 +1,7 @@
 <?php
 /** Read-only local CSS fixture. No submissions, remote assets or WordPress settings writes. */
 $root = dirname( __DIR__ );
-$css = file_get_contents( $root . '/assets/css/elementor extra.css' );
+$css = file_get_contents( $root . '/assets/css/global/form-focus.css' );
 if ( PHP_SAPI === 'cli' ) {
     if ( ! preg_match( '/\\.elementor-widget-form \\.elementor-form \\.elementor-field:focus,\s*\\.elementor-widget-form \\.elementor-form \\.elementor-select-wrapper select:focus\\s*\\{([^}]+)\\}/', $css, $matches ) || trim( $matches[1] ) !== 'box-shadow: none !important;' ) {
         throw new RuntimeException( 'Form focus rule must remove only box-shadow.' );

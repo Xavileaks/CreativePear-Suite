@@ -413,6 +413,15 @@
     }
 
     $(function () {
+        $('[data-xw-global-rules]').on('click', '[data-xw-set-global-rules]', function () {
+            var checked = this.dataset.xwSetGlobalRules === '1';
+            $(this).closest('[data-xw-global-rules]').find('[data-xw-global-rule]').each(function () {
+                if (this.checked === checked) return;
+                this.checked = checked;
+                $(this).trigger('change');
+            });
+        });
+
         $('[data-xw-comments-options]').each(function () {
             var card = $(this);
             function updateComments() {

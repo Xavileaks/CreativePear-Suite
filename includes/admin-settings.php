@@ -33,7 +33,7 @@ function xw_get_feature_definitions() {
     return array(
         'assets_styles' => array(
             'title'       => xw_t( 'Estilos CSS globales', 'Global CSS styles' ),
-            'description' => xw_t( 'Carga automáticamente los archivos CSS de assets/css en la web.', 'Automatically loads the CSS files from assets/css on the website.' ),
+            'description' => xw_t( 'Elige qué estilos CSS de la suite se aplican en la web.', 'Choose which CSS styles from the suite are applied to the website.' ),
             'settings'    => true,
         ),
         'classic_editor' => array(
@@ -305,6 +305,7 @@ function xw_get_default_settings() {
             'scrollbar_track_color' => '',
             'scrollbar_thumb_color' => '',
             'scrollbar_radius'      => 0,
+            'rules'                 => array_fill_keys( array_keys( xw_global_style_files() ), 1 ),
         ),
         'admin_branding' => array(
             'footer_html' => xw_t(
@@ -558,6 +559,10 @@ function xw_sanitize_settings( $input ) {
     $sanitized['styles']['scrollbar_track_color'] = $track_color ? $track_color : '';
     $sanitized['styles']['scrollbar_thumb_color'] = $thumb_color ? $thumb_color : '';
     $sanitized['styles']['scrollbar_radius']      = max( 0, min( 50, $scroll_radius ) );
+    foreach ( $defaults['styles']['rules'] as $rule => $default ) {
+        $value = $styles['rules'][ $rule ] ?? $default;
+        $sanitized['styles']['rules'][ $rule ] = '1' === $value || 1 === $value || true === $value ? 1 : 0;
+    }
 
     $allowed_footer_html = array(
         'a' => array(
@@ -979,33 +984,54 @@ function xw_render_settings_page() {
                                     </div>
 
                                     <h3 class="xw-options-heading"><?php echo esc_html( xw_t( 'Barra de desplazamiento', 'Scrollbar' ) ); ?></h3>
-                                    <div class="xw-field-row">
-                                        <label for="xw-scrollbar-width"><?php echo esc_html( xw_t( 'Ancho', 'Width' ) ); ?></label>
-                                        <div class="xw-number-control">
-                                            <input id="xw-scrollbar-width" type="number" name="xw_settings[styles][scrollbar_width]" value="<?php echo esc_attr( $settings['styles']['scrollbar_width'] ); ?>" min="0" max="40" step="1">
-                                            <span>px</span>
+                                    <div class="xw-field-full xw-scrollbar-fields">
+                                        <div class="xw-field-row">
+                                            <label for="xw-scrollbar-width"><?php echo esc_html( xw_t( 'Ancho', 'Width' ) ); ?></label>
+                                            <div class="xw-number-control">
+                                                <input id="xw-scrollbar-width" type="number" name="xw_settings[styles][scrollbar_width]" value="<?php echo esc_attr( $settings['styles']['scrollbar_width'] ); ?>" min="0" max="40" step="1">
+                                                <span>px</span>
+                                            </div>
                                         </div>
-                                        <p><?php echo esc_html( xw_t( 'Use 0 px si quiere ocultar visualmente la barra.', 'Use 0 px to visually hide the scrollbar.' ) ); ?></p>
-                                    </div>
-                                    <div class="xw-field-row">
-                                        <label for="xw-scrollbar-track-color"><?php echo esc_html( xw_t( 'Color del carril', 'Track color' ) ); ?></label>
-                                        <div class="xw-color-control">
-                                            <input id="xw-scrollbar-track-color" type="color" class="<?php echo empty( $settings['styles']['scrollbar_track_color'] ) ? 'is-empty' : ''; ?>" value="<?php echo esc_attr( $settings['styles']['scrollbar_track_color'] ?: '#000000' ); ?>" data-xw-color-picker>
-                                            <input type="text" name="xw_settings[styles][scrollbar_track_color]" class="xw-color-text" value="<?php echo esc_attr( $settings['styles']['scrollbar_track_color'] ); ?>" maxlength="7" spellcheck="false" placeholder="#RRGGBB" aria-label="<?php echo esc_attr( xw_t( 'Código hexadecimal del color del carril', 'Track color hexadecimal code' ) ); ?>" data-xw-color-value>
+                                        <div class="xw-field-row">
+                                            <label for="xw-scrollbar-track-color"><?php echo esc_html( xw_t( 'Color del carril', 'Track color' ) ); ?></label>
+                                            <div class="xw-color-control">
+                                                <input id="xw-scrollbar-track-color" type="color" class="<?php echo empty( $settings['styles']['scrollbar_track_color'] ) ? 'is-empty' : ''; ?>" value="<?php echo esc_attr( $settings['styles']['scrollbar_track_color'] ?: '#000000' ); ?>" data-xw-color-picker>
+                                                <input type="text" name="xw_settings[styles][scrollbar_track_color]" class="xw-color-text" value="<?php echo esc_attr( $settings['styles']['scrollbar_track_color'] ); ?>" maxlength="7" spellcheck="false" placeholder="#RRGGBB" aria-label="<?php echo esc_attr( xw_t( 'Código hexadecimal del color del carril', 'Track color hexadecimal code' ) ); ?>" data-xw-color-value>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="xw-field-row">
-                                        <label for="xw-scrollbar-thumb-color"><?php echo esc_html( xw_t( 'Color de la barra', 'Thumb color' ) ); ?></label>
-                                        <div class="xw-color-control">
-                                            <input id="xw-scrollbar-thumb-color" type="color" class="<?php echo empty( $settings['styles']['scrollbar_thumb_color'] ) ? 'is-empty' : ''; ?>" value="<?php echo esc_attr( $settings['styles']['scrollbar_thumb_color'] ?: '#000000' ); ?>" data-xw-color-picker>
-                                            <input type="text" name="xw_settings[styles][scrollbar_thumb_color]" class="xw-color-text" value="<?php echo esc_attr( $settings['styles']['scrollbar_thumb_color'] ); ?>" maxlength="7" spellcheck="false" placeholder="#RRGGBB" aria-label="<?php echo esc_attr( xw_t( 'Código hexadecimal del color de la barra', 'Thumb color hexadecimal code' ) ); ?>" data-xw-color-value>
+                                        <div class="xw-field-row">
+                                            <label for="xw-scrollbar-thumb-color"><?php echo esc_html( xw_t( 'Color de la barra', 'Thumb color' ) ); ?></label>
+                                            <div class="xw-color-control">
+                                                <input id="xw-scrollbar-thumb-color" type="color" class="<?php echo empty( $settings['styles']['scrollbar_thumb_color'] ) ? 'is-empty' : ''; ?>" value="<?php echo esc_attr( $settings['styles']['scrollbar_thumb_color'] ?: '#000000' ); ?>" data-xw-color-picker>
+                                                <input type="text" name="xw_settings[styles][scrollbar_thumb_color]" class="xw-color-text" value="<?php echo esc_attr( $settings['styles']['scrollbar_thumb_color'] ); ?>" maxlength="7" spellcheck="false" placeholder="#RRGGBB" aria-label="<?php echo esc_attr( xw_t( 'Código hexadecimal del color de la barra', 'Thumb color hexadecimal code' ) ); ?>" data-xw-color-value>
+                                            </div>
                                         </div>
+                                        <div class="xw-field-row">
+                                            <label for="xw-scrollbar-radius"><?php echo esc_html( xw_t( 'Redondeado', 'Corner radius' ) ); ?></label>
+                                            <div class="xw-number-control">
+                                                <input id="xw-scrollbar-radius" type="number" name="xw_settings[styles][scrollbar_radius]" value="<?php echo esc_attr( $settings['styles']['scrollbar_radius'] ); ?>" min="0" max="50" step="1">
+                                                <span>px</span>
+                                            </div>
+                                        </div>
+                                        <p class="xw-scrollbar-hint"><?php echo esc_html( xw_t( 'Pon el ancho en 0 px para ocultar la barra.', 'Set the width to 0 px to hide the scrollbar.' ) ); ?></p>
                                     </div>
-                                    <div class="xw-field-row">
-                                        <label for="xw-scrollbar-radius"><?php echo esc_html( xw_t( 'Redondeado', 'Corner radius' ) ); ?></label>
-                                        <div class="xw-number-control">
-                                            <input id="xw-scrollbar-radius" type="number" name="xw_settings[styles][scrollbar_radius]" value="<?php echo esc_attr( $settings['styles']['scrollbar_radius'] ); ?>" min="0" max="50" step="1">
-                                            <span>px</span>
+
+                                    <h3 class="xw-options-heading" id="xw-global-rules-heading"><?php echo esc_html( xw_t( 'Estilos individuales', 'Individual styles' ) ); ?></h3>
+                                    <div class="xw-field-full" data-xw-global-rules role="group" aria-labelledby="xw-global-rules-heading">
+                                        <div class="xw-global-rule-actions">
+                                            <button type="button" class="button" data-xw-set-global-rules="1"><?php echo esc_html( xw_t( 'Activar todos', 'Enable all' ) ); ?></button>
+                                            <button type="button" class="button" data-xw-set-global-rules="0"><?php echo esc_html( xw_t( 'Desactivar todos', 'Disable all' ) ); ?></button>
+                                        </div>
+                                        <div class="xw-global-rule-grid">
+                                            <?php $rule_labels = xw_global_style_labels(); ?>
+                                            <?php foreach ( xw_global_style_files() as $rule_key => $rule_file ) : ?>
+                                                <label class="xw-switch xw-global-rule-toggle">
+                                                    <span class="xw-global-rule-label"><?php echo esc_html( $rule_labels[ $rule_key ] ?? pathinfo( $rule_file, PATHINFO_FILENAME ) ); ?></span>
+                                                    <input type="hidden" name="xw_settings[styles][rules][<?php echo esc_attr( $rule_key ); ?>]" value="0">
+                                                    <input type="checkbox" role="switch" name="xw_settings[styles][rules][<?php echo esc_attr( $rule_key ); ?>]" value="1" <?php checked( ! empty( $settings['styles']['rules'][ $rule_key ] ) ); ?> data-xw-global-rule>
+                                                    <span class="xw-switch-track" aria-hidden="true"><span></span></span>
+                                                </label>
+                                            <?php endforeach; ?>
                                         </div>
                                     </div>
                                 <?php elseif ( 'comments_control' === $key ) : ?>

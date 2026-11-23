@@ -19,7 +19,7 @@ $legacy_schedule = function ( $schedules ) { $schedules['xw_ten_minutes'] = arra
 add_filter( 'pre_http_request', $http, 10, 3 );
 try {
     defaults_check( xw_get_default_settings()['styles']['scrollbar_width'] === 5, 'new scrollbar default is 5px' );
-    defaults_check( preg_match( '/::-webkit-scrollbar\\s*\\{\\s*width:\\s*5px;/', file_get_contents( dirname( __DIR__ ) . '/assets/css/elementor extra.css' ) ) === 1, 'base CSS fallback also uses 5px' );
+    defaults_check( preg_match( '/::-webkit-scrollbar\\s*\\{\\s*width:\\s*5px;/', file_get_contents( dirname( __DIR__ ) . '/assets/css/global/scrollbar.css' ) ) === 1, 'base CSS fallback also uses 5px' );
     delete_option( 'xw_settings' );
     defaults_check( xw_get_settings()['styles']['scrollbar_width'] === 5 && xw_sanitize_settings( array() )['styles']['scrollbar_width'] === 5, 'fresh settings and missing submitted width use 5px' );
     foreach ( array( 0, 10, 17 ) as $width ) {
